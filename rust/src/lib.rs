@@ -74,8 +74,8 @@ mod amplify_types;
 mod bitcoin;
 mod bitcoin_hashes;
 mod collections;
-#[cfg(feature = "crypto")]
-mod crypto;
+#[cfg(feature = "ed25519-dalek")]
+mod ed25519;
 #[cfg(feature = "miniscript")]
 mod miniscript;
 #[cfg(feature = "monero")]
