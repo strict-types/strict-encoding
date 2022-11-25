@@ -257,7 +257,7 @@ fn encode_enum_impl(
         inner_impl.append_all(quote_spanned! { variant.span() =>
             #[allow(clippy::unnecessary_cast)]
             Self::#ident #bra_captures_ket => {
-                (#value as #repr).#encode_name(&mut e)?;
+                (#value as #repr).#encode_name(e)?;
                 #captures
                 #field_impl
             }
@@ -356,7 +356,7 @@ fn encode_fields_impl<'a>(
 
     for name in strict_fields {
         stream.append_all(quote_spanned! { Span::call_site() =>
-            data.#name.#encode_name(&mut e)?;
+            data.#name.#encode_name(e)?;
         })
     }
 
@@ -388,7 +388,7 @@ fn encode_fields_impl<'a>(
         }
 
         stream.append_all(quote_spanned! { Span::call_site() =>
-            tlvs.#encode_name(&mut e)?;
+            tlvs.#encode_name(e)?;
         })
     }
 
