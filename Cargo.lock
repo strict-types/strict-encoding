@@ -222,7 +222,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b7453f970f5059a5104bae26bfd4147ad5de1844bbd6eba2815499b072407a24"
 dependencies = [
  "amplify_syn",
- "encoding_derive_helpers 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "encoding_derive_helpers 0.8.1",
  "proc-macro2",
  "syn",
 ]
@@ -367,6 +367,8 @@ dependencies = [
 [[package]]
 name = "encoding_derive_helpers"
 version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8a2293d9a54744b73b753fad2e3c16295345504dc230696ee8aa5dbfd276ab4"
 dependencies = [
  "amplify",
  "proc-macro2",
@@ -376,9 +378,7 @@ dependencies = [
 
 [[package]]
 name = "encoding_derive_helpers"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8a2293d9a54744b73b753fad2e3c16295345504dc230696ee8aa5dbfd276ab4"
+version = "2.0.0-alpha.1"
 dependencies = [
  "amplify",
  "proc-macro2",
@@ -916,12 +916,12 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_derive"
-version = "0.8.0"
+version = "2.0.0-alpha.1"
 dependencies = [
  "amplify",
  "amplify_syn",
  "compiletest_rs",
- "encoding_derive_helpers 0.8.1",
+ "encoding_derive_helpers 2.0.0-alpha.1",
  "proc-macro2",
  "strict_encoding",
  "strict_encoding_test",
