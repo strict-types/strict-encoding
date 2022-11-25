@@ -141,7 +141,7 @@ fn decode_struct_impl(
     Ok(quote! {
         impl #impl_generics #import::#trait_name for #ident_name #ty_generics #where_clause {
             #[allow(clippy::init_numbered_fields)]
-            fn #decode_name<D: ::std::io::Read>(mut d: D) -> ::core::result::Result<Self, #import::Error> {
+            fn #decode_name(d: &mut impl ::std::io::Read) -> ::core::result::Result<Self, #import::Error> {
                 use #import::#trait_name;
                 #inner_impl
             }
@@ -247,9 +247,9 @@ fn decode_enum_impl(
     Ok(quote! {
         impl #impl_generics #import::#trait_name for #ident_name #ty_generics #where_clause {
             #[allow(clippy::init_numbered_fields)]
-            fn #decode_name<D: ::std::io::Read>(mut d: D) -> ::core::result::Result<Self, #import::Error> {
+            fn #decode_name(d: &mut impl ::std::io::Read) -> ::core::result::Result<Self, #import::Error> {
                 use #import::#trait_name;
-                Ok(match #repr::#decode_name(&mut d)? {
+                Ok(match #repr::#decode_name(d)? {
                     #inner_impl
                     unknown => Err(#import::Error::EnumValueNotKnown(#enum_name, unknown as usize))?
                 })
@@ -341,7 +341,7 @@ fn decode_fields_impl<'a>(
 
     for name in strict_fields {
         stream.append_all(quote_spanned! { Span::call_site() =>
-            #name: #import::#trait_name::#decode_name(&mut d)?,
+            #name: #import::#trait_name::#decode_name(d)?,
         });
     }
 
@@ -383,7 +383,7 @@ fn decode_fields_impl<'a>(
 
             stream = quote_spanned! { Span::call_site() =>
                 let mut s = #ident_name { #stream };
-                let tlvs = internet2::tlv::Stream::#decode_name(&mut d)?;
+                let tlvs = internet2::tlv::Stream::#decode_name(d)?;
             };
 
             stream.append_all(quote_spanned! { Span::call_site() =>

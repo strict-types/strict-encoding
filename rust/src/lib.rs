@@ -63,9 +63,10 @@ extern crate amplify;
 #[macro_use]
 extern crate strict_encoding_test;
 #[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde;
+//#[macro_use]
+//extern crate serde;
 
+/*
 #[macro_use]
 mod macros;
 
@@ -86,20 +87,17 @@ mod primitives;
 mod slice32;
 pub mod strategies;
 
+pub use collections::{LargeVec, MediumVec};
+pub use strategies::Strategy;
+ */
+
 use std::io::Seek;
 use std::ops::Range;
 use std::path::Path;
 use std::string::FromUtf8Error;
 use std::{fmt, fs, io};
 
-/// Re-exporting extended read and write functions from bitcoin consensus
-/// module so others may use semantic convenience
-/// `strict_encode::ReadExt`
-#[cfg(feature = "bitcoin")]
-pub use ::bitcoin::consensus::encode::{ReadExt, WriteExt};
 use amplify::IoError;
-pub use collections::{LargeVec, MediumVec};
-pub use strategies::Strategy;
 
 /// Binary encoding according to the strict rules that usually apply to
 /// consensus-critical data structures. May be used for network communications;
@@ -113,7 +111,7 @@ pub trait StrictEncode {
     /// Encode with the given [`std::io::Write`] instance; must return result
     /// with either amount of bytes encoded – or implementation-specific
     /// error type.
-    fn strict_encode<E: io::Write>(&self, e: E) -> Result<usize, Error>;
+    fn strict_encode(&self, e: &mut impl io::Write) -> Result<(), Error>;
 
     /// Serializes data as a byte array using [`StrictEncode::strict_encode`]
     /// function
@@ -126,9 +124,9 @@ pub trait StrictEncode {
     /// Saves data to a file at a given `path`. If the file does not exists,
     /// attempts to create the file. If the file already exists, it gets
     /// truncated.
-    fn strict_file_save(&self, path: impl AsRef<Path>) -> Result<usize, Error> {
-        let file = fs::File::create(path)?;
-        self.strict_encode(file)
+    fn strict_file_save(&self, path: impl AsRef<Path>) -> Result<(), Error> {
+        let mut file = fs::File::create(path)?;
+        self.strict_encode(&mut file)
     }
 }
 
@@ -143,7 +141,7 @@ pub trait StrictEncode {
 pub trait StrictDecode: Sized {
     /// Decode with the given [`std::io::Read`] instance; must either
     /// construct an instance or return implementation-specific error type.
-    fn strict_decode<D: io::Read>(d: D) -> Result<Self, Error>;
+    fn strict_decode(d: &mut impl io::Read) -> Result<Self, Error>;
 
     /// Tries to deserialize byte array into the current type using
     /// [`StrictDecode::strict_decode`]. If there are some data remains in the
@@ -151,7 +149,13 @@ pub trait StrictDecode: Sized {
     /// [`Error::DataNotEntirelyConsumed`]. Use `io::Cursor` over the buffer and
     /// [`StrictDecode::strict_decode`] to avoid such failures.
     fn strict_deserialize(data: impl AsRef<[u8]>) -> Result<Self, Error> {
-        Self::strict_decode(data.as_ref())
+        let data = data.as_ref();
+        let mut cursor = io::Cursor::new(data);
+        let me = Self::strict_decode(&mut cursor)?;
+        if cursor.position() as usize != data.len() {
+            return Err(Error::DataNotEntirelyConsumed);
+        }
+        Ok(me)
     }
 
     /// Reads data from file at `path` and reconstructs object from it. Fails
@@ -165,35 +169,6 @@ pub trait StrictDecode: Sized {
         } else {
             Ok(obj)
         }
-    }
-}
-
-/// Convenience method for strict encoding of data structures implementing
-/// [`StrictEncode`] into a byte vector.
-pub fn strict_serialize<T>(data: &T) -> Result<Vec<u8>, Error>
-where
-    T: StrictEncode,
-{
-    let mut encoder = io::Cursor::new(vec![]);
-    data.strict_encode(&mut encoder)?;
-    Ok(encoder.into_inner())
-}
-
-/// Convenience method for strict decoding of data structures implementing
-/// [`StrictDecode`] from any byt data source.
-pub fn strict_deserialize<T>(data: impl AsRef<[u8]>) -> Result<T, Error>
-where
-    T: StrictDecode,
-{
-    let mut decoder = io::Cursor::new(data.as_ref());
-    let rv = T::strict_decode(&mut decoder)?;
-    let consumed = decoder.position() as usize;
-
-    // Fail if data are not consumed entirely.
-    if consumed == data.as_ref().len() {
-        Ok(rv)
-    } else {
-        Err(Error::DataNotEntirelyConsumed)
     }
 }
 

@@ -23,7 +23,6 @@ mod common;
 use std::collections::BTreeMap;
 
 use common::{compile_test, Error, Result};
-use strict_encoding::{strict_deserialize, StrictDecode};
 use strict_encoding_test::test_encoding_roundtrip;
 
 pub mod internet2 {
@@ -271,7 +270,7 @@ fn tlv_ordering() -> Result {
         0x01, 0x00, // length
         0xA2, // value
     ];
-    let _: Tlv = strict_deserialize(&data).unwrap();
+    let _ = Tlv::strict_deserialize(&data).unwrap();
 
     test_encoding_roundtrip(&Tlv::default(), &[])?;
     test_encoding_roundtrip(
@@ -318,8 +317,8 @@ fn pseudo_tlv() -> Result {
     ];
 
     // Checking that the data are entirely consumed
-    let _: Tlv = strict_deserialize(&data1).unwrap();
-    let _: Tlv = strict_deserialize(&data2).unwrap();
+    let _ = Tlv::strict_deserialize(&data1).unwrap();
+    let _ = Tlv::strict_deserialize(&data2).unwrap();
 
     test_encoding_roundtrip(&Tlv::default(), &data1)?;
     test_encoding_roundtrip(

@@ -480,19 +480,6 @@ where
         #[doc = "Byte string which failed to decode"] Vec<u8>,
     ),
 
-    /// Failure of the strict encode implementation: encoder reports incorrect
-    /// length of the serialized data
-    #[display(
-        "Encoder reported incorrect length of the serialized data: \
-         `{returned}` instead of `{actual}`"
-    )]
-    EncoderReturnedWrongLength {
-        /// Actual length of the serialized data
-        actual: usize,
-        /// Incorrect length returned by the encoder
-        returned: usize,
-    },
-
     /// Test case failure representing mismatch between object produced
     /// by decoding from the originally encoded object
     #[display(
@@ -567,18 +554,11 @@ where
     T: StrictEncode + StrictDecode + PartialEq + Clone + Debug,
 {
     let mut encoded_object: Vec<u8> = vec![];
-    let written = object
+    object
         .strict_encode(&mut encoded_object)
         .map_err(DataEncodingTestFailure::EncoderFailure)?;
-    let len = encoded_object.len();
-    if written != len {
-        return Err(DataEncodingTestFailure::EncoderReturnedWrongLength {
-            actual: len,
-            returned: written,
-        });
-    }
     let decoded_object =
-        T::strict_decode(&encoded_object[..]).map_err(|e| {
+        T::strict_deserialize(&mut encoded_object).map_err(|e| {
             DataEncodingTestFailure::DecoderFailure(e, encoded_object.clone())
         })?;
     if &decoded_object != object {
@@ -635,11 +615,11 @@ where
     T: StrictEncode + StrictDecode + PartialEq + Clone + Debug,
 {
     let test_vec = test_vec.as_ref();
-    let decoded_object = T::strict_decode(test_vec).map_err(|e| {
+    let decoded_object = T::strict_deserialize(test_vec).map_err(|e| {
         DataEncodingTestFailure::DecoderFailure(e, test_vec.to_vec())
     })?;
     let encoded_object = test_object_encoding_roundtrip(&decoded_object)?;
-    if test_vec != encoded_object {
+    if test_vec != &encoded_object {
         return Err(
             DataEncodingTestFailure::TranscodedVecDiffersFromOriginal {
                 original: test_vec.to_vec(),

@@ -131,19 +131,18 @@ fn encode_struct_impl(
             false,
             tlv_encoding,
         )?,
-        Fields::Unit => quote! { Ok(0) },
+        Fields::Unit => quote! { Ok(()) },
     };
 
     let import = encoding.use_crate;
 
     Ok(quote! {
         impl #impl_generics #import::#trait_name for #ident_name #ty_generics #where_clause {
-            fn #encode_name<E: ::std::io::Write>(&self, mut e: E) -> ::core::result::Result<usize, #import::Error> {
+            fn #encode_name(&self, e: &mut impl ::std::io::Write) -> ::core::result::Result<(), #import::Error> {
                 use #import::#trait_name;
-                let mut len = 0;
                 let data = self;
                 #inner_impl
-                Ok(len)
+                Ok(())
             }
         }
     })
@@ -258,7 +257,7 @@ fn encode_enum_impl(
         inner_impl.append_all(quote_spanned! { variant.span() =>
             #[allow(clippy::unnecessary_cast)]
             Self::#ident #bra_captures_ket => {
-                len += (#value as #repr).#encode_name(&mut e)?;
+                (#value as #repr).#encode_name(&mut e)?;
                 #captures
                 #field_impl
             }
@@ -270,13 +269,12 @@ fn encode_enum_impl(
     Ok(quote! {
         impl #impl_generics #import::#trait_name for #ident_name #ty_generics #where_clause {
             #[inline]
-            fn #encode_name<E: ::std::io::Write>(&self, mut e: E) -> ::core::result::Result<usize, #import::Error> {
+            fn #encode_name(&self, e: &mut impl ::std::io::Write) -> ::core::result::Result<(), #import::Error> {
                 use #import::#trait_name;
-                let mut len = 0;
                 match self {
                     #inner_impl
                 }
-                Ok(len)
+                Ok(())
             }
         }
     })
@@ -358,7 +356,7 @@ fn encode_fields_impl<'a>(
 
     for name in strict_fields {
         stream.append_all(quote_spanned! { Span::call_site() =>
-            len += data.#name.#encode_name(&mut e)?;
+            data.#name.#encode_name(&mut e)?;
         })
     }
 
@@ -390,7 +388,7 @@ fn encode_fields_impl<'a>(
         }
 
         stream.append_all(quote_spanned! { Span::call_site() =>
-            len += tlvs.#encode_name(&mut e)?;
+            tlvs.#encode_name(&mut e)?;
         })
     }
 
