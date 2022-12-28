@@ -29,6 +29,16 @@ use crate::{FieldName, LibName, TypeName};
 #[display("unexpected variant {1} for enum or union {0}")]
 pub struct VariantError<V: Debug + Display>(TypeName, V);
 
+pub trait StrictDumb: Sized {
+    fn strict_dumb() -> Self;
+}
+
+impl<T> StrictDumb for T
+where T: StrictType + Default
+{
+    fn strict_dumb() -> T { T::default() }
+}
+
 pub trait StrictType: Sized {
     const STRICT_LIB_NAME: &'static str;
     fn strict_name() -> Option<String> {
@@ -40,7 +50,7 @@ pub trait StrictType: Sized {
         let mut ident = get_ident(base).to_owned();
         for arg in generics.split(',') {
             ident.push('_');
-            ident.extend(get_ident(arg));
+            ident.extend(get_ident(arg).chars());
         }
         Some(ident)
     }
@@ -50,17 +60,24 @@ impl<T: StrictType> StrictType for &T {
     const STRICT_LIB_NAME: &'static str = T::STRICT_LIB_NAME;
 }
 
-pub trait StrictProduct: StrictType {}
+pub trait StrictProduct: StrictType + StrictDumb {}
 
 pub trait StrictTuple: StrictProduct {
     const ALL_FIELDS: &'static [u8];
     fn strict_check_fields() {
-        let set = BTreeSet::from(Self::ALL_FIELDS);
+        let name = Self::strict_name().unwrap_or_else(|| s!("<unnamed>"));
+        assert!(
+            !Self::ALL_FIELDS.is_empty(),
+            "tuple type {} does not contain a single field defined",
+            name
+        );
+        let mut set = BTreeSet::<u8>::new();
+        set.extend(Self::ALL_FIELDS);
         assert_eq!(
             set.len(),
             Self::ALL_FIELDS.len(),
             "tuple type {} contains repeated field ids",
-            Self::strict_name()
+            name
         );
     }
 
@@ -79,18 +96,24 @@ pub trait StrictStruct: StrictProduct {
     const ALL_FIELDS: &'static [(u8, &'static str)];
 
     fn strict_check_fields() {
-        let (ords, names): (BTreeSet<_>, BTreeSet<_>) = Self::ALL_FIELDS.iter().unzip();
+        let name = Self::strict_name().unwrap_or_else(|| s!("<unnamed>"));
+        assert!(
+            !Self::ALL_FIELDS.is_empty(),
+            "struct type {} does not contain a single field defined",
+            name
+        );
+        let (ords, names): (BTreeSet<_>, BTreeSet<_>) = Self::ALL_FIELDS.iter().copied().unzip();
         assert_eq!(
             ords.len(),
             Self::ALL_FIELDS.len(),
             "struct type {} contains repeated field ids",
-            Self::strict_name()
+            name
         );
         assert_eq!(
             names.len(),
             Self::ALL_FIELDS.len(),
             "struct type {} contains repeated field names",
-            Self::strict_name()
+            name
         );
     }
 
@@ -109,25 +132,31 @@ pub trait StrictSum: StrictType {
     const ALL_VARIANTS: &'static [(u8, &'static str)];
 
     fn strict_check_variants() {
-        let (ords, names): (BTreeSet<_>, BTreeSet<_>) = Self::ALL_VARIANTS.iter().unzip();
+        let name = Self::strict_name().unwrap_or_else(|| s!("<unnamed>"));
+        assert!(
+            !Self::ALL_VARIANTS.is_empty(),
+            "type {} does not contain a single variant defined",
+            name
+        );
+        let (ords, names): (BTreeSet<_>, BTreeSet<_>) = Self::ALL_VARIANTS.iter().copied().unzip();
         assert_eq!(
             ords.len(),
-            Self::ALL_FIELDS.len(),
+            Self::ALL_VARIANTS.len(),
             "type {} contains repeated variant ids",
-            Self::strict_name()
+            name
         );
         assert_eq!(
             names.len(),
-            Self::ALL_FIELDS.len(),
+            Self::ALL_VARIANTS.len(),
             "type {} contains repeated variant names",
-            Self::strict_name()
+            name
         );
     }
 
     fn variant_ord(&self) -> u8 {
         let variant = self.variant_name();
         for (ord, name) in Self::ALL_VARIANTS {
-            if name == variant {
+            if *name == variant {
                 return *ord;
             }
         }
@@ -140,7 +169,7 @@ pub trait StrictSum: StrictType {
     fn variant_name(&self) -> &'static str;
 }
 
-pub trait StrictUnion: StrictSum {
+pub trait StrictUnion: StrictSum + StrictDumb {
     fn strict_type_info() -> TypeInfo<Self> {
         Self::strict_check_variants();
         TypeInfo {
@@ -165,7 +194,8 @@ where
             lib: libname!(Self::STRICT_LIB_NAME),
             name: Self::strict_name().map(|name| tn!(name)),
             cls: TypeClass::Enum(Self::ALL_VARIANTS),
-            dumb: Self::strict_dumb(),
+            dumb: Self::try_from(Self::ALL_VARIANTS[0].0)
+                .expect("first variant contains invalid value"),
         }
     }
 }

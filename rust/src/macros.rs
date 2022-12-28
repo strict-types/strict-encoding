@@ -38,12 +38,12 @@ macro_rules! tn {
         $crate::TypeName::from($name).into()
     };
     ($name:ident) => {
-        $crate::TypeName::from($name).into()
-    };
-    ($name:literal, $($arg:expr),+) => {
-        $crate::TypeName::try_from(format!($name, $($arg),+))
+        $crate::TypeName::try_from($name)
             .expect("invalid type name from formatter")
             .into()
+    };
+    ($name:literal, $($arg:expr),+) => {
+        tn!(format!($name, $($arg),+))
     };
 }
 

@@ -26,7 +26,7 @@ use amplify::ascii::{AsAsciiStrError, AsciiChar, AsciiString, FromAsciiError};
 use amplify::confinement::Confined;
 use amplify::{confinement, Wrapper};
 
-use crate::{strict_newtype, StrictEncode, TypedWrite, STEN_LIB};
+use crate::{strict_newtype, StrictDumb, StrictEncode, TypedWrite, STEN_LIB};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
@@ -108,6 +108,9 @@ impl TryFrom<AsciiString> for Ident {
 }
 
 strict_newtype!(Ident, STEN_LIB);
+impl StrictDumb for Ident {
+    fn strict_dumb() -> Self { Ident::from("Dumb") }
+}
 impl StrictEncode for Ident {
     unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_type(libname!(STEN_LIB), tn!("Ident"), Wrapper::as_inner(self))
@@ -134,6 +137,10 @@ impl TryFrom<String> for TypeName {
     fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
 }
 
+strict_newtype!(TypeName, STEN_LIB);
+impl StrictDumb for TypeName {
+    fn strict_dumb() -> Self { tn!("Dumb") }
+}
 impl StrictEncode for TypeName {
     unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_type(libname!(STEN_LIB), tn!("TypeName"), Wrapper::as_inner(self))
@@ -160,6 +167,10 @@ impl TryFrom<String> for FieldName {
     fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
 }
 
+strict_newtype!(FieldName, STEN_LIB);
+impl StrictDumb for FieldName {
+    fn strict_dumb() -> Self { fname!("dumb") }
+}
 impl StrictEncode for FieldName {
     unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_type(libname!(STEN_LIB), tn!("FieldName"), Wrapper::as_inner(self))
@@ -186,6 +197,10 @@ impl TryFrom<String> for LibName {
     fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
 }
 
+strict_newtype!(LibName, STEN_LIB);
+impl StrictDumb for LibName {
+    fn strict_dumb() -> Self { libname!("Dumb") }
+}
 impl StrictEncode for LibName {
     unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_type(libname!(STEN_LIB), tn!("LibName"), Wrapper::as_inner(self))

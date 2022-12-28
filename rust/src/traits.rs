@@ -270,7 +270,7 @@ pub trait ReadUnion: Sized {
 
     fn read_unit<T: StrictDecode>(&mut self, name: FieldName) -> Result<T, DecodeError>;
     fn read_type(self, name: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
-        Ok(self.write_tuple(name)?.write_field(value)?.complete())
+        Ok(self.read_tuple(name)?.read_field(value)?.complete())
     }
     fn read_tuple(self, name: FieldName) -> io::Result<Self::TupleReader>;
     fn read_struct(self, name: FieldName) -> io::Result<Self::StructReader>;
