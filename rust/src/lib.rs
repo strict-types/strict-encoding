@@ -55,5 +55,6 @@ pub use types::*;
 pub use util::{Field, Sizing};
 pub use write::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWriter};
 
+pub const NO_LIB: &'static str = "No";
 const STD_LIB: &'static str = "StdLib";
-const STEN_LIB: &'static str = "StEn";
+pub const STEN_LIB: &'static str = "StEn";

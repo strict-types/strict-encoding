@@ -40,37 +40,24 @@ pub trait TypedWrite: Sized {
     type UnionDefiner: DefineUnion<Parent = Self>;
     type EnumDefiner: DefineEnum<Parent = Self>;
 
-    fn write_union(
+    fn write_union<T: StrictType>(
         self,
-        lib: LibName,
-        name: Option<TypeName>,
         inner: impl FnOnce(Self::UnionDefiner) -> io::Result<Self>,
     ) -> io::Result<Self>;
-    fn write_enum(
+    fn write_enum<T: StrictType>(
         self,
-        lib: LibName,
-        name: Option<TypeName>,
         inner: impl FnOnce(Self::EnumDefiner) -> io::Result<Self>,
     ) -> io::Result<Self>;
-    fn write_tuple(
+    fn write_tuple<T: StrictType>(
         self,
-        lib: LibName,
-        name: Option<TypeName>,
         inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
     ) -> io::Result<Self>;
-    fn write_struct(
+    fn write_struct<T: StrictType>(
         self,
-        lib: LibName,
-        name: Option<TypeName>,
         inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
     ) -> io::Result<Self>;
-    fn write_type(
-        self,
-        lib: LibName,
-        name: Option<TypeName>,
-        value: &impl StrictEncode,
-    ) -> io::Result<Self> {
-        self.write_tuple(lib, name, |writer| Ok(writer.write_field(value)?.complete()))
+    fn write_type<T: StrictType>(self, value: &impl StrictEncode) -> io::Result<Self> {
+        self.write_tuple::<T>(|writer| Ok(writer.write_field(value)?.complete()))
     }
 
     #[doc(hidden)]

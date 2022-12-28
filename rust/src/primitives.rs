@@ -30,8 +30,8 @@ use amplify::num::apfloat::{ieee, Float};
 use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
 
 use crate::{
-    DefineUnion, Sizing, StrictDumb, StrictEncode, StrictSum, StrictType, StrictUnion, TypedWrite,
-    WriteUnion, STD_LIB,
+    DefineUnion, Sizing, StrictDumb, StrictEncode, StrictSum, StrictType, StrictUnion, TypeName,
+    TypedWrite, WriteUnion, STD_LIB,
 };
 
 pub mod constants {
@@ -383,7 +383,7 @@ impl<T> StrictUnion for Option<T> where T: StrictUnion {}
 
 impl<T: StrictEncode> StrictEncode for Option<T> {
     unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_union(libname!(STD_LIB), None, |u| {
+        writer.write_union::<Self>(|u| {
             let u = u.define_unit(fname!("none")).define_type::<T>(fname!("some")).complete();
 
             Ok(match self {
@@ -397,6 +397,7 @@ impl<T: StrictEncode> StrictEncode for Option<T> {
 
 impl<T: StrictEncode + Copy, const LEN: usize> StrictType for [T; LEN] {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { None }
 }
 impl<T: StrictEncode + Copy + StrictDumb, const LEN: usize> StrictEncode for [T; LEN] {
     unsafe fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
@@ -411,6 +412,7 @@ impl<T: StrictEncode + Copy + StrictDumb, const LEN: usize> StrictEncode for [T;
 
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictType for Confined<String, MIN_LEN, MAX_LEN> {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { None }
 }
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<String, MIN_LEN, MAX_LEN>
@@ -428,6 +430,7 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictType
     for Confined<AsciiString, MIN_LEN, MAX_LEN>
 {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { None }
 }
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<AsciiString, MIN_LEN, MAX_LEN>
@@ -445,6 +448,7 @@ impl<T: StrictEncode, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
     for Confined<Vec<T>, MIN_LEN, MAX_LEN>
 {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { None }
 }
 impl<T: StrictEncode + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<Vec<T>, MIN_LEN, MAX_LEN>
@@ -461,6 +465,7 @@ impl<T: StrictEncode + Ord, const MIN_LEN: usize, const MAX_LEN: usize> StrictTy
     for Confined<BTreeSet<T>, MIN_LEN, MAX_LEN>
 {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { None }
 }
 impl<T: StrictEncode + Ord + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<BTreeSet<T>, MIN_LEN, MAX_LEN>
@@ -477,6 +482,7 @@ impl<K: StrictEncode + Ord + Hash, V: StrictEncode, const MIN_LEN: usize, const 
     StrictType for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
 {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { None }
 }
 impl<
         K: StrictEncode + Ord + Hash + StrictDumb,
