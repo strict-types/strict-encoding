@@ -19,19 +19,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[macro_use]
-mod macros;
-mod types;
-mod traits;
-mod error;
-mod read;
-mod write;
-mod base;
-#[cfg(test)]
-pub(crate) mod test;
-
-pub use error::{DecodeError, DeserializeError, SerializeError};
-pub use read::StrictReader;
-pub use traits::*;
-pub use types::*;
-pub use write::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWriter};
+#[macro_export]
+macro_rules! strict_newtype {
+    ($ty:ident, $lib:expr) => {
+        impl $crate::StrictType for $ty {
+            const STRICT_LIB_NAME: &'static str = $lib;
+        }
+        impl $crate::StrictProduct for $ty {}
+        impl $crate::StrictTuple for $ty {
+            const ALL_FIELDS: &'static [u8] = &[0];
+        }
+    };
+}
