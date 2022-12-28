@@ -26,10 +26,10 @@ use amplify::confinement::{Collection, Confined};
 use amplify::num::u24;
 
 use super::DecodeError;
-use crate::encoding::{DeserializeError, SerializeError, StrictReader, StrictWriter};
-use crate::primitive::Primitive;
-use crate::util::Sizing;
-use crate::{FieldName, LibName, StrictType, TypeName};
+use crate::{
+    DeserializeError, FieldName, LibName, SerializeError, Sizing, StrictReader, StrictType,
+    StrictWriter, TypeName,
+};
 
 pub trait TypedParent: Sized {}
 
@@ -74,7 +74,7 @@ pub trait TypedWrite: Sized {
     }
 
     #[doc(hidden)]
-    unsafe fn register_primitive(self, prim: Primitive) -> Self { self }
+    unsafe fn register_primitive(self, prim: u8) -> Self { self }
     #[doc(hidden)]
     unsafe fn register_array(self, ty: &impl StrictEncode, len: u16) -> Self { self }
     #[doc(hidden)]

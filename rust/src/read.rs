@@ -30,7 +30,7 @@
 
 use std::io;
 
-use crate::encoding::TypedRead;
+use crate::TypedRead;
 
 // TODO: Move to amplify crate
 /// A simple way to count bytes read through [`io::Read`].

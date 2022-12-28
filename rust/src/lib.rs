@@ -19,19 +19,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![deny(
+    non_upper_case_globals,
+    non_camel_case_types,
+    non_snake_case,
+    unused_mut,
+    unused_imports,
+    //dead_code,
+    //missing_docs
+)]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
+#[macro_use]
+extern crate amplify;
+
 #[macro_use]
 mod macros;
 mod types;
 mod traits;
+mod ident;
 mod error;
 mod read;
 mod write;
-mod base;
+mod util;
 #[cfg(test)]
 pub(crate) mod test;
 
 pub use error::{DecodeError, DeserializeError, SerializeError};
+pub use ident::{FieldName, Ident, InvalidIdent, LibName, TypeName};
 pub use read::StrictReader;
 pub use traits::*;
 pub use types::*;
+pub use util::{Field, Sizing};
 pub use write::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWriter};
+
+const STEN_LIB: &'static str = "StEn";

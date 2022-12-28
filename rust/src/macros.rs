@@ -31,3 +31,38 @@ macro_rules! strict_newtype {
         }
     };
 }
+
+#[macro_export]
+macro_rules! tn {
+    ($name:literal) => {
+        $crate::TypeName::from($name).into()
+    };
+    ($name:ident) => {
+        $crate::TypeName::from($name).into()
+    };
+    ($name:literal, $($arg:expr),+) => {
+        $crate::TypeName::try_from(format!($name, $($arg),+))
+            .expect("invalid type name from formatter")
+            .into()
+    };
+}
+
+#[macro_export]
+macro_rules! fname {
+    ($name:literal) => {
+        $crate::FieldName::from($name).into()
+    };
+    ($name:ident) => {
+        $crate::FieldName::from($name).into()
+    };
+}
+
+#[macro_export]
+macro_rules! libname {
+    ($name:literal) => {
+        $crate::LibName::from($name)
+    };
+    ($name:expr) => {
+        $crate::LibName::from($name)
+    };
+}

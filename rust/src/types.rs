@@ -21,13 +21,13 @@
 
 use std::any;
 use std::collections::BTreeSet;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 
 use crate::{FieldName, LibName, TypeName};
 
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error)]
 #[display("unexpected variant {1} for enum or union {0}")]
-pub struct VariantError<V: Display>(TypeName, V);
+pub struct VariantError<V: Debug + Display>(TypeName, V);
 
 pub trait StrictType: Sized {
     const STRICT_LIB_NAME: &'static str;

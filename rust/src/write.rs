@@ -26,12 +26,10 @@ use std::marker::PhantomData;
 
 use amplify::WriteCounter;
 
-use crate::ast::Field;
-use crate::encoding::{
-    DefineEnum, DefineStruct, DefineTuple, DefineUnion, StrictEncode, TypedParent, TypedWrite,
-    WriteEnum, WriteStruct, WriteTuple, WriteUnion,
+use crate::{
+    DefineEnum, DefineStruct, DefineTuple, DefineUnion, Field, FieldName, LibName, StrictEncode,
+    TypeName, TypedParent, TypedWrite, WriteEnum, WriteStruct, WriteTuple, WriteUnion,
 };
-use crate::{FieldName, LibName, TypeName};
 
 // TODO: Move to amplify crate
 #[derive(Debug)]
