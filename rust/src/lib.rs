@@ -42,15 +42,18 @@ mod error;
 mod read;
 mod write;
 mod util;
+mod primitives;
 #[cfg(test)]
 pub(crate) mod test;
 
 pub use error::{DecodeError, DeserializeError, SerializeError};
 pub use ident::{FieldName, Ident, InvalidIdent, LibName, TypeName};
+pub use primitives::{constants, NumCls, NumInfo, NumSize, Primitive};
 pub use read::StrictReader;
 pub use traits::*;
 pub use types::*;
 pub use util::{Field, Sizing};
 pub use write::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWriter};
 
+const STD_LIB: &'static str = "StdLib";
 const STEN_LIB: &'static str = "StEn";

@@ -25,7 +25,7 @@ use std::io::BufRead;
 
 use amplify::confinement::Confined;
 
-use crate::encoding::{StrictDecode, StrictEncode, StrictReader, StrictWriter};
+use crate::primitives::{StrictDecode, StrictEncode, StrictReader, StrictWriter};
 
 pub fn encode<T: StrictEncode + Debug + Eq>(val: &T) -> Vec<u8> {
     const MAX: usize = u16::MAX as usize;
