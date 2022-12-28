@@ -379,8 +379,7 @@ where T: StrictType
         }
     }
 }
-impl<T> StrictUnion for Option<T> where T: StrictUnion {}
-
+impl<T> StrictUnion for Option<T> where T: StrictType {}
 impl<T: StrictEncode> StrictEncode for Option<T> {
     unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_union::<Self>(|u| {

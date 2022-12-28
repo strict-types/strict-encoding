@@ -28,8 +28,8 @@ use amplify::WriteCounter;
 
 use crate::{
     DefineEnum, DefineStruct, DefineTuple, DefineUnion, Field, FieldName, LibName, StrictEncode,
-    StrictType, TypeName, TypedParent, TypedWrite, WriteEnum, WriteStruct, WriteTuple, WriteUnion,
-    NO_LIB,
+    StrictEnum, StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictUnion, TypeName,
+    TypedParent, TypedWrite, WriteEnum, WriteStruct, WriteTuple, WriteUnion, NO_LIB,
 };
 
 // TODO: Move to amplify crate
@@ -103,7 +103,7 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
     type UnionDefiner = UnionWriter<W>;
     type EnumDefiner = UnionWriter<W>;
 
-    fn write_union<T: StrictType>(
+    fn write_union<T: StrictUnion>(
         self,
         inner: impl FnOnce(Self::UnionDefiner) -> io::Result<Self>,
     ) -> io::Result<Self> {
@@ -111,15 +111,18 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
         inner(writer)
     }
 
-    fn write_enum<T: StrictType>(
+    fn write_enum<T: StrictEnum>(
         self,
         inner: impl FnOnce(Self::EnumDefiner) -> io::Result<Self>,
-    ) -> io::Result<Self> {
+    ) -> io::Result<Self>
+    where
+        u8: From<T>,
+    {
         let writer = UnionWriter::with::<T>(self);
         inner(writer)
     }
 
-    fn write_tuple<T: StrictType>(
+    fn write_tuple<T: StrictTuple>(
         self,
         inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
     ) -> io::Result<Self> {
@@ -127,7 +130,7 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
         inner(writer)
     }
 
-    fn write_struct<T: StrictType>(
+    fn write_struct<T: StrictStruct>(
         self,
         inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
     ) -> io::Result<Self> {
@@ -153,8 +156,7 @@ pub struct StructWriter<W: io::Write, P: StrictParent<W>> {
 }
 
 impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
-    pub fn with<T: StrictType>(parent: P) -> Self {
-        // TODO: Check that the type is struct
+    pub fn with<T: StrictProduct>(parent: P) -> Self {
         StructWriter {
             lib: libname!(T::STRICT_LIB_NAME),
             name: T::strict_name(),
@@ -167,7 +169,6 @@ impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
     }
 
     pub fn unnamed(parent: P) -> Self {
-        // TODO: Check that the type is struct
         StructWriter {
             lib: libname!(NO_LIB),
             name: None,
@@ -314,9 +315,7 @@ pub struct UnionWriter<W: io::Write> {
 }
 
 impl<W: io::Write> UnionWriter<W> {
-    pub fn with<T: StrictType>(parent: StrictWriter<W>) -> Self {
-        // TODO: Save lib name
-        // TODO: Check that the type is indeed union
+    pub fn with<T: StrictSum>(parent: StrictWriter<W>) -> Self {
         UnionWriter {
             lib: libname!(T::STRICT_LIB_NAME),
             name: T::strict_name(),
@@ -327,7 +326,7 @@ impl<W: io::Write> UnionWriter<W> {
         }
     }
 
-    pub fn inline<T: StrictType>(uw: UnionWriter<W>) -> Self {
+    pub fn inline<T: StrictSum>(uw: UnionWriter<W>) -> Self {
         UnionWriter {
             lib: libname!(T::STRICT_LIB_NAME),
             name: T::strict_name(),

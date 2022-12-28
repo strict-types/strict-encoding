@@ -27,8 +27,8 @@ use amplify::num::u24;
 
 use super::DecodeError;
 use crate::{
-    DeserializeError, FieldName, LibName, Primitive, SerializeError, Sizing, StrictReader,
-    StrictType, StrictWriter, TypeName,
+    DeserializeError, FieldName, LibName, Primitive, SerializeError, Sizing, StrictEnum,
+    StrictReader, StrictStruct, StrictTuple, StrictType, StrictUnion, StrictWriter, TypeName,
 };
 
 pub trait TypedParent: Sized {}
@@ -40,23 +40,25 @@ pub trait TypedWrite: Sized {
     type UnionDefiner: DefineUnion<Parent = Self>;
     type EnumDefiner: DefineEnum<Parent = Self>;
 
-    fn write_union<T: StrictType>(
+    fn write_union<T: StrictUnion>(
         self,
         inner: impl FnOnce(Self::UnionDefiner) -> io::Result<Self>,
     ) -> io::Result<Self>;
-    fn write_enum<T: StrictType>(
+    fn write_enum<T: StrictEnum>(
         self,
         inner: impl FnOnce(Self::EnumDefiner) -> io::Result<Self>,
-    ) -> io::Result<Self>;
-    fn write_tuple<T: StrictType>(
+    ) -> io::Result<Self>
+    where
+        u8: From<T>;
+    fn write_tuple<T: StrictTuple>(
         self,
         inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
     ) -> io::Result<Self>;
-    fn write_struct<T: StrictType>(
+    fn write_struct<T: StrictStruct>(
         self,
         inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
     ) -> io::Result<Self>;
-    fn write_type<T: StrictType>(self, value: &impl StrictEncode) -> io::Result<Self> {
+    fn write_type<T: StrictTuple>(self, value: &impl StrictEncode) -> io::Result<Self> {
         self.write_tuple::<T>(|writer| Ok(writer.write_field(value)?.complete()))
     }
 
