@@ -63,20 +63,12 @@ impl<T: StrictType> StrictType for &T {
 pub trait StrictProduct: StrictType + StrictDumb {}
 
 pub trait StrictTuple: StrictProduct {
-    const ALL_FIELDS: &'static [u8];
+    const FIELD_COUNT: u8;
     fn strict_check_fields() {
         let name = Self::strict_name().unwrap_or_else(|| tn!("unnamed"));
-        assert!(
-            !Self::ALL_FIELDS.is_empty(),
+        assert_ne!(
+            Self::FIELD_COUNT, 0,
             "tuple type {} does not contain a single field defined",
-            name
-        );
-        let mut set = BTreeSet::<u8>::new();
-        set.extend(Self::ALL_FIELDS);
-        assert_eq!(
-            set.len(),
-            Self::ALL_FIELDS.len(),
-            "tuple type {} contains repeated field ids",
             name
         );
     }
@@ -86,14 +78,14 @@ pub trait StrictTuple: StrictProduct {
         TypeInfo {
             lib: libname!(Self::STRICT_LIB_NAME),
             name: Self::strict_name().map(|name| tn!(name)),
-            cls: TypeClass::Tuple(Self::ALL_FIELDS),
+            cls: TypeClass::Tuple(Self::FIELD_COUNT),
             dumb: Self::strict_dumb(),
         }
     }
 }
 
 pub trait StrictStruct: StrictProduct {
-    const ALL_FIELDS: &'static [(u8, &'static str)];
+    const ALL_FIELDS: &'static [&'static str];
 
     fn strict_check_fields() {
         let name = Self::strict_name().unwrap_or_else(|| tn!("unnamed"));
@@ -102,13 +94,7 @@ pub trait StrictStruct: StrictProduct {
             "struct type {} does not contain a single field defined",
             name
         );
-        let (ords, names): (BTreeSet<_>, BTreeSet<_>) = Self::ALL_FIELDS.iter().copied().unzip();
-        assert_eq!(
-            ords.len(),
-            Self::ALL_FIELDS.len(),
-            "struct type {} contains repeated field ids",
-            name
-        );
+        let names: BTreeSet<_> = Self::ALL_FIELDS.iter().copied().collect();
         assert_eq!(
             names.len(),
             Self::ALL_FIELDS.len(),
@@ -204,8 +190,8 @@ pub enum TypeClass {
     Embedded,
     Enum(&'static [(u8, &'static str)]),
     Union(&'static [(u8, &'static str)]),
-    Tuple(&'static [u8]),
-    Struct(&'static [(u8, &'static str)]),
+    Tuple(u8),
+    Struct(&'static [&'static str]),
 }
 
 pub struct TypeInfo<T: StrictType> {

@@ -27,7 +27,7 @@ macro_rules! strict_newtype {
         }
         impl $crate::StrictProduct for $ty {}
         impl $crate::StrictTuple for $ty {
-            const ALL_FIELDS: &'static [u8] = &[0];
+            const FIELD_COUNT: u8 = 0;
         }
     };
 }
@@ -52,7 +52,7 @@ macro_rules! fname {
     ($name:literal) => {
         $crate::FieldName::from($name).into()
     };
-    ($name:ident) => {
+    ($name:expr) => {
         $crate::FieldName::from($name).into()
     };
 }

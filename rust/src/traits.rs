@@ -170,14 +170,12 @@ pub trait TypedRead: Sized {
 pub trait DefineTuple: Sized {
     type Parent: TypedParent;
     fn define_field<T: StrictEncode>(self) -> Self;
-    fn define_field_ord<T: StrictEncode>(self, ord: u8) -> Self;
     fn complete(self) -> Self::Parent;
 }
 
 pub trait WriteTuple: Sized {
     type Parent: TypedParent;
     fn write_field(self, value: &impl StrictEncode) -> io::Result<Self>;
-    fn write_field_ord(self, ord: u8, value: &impl StrictEncode) -> io::Result<Self>;
     fn complete(self) -> Self::Parent;
 }
 
@@ -188,19 +186,12 @@ pub trait ReadTuple {
 pub trait DefineStruct: Sized {
     type Parent: TypedParent;
     fn define_field<T: StrictEncode>(self, name: FieldName) -> Self;
-    fn define_field_ord<T: StrictEncode>(self, name: FieldName, ord: u8) -> Self;
     fn complete(self) -> Self::Parent;
 }
 
 pub trait WriteStruct: Sized {
     type Parent: TypedParent;
     fn write_field(self, name: FieldName, value: &impl StrictEncode) -> io::Result<Self>;
-    fn write_field_ord(
-        self,
-        name: FieldName,
-        ord: u8,
-        value: &impl StrictEncode,
-    ) -> io::Result<Self>;
     fn complete(self) -> Self::Parent;
 }
 

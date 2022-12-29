@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap};
 use std::io;
 use std::io::Sink;
 use std::marker::PhantomData;
@@ -28,7 +28,7 @@ use amplify::WriteCounter;
 
 use crate::{
     DefineEnum, DefineStruct, DefineTuple, DefineUnion, Field, FieldName, LibName, StrictEncode,
-    StrictEnum, StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictUnion, TypeName,
+    StrictEnum, StrictStruct, StrictSum, StrictTuple, StrictUnion, TypeName,
     TypedParent, TypedWrite, WriteEnum, WriteStruct, WriteTuple, WriteUnion, NO_LIB,
 };
 
@@ -126,7 +126,7 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
         self,
         inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
     ) -> io::Result<Self> {
-        let writer = StructWriter::with::<T>(self);
+        let writer = StructWriter::tuple::<T>(self);
         inner(writer)
     }
 
@@ -134,7 +134,7 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
         self,
         inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
     ) -> io::Result<Self> {
-        let writer = StructWriter::with::<T>(self);
+        let writer = StructWriter::structure::<T>(self);
         inner(writer)
     }
 
@@ -148,154 +148,126 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
 pub struct StructWriter<W: io::Write, P: StrictParent<W>> {
     lib: LibName,
     name: Option<TypeName>,
-    fields: BTreeSet<Field>,
-    ords: BTreeSet<u8>,
+    named_fields: Vec<FieldName>,
+    tuple_fields: Option<u8>,
     parent: P,
-    defined: bool,
     _phantom: PhantomData<W>,
 }
 
 impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
-    pub fn with<T: StrictProduct>(parent: P) -> Self {
+    pub fn structure<T: StrictStruct>(parent: P) -> Self {
         StructWriter {
             lib: libname!(T::STRICT_LIB_NAME),
             name: T::strict_name(),
-            fields: empty!(),
-            ords: empty!(),
+            named_fields: T::ALL_FIELDS.iter().map(|name| fname!(*name)).collect(),
+            tuple_fields: None,
             parent,
-            defined: false,
             _phantom: default!(),
         }
     }
 
-    pub fn unnamed(parent: P) -> Self {
+    pub fn tuple<T: StrictTuple>(parent: P) -> Self {
+        StructWriter {
+            lib: libname!(T::STRICT_LIB_NAME),
+            name: T::strict_name(),
+            named_fields: empty!(),
+            tuple_fields: Some(T::FIELD_COUNT),
+            parent,
+            _phantom: default!(),
+        }
+    }
+
+    pub fn unnamed(parent: P, tuple: bool) -> Self {
         StructWriter {
             lib: libname!(NO_LIB),
             name: None,
-            fields: empty!(),
-            ords: empty!(),
+            named_fields: empty!(),
+            tuple_fields: if tuple { Some(0) } else { None },
             parent,
-            defined: false,
             _phantom: default!(),
         }
     }
 
-    pub fn is_defined(&self) -> bool { self.defined }
-
-    pub fn field_ord(&self, field_name: &FieldName) -> Option<u8> {
-        self.fields.iter().find(|f| f.name.as_ref() == Some(field_name)).map(|f| f.ord)
+    pub fn named_fields(&self) -> &[FieldName] {
+        debug_assert!(self.tuple_fields.is_none(), "tuples does not contain named fields");
+        self.named_fields.as_slice()
     }
 
-    pub fn fields(&self) -> &BTreeSet<Field> { &self.fields }
+    pub fn fields_count(&self) -> u8 {
+        self.tuple_fields.unwrap_or_else(|| self.named_fields.len() as u8)
+    }
 
     pub fn name(&self) -> &str { self.name.as_ref().map(|n| n.as_str()).unwrap_or("<unnamed>") }
 
-    pub fn next_ord(&self) -> u8 { self.fields.iter().max().map(|f| f.ord + 1).unwrap_or_default() }
-
     pub fn into_parent(self) -> P { self.parent }
 
-    fn _define_field(mut self, field: Field) -> Self {
-        assert!(
-            self.fields.insert(field.clone()),
-            "field {:#} is already defined as a part of {}",
-            &field,
-            self.name()
-        );
-        self.ords.insert(field.ord);
-        self
-    }
-
-    fn _write_field(mut self, field: Field, value: &impl StrictEncode) -> io::Result<Self> {
-        if self.defined {
-            assert!(
-                !self.fields.contains(&field),
-                "field {:#} was not defined in {}",
-                &field,
-                self.name()
-            )
-        } else {
-            self = self._define_field(field.clone());
-        }
-        assert!(
-            self.ords.remove(&field.ord),
-            "field {:#} was already written before in {} struct",
-            &field,
-            self.name()
-        );
+    fn write_value(mut self, value: &impl StrictEncode) -> io::Result<Self> {
         let (mut writer, remnant) = self.parent.into_write_split();
-        writer = unsafe { field.ord.strict_encode(writer)? };
         writer = unsafe { value.strict_encode(writer)? };
         self.parent = P::from_write_split(writer, remnant);
         Ok(self)
-    }
-
-    fn _complete_definition(mut self) -> P {
-        assert!(!self.fields.is_empty(), "struct {} does not have fields defined", self.name());
-        self.defined = true;
-        self.parent
-    }
-
-    fn _complete_write(self) -> P {
-        assert!(self.ords.is_empty(), "not all fields were written for {}", self.name());
-        self.parent
     }
 }
 
 impl<W: io::Write, P: StrictParent<W>> DefineStruct for StructWriter<W, P> {
     type Parent = P;
-    fn define_field<T: StrictEncode>(self, name: FieldName) -> Self {
-        let ord = self.next_ord();
-        DefineStruct::define_field_ord::<T>(self, name, ord)
+    fn define_field<T: StrictEncode>(mut self, field: FieldName) -> Self {
+        assert!(
+            self.named_fields.contains(&field),
+            "field {:#} is already defined as a part of {}",
+            field,
+            self.name()
+        );
+        self.named_fields.push(field);
+        self
     }
-    fn define_field_ord<T: StrictEncode>(self, name: FieldName, ord: u8) -> Self {
-        let field = Field::named(name, ord);
-        self._define_field(field)
+    fn complete(self) -> P {
+        assert!(!self.named_fields.is_empty(), "struct {} does not have fields defined", self.name());
+        self.parent
     }
-    fn complete(self) -> P { self._complete_definition() }
 }
 
 impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
     type Parent = P;
-    fn write_field(self, name: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
-        let ord = self.next_ord();
-        WriteStruct::write_field_ord(self, name, ord, value)
+    fn write_field(mut self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
+        debug_assert!(self.tuple_fields.is_none(), "using struct method on tuple");
+        assert!(
+            !self.named_fields.contains(&field),
+            "field {:#} was not defined in {}",
+            field,
+            self.name()
+        );
+        self.write_value(value)
     }
-    fn write_field_ord(
-        self,
-        name: FieldName,
-        ord: u8,
-        value: &impl StrictEncode,
-    ) -> io::Result<Self> {
-        let field = Field::named(name, ord);
-        self._write_field(field, value)
+    fn complete(self) -> P {
+        assert!(self.named_fields.is_empty(), "not all fields were written for {}", self.name());
+        self.parent
     }
-    fn complete(self) -> P { self._complete_write() }
 }
 
 impl<W: io::Write, P: StrictParent<W>> DefineTuple for StructWriter<W, P> {
     type Parent = P;
-    fn define_field<T: StrictEncode>(self) -> Self {
-        let ord = self.next_ord();
-        DefineTuple::define_field_ord::<T>(self, ord)
+    fn define_field<T: StrictEncode>(mut self) -> Self {
+        self.tuple_fields = Some(self.tuple_fields.expect("calling tuple method on struct") + 1);
+        self
     }
-    fn define_field_ord<T: StrictEncode>(self, ord: u8) -> Self {
-        let field = Field::unnamed(ord);
-        self._define_field(field)
+    fn complete(self) -> P {
+        assert_ne!(self.tuple_fields.expect("tuple defined as struct"), 0, "tuple {} does not have fields defined", self.name());
+        debug_assert!(!self.named_fields.is_empty(), "tuple {} defined as struct", self.name());
+        self.parent
     }
-    fn complete(self) -> P { self._complete_definition() }
 }
 
 impl<W: io::Write, P: StrictParent<W>> WriteTuple for StructWriter<W, P> {
     type Parent = P;
-    fn write_field(self, value: &impl StrictEncode) -> io::Result<Self> {
-        let ord = self.next_ord();
-        WriteTuple::write_field_ord(self, ord, value)
+    fn write_field(mut self, value: &impl StrictEncode) -> io::Result<Self> {
+        self.tuple_fields = Some(self.tuple_fields.expect("using struct method on tuple") - 1);
+        self.write_value(value)
     }
-    fn write_field_ord(self, ord: u8, value: &impl StrictEncode) -> io::Result<Self> {
-        let field = Field::unnamed(ord);
-        self._write_field(field, value)
+    fn complete(self) -> P {
+        assert_eq!(self.tuple_fields, Some(0), "not all fields were written for {}", self.name());
+        self.parent
     }
-    fn complete(self) -> P { self._complete_write() }
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
@@ -410,12 +382,12 @@ impl<W: io::Write> DefineUnion for UnionWriter<W> {
     fn define_tuple(mut self, name: FieldName) -> Self::TupleDefiner {
         let field = Field::named(name, self.next_ord());
         self = self._define_field(field, FieldType::Tuple);
-        StructWriter::unnamed(self)
+        StructWriter::unnamed(self, true)
     }
     fn define_struct(mut self, name: FieldName) -> Self::StructDefiner {
         let field = Field::named(name, self.next_ord());
         self = self._define_field(field, FieldType::Struct);
-        StructWriter::unnamed(self)
+        StructWriter::unnamed(self, false)
     }
     fn complete(self) -> Self::UnionWriter { self._complete_definition() }
 }
@@ -430,11 +402,11 @@ impl<W: io::Write> WriteUnion for UnionWriter<W> {
     }
     fn write_tuple(mut self, name: FieldName) -> io::Result<Self::TupleWriter> {
         self = self._write_field(name, FieldType::Tuple)?;
-        Ok(StructWriter::unnamed(self))
+        Ok(StructWriter::unnamed(self, true))
     }
     fn write_struct(mut self, name: FieldName) -> io::Result<Self::StructWriter> {
         self = self._write_field(name, FieldType::Struct)?;
-        Ok(StructWriter::unnamed(self))
+        Ok(StructWriter::unnamed(self, false))
     }
     fn complete(self) -> Self::Parent { self._complete_write() }
 }
@@ -507,10 +479,9 @@ impl<W: io::Write, P: StrictParent<W>> SplitParent for StructWriter<W, P> {
         Self {
             lib: remnant.lib,
             name: remnant.name,
-            fields: remnant.fields,
+            named_fields: remnant.named_fields,
+            tuple_fields: remnant.tuple_fields,
             parent,
-            defined: remnant.defined,
-            ords: remnant.ords,
             _phantom: none!(),
         }
     }
@@ -518,10 +489,9 @@ impl<W: io::Write, P: StrictParent<W>> SplitParent for StructWriter<W, P> {
         let remnant = StructWriter::<Vec<u8>, ParentDumb> {
             lib: self.lib,
             name: self.name,
-            fields: self.fields,
+            named_fields: self.named_fields,
+            tuple_fields: self.tuple_fields,
             parent: none!(),
-            defined: self.defined,
-            ords: self.ords,
             _phantom: none!(),
         };
         (self.parent, remnant)
