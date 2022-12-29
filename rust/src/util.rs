@@ -70,56 +70,40 @@ impl Display for Sizing {
     }
 }
 
-#[derive(Clone, Eq, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct Field {
-    pub name: Option<FieldName>,
+pub struct Variant {
+    pub name: FieldName,
     pub ord: u8,
 }
 
-impl Field {
-    pub fn named(name: FieldName, value: u8) -> Field {
-        Field {
-            name: Some(name),
-            ord: value,
-        }
-    }
-    pub fn unnamed(value: u8) -> Field {
-        Field {
-            name: None,
+impl Variant {
+    pub fn named(name: FieldName, value: u8) -> Variant {
+        Variant {
+            name,
             ord: value,
         }
     }
 
-    pub fn none() -> Field {
-        Field {
-            name: Some(FieldName::from("None")),
+    pub fn none() -> Variant {
+        Variant {
+            name: fname!("none"),
             ord: 0,
         }
     }
-    pub fn some() -> Field {
-        Field {
-            name: Some(FieldName::from("Some")),
+    pub fn some() -> Variant {
+        Variant {
+            name: fname!("some"),
             ord: 1,
         }
     }
 }
 
-impl PartialEq for Field {
-    fn eq(&self, other: &Self) -> bool {
-        match (&self.name, &other.name) {
-            (None, None) => self.ord == other.ord,
-            (Some(name1), Some(name2)) => name1 == name2 || self.ord == other.ord,
-            _ => false,
-        }
-    }
-}
-
-impl PartialOrd for Field {
+impl PartialOrd for Variant {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
 }
 
-impl Ord for Field {
+impl Ord for Variant {
     fn cmp(&self, other: &Self) -> Ordering {
         if self == other {
             return Ordering::Equal;
@@ -128,15 +112,11 @@ impl Ord for Field {
     }
 }
 
-impl Display for Field {
+impl Display for Variant {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        if let Some(name) = &self.name {
-            write!(f, "{}", name)?;
-        }
+        write!(f, "{}", self.name)?;
         if f.alternate() {
-            if self.name.is_some() {
-                f.write_str(" = ")?;
-            }
+            f.write_str(" = ")?;
             Display::fmt(&self.ord, f)?;
         }
         Ok(())

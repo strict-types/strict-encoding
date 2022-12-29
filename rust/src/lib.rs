@@ -52,7 +52,7 @@ pub use primitives::{constants, NumCls, NumInfo, NumSize, Primitive};
 pub use read::StrictReader;
 pub use traits::*;
 pub use types::*;
-pub use util::{Field, Sizing};
+pub use util::{Variant, Sizing};
 pub use write::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWriter};
 
 pub const NO_LIB: &'static str = "No";

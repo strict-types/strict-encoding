@@ -65,7 +65,7 @@ pub trait StrictProduct: StrictType + StrictDumb {}
 pub trait StrictTuple: StrictProduct {
     const FIELD_COUNT: u8;
     fn strict_check_fields() {
-        let name = Self::strict_name().unwrap_or_else(|| tn!("unnamed"));
+        let name = Self::strict_name().unwrap_or_else(|| tn!("__unnamed"));
         assert_ne!(
             Self::FIELD_COUNT, 0,
             "tuple type {} does not contain a single field defined",
@@ -88,7 +88,7 @@ pub trait StrictStruct: StrictProduct {
     const ALL_FIELDS: &'static [&'static str];
 
     fn strict_check_fields() {
-        let name = Self::strict_name().unwrap_or_else(|| tn!("unnamed"));
+        let name = Self::strict_name().unwrap_or_else(|| tn!("__unnamed"));
         assert!(
             !Self::ALL_FIELDS.is_empty(),
             "struct type {} does not contain a single field defined",
@@ -118,7 +118,7 @@ pub trait StrictSum: StrictType {
     const ALL_VARIANTS: &'static [(u8, &'static str)];
 
     fn strict_check_variants() {
-        let name = Self::strict_name().unwrap_or_else(|| tn!("unnamed"));
+        let name = Self::strict_name().unwrap_or_else(|| tn!("__unnamed"));
         assert!(
             !Self::ALL_VARIANTS.is_empty(),
             "type {} does not contain a single variant defined",
