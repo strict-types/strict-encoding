@@ -39,8 +39,8 @@ mod types;
 mod traits;
 mod ident;
 mod error;
-mod read;
-mod write;
+mod reader;
+mod writer;
 mod util;
 mod primitives;
 #[cfg(test)]
@@ -49,11 +49,11 @@ pub(crate) mod test;
 pub use error::{DecodeError, DeserializeError, SerializeError};
 pub use ident::{FieldName, Ident, InvalidIdent, LibName, TypeName};
 pub use primitives::{constants, NumCls, NumInfo, NumSize, Primitive};
-pub use read::StrictReader;
+pub use reader::StrictReader;
 pub use traits::*;
 pub use types::*;
-pub use util::{Variant, Sizing};
-pub use write::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWriter};
+pub use util::{Sizing, Variant};
+pub use writer::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWriter};
 
 pub const NO_LIB: &'static str = "No";
 const STD_LIB: &'static str = "StdLib";
