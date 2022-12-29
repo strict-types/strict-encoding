@@ -58,7 +58,7 @@ pub trait TypedWrite: Sized {
         self,
         inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
     ) -> io::Result<Self>;
-    fn write_type<T: StrictTuple>(self, value: &impl StrictEncode) -> io::Result<Self> {
+    fn write_newtype<T: StrictTuple>(self, value: &impl StrictEncode) -> io::Result<Self> {
         self.write_tuple::<T>(|writer| Ok(writer.write_field(value)?.complete()))
     }
 
