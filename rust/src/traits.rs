@@ -24,11 +24,12 @@ use std::{fs, io};
 
 use amplify::confinement::{Collection, Confined};
 use amplify::num::u24;
+use amplify::Wrapper;
 
 use super::DecodeError;
 use crate::{
-    DeserializeError, FieldName, LibName, Primitive, SerializeError, Sizing, StrictEnum,
-    StrictReader, StrictStruct, StrictTuple, StrictType, StrictUnion, StrictWriter, TypeName,
+    DeserializeError, FieldName, Primitive, SerializeError, Sizing, StrictEnum, StrictProduct,
+    StrictReader, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, StrictWriter,
 };
 
 pub trait TypedParent: Sized {}
@@ -131,39 +132,29 @@ pub trait TypedRead: Sized {
     type StructReader: ReadStruct<Parent = Self>;
     type UnionReader: ReadUnion<Parent = Self>;
 
-    fn read_union<T: StrictDecode>(
+    fn read_union<T: StrictUnion>(
         &mut self,
-        lib: LibName,
-        name: Option<TypeName>,
         inner: impl FnOnce(FieldName, &mut Self::UnionReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>;
-    fn read_enum<T: StrictDecode>(
+    fn read_enum<T: StrictEnum>(
         &mut self,
-        lib: LibName,
-        name: Option<TypeName>,
         inner: impl FnOnce(FieldName) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>
+    where
+        u8: From<T>;
+
+    fn read_tuple<T: StrictTuple>(
+        &mut self,
+        inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>;
+    fn read_struct<T: StrictStruct>(
+        &mut self,
+        inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>;
 
-    fn read_tuple<T: StrictDecode>(
-        &mut self,
-        lib: LibName,
-        name: Option<TypeName>,
-        inner: impl FnOnce(FieldName, &mut Self::TupleReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>;
-    fn read_struct<T: StrictDecode>(
-        &mut self,
-        lib: LibName,
-        name: Option<TypeName>,
-        inner: impl FnOnce(FieldName, &mut Self::StructReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>;
-
-    fn read_type<T: StrictDecode>(
-        &mut self,
-        lib: LibName,
-        name: Option<TypeName>,
-        value: &impl StrictEncode,
-    ) -> Result<T, DecodeError> {
-        self.read_tuple(lib, name, |writer| Ok(writer.write_field(value)?.complete()))
+    fn read_newtype<T: StrictTuple + Wrapper>(&mut self) -> Result<T, DecodeError>
+    where T::Inner: StrictDecode {
+        self.read_tuple(|reader| reader.read_field().map(T::from_inner))
     }
 }
 
@@ -180,7 +171,8 @@ pub trait WriteTuple: Sized {
 }
 
 pub trait ReadTuple {
-    type Parent: TypedRead;
+    type Parent: TypedParent;
+    fn read_field<T: StrictDecode>(&mut self) -> Result<T, DecodeError>;
 }
 
 pub trait DefineStruct: Sized {
@@ -196,7 +188,8 @@ pub trait WriteStruct: Sized {
 }
 
 pub trait ReadStruct {
-    type Parent: TypedRead;
+    type Parent: TypedParent;
+    fn read_field<T: StrictEncode>(&mut self, field: FieldName) -> Result<T, DecodeError>;
 }
 
 pub trait DefineEnum: Sized {
@@ -248,12 +241,24 @@ pub trait ReadUnion: Sized {
     type TupleReader: ReadTuple<Parent = Self>;
     type StructReader: ReadStruct<Parent = Self>;
 
-    fn read_unit<T: StrictDecode>(&mut self, name: FieldName) -> Result<T, DecodeError>;
-    fn read_type(self, name: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
-        Ok(self.read_tuple(name)?.read_field(value)?.complete())
+    fn read_unit<T: StrictSum>(&mut self, name: FieldName) -> Result<T, DecodeError>;
+    fn read_tuple<T: StrictSum>(
+        &mut self,
+        name: FieldName,
+        inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>;
+    fn read_struct<T: StrictSum>(
+        &mut self,
+        name: FieldName,
+        inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>;
+
+    fn read_newtype<T: StrictSum + From<I>, I: StrictProduct + StrictDecode>(
+        &mut self,
+        field: FieldName,
+    ) -> Result<T, DecodeError> {
+        self.read_tuple(field, |reader| reader.read_field::<I>().map(T::from))
     }
-    fn read_tuple(self, name: FieldName) -> io::Result<Self::TupleReader>;
-    fn read_struct(self, name: FieldName) -> io::Result<Self::StructReader>;
 
     fn complete(self) -> Self::Parent;
 }

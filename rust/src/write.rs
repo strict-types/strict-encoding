@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::{BTreeMap};
+use std::collections::BTreeMap;
 use std::io;
 use std::io::Sink;
 use std::marker::PhantomData;
@@ -27,9 +27,9 @@ use std::marker::PhantomData;
 use amplify::WriteCounter;
 
 use crate::{
-    DefineEnum, DefineStruct, DefineTuple, DefineUnion, Variant, FieldName, LibName, StrictEncode,
-    StrictEnum, StrictStruct, StrictSum, StrictTuple, StrictUnion, TypeName,
-    TypedParent, TypedWrite, WriteEnum, WriteStruct, WriteTuple, WriteUnion, NO_LIB,
+    DefineEnum, DefineStruct, DefineTuple, DefineUnion, FieldName, LibName, StrictEncode,
+    StrictEnum, StrictStruct, StrictSum, StrictTuple, StrictUnion, TypeName, TypedParent,
+    TypedWrite, Variant, WriteEnum, WriteStruct, WriteTuple, WriteUnion, NO_LIB,
 };
 
 // TODO: Move to amplify crate
@@ -222,14 +222,18 @@ impl<W: io::Write, P: StrictParent<W>> DefineStruct for StructWriter<W, P> {
         self
     }
     fn complete(self) -> P {
-        assert!(!self.named_fields.is_empty(), "struct {} does not have fields defined", self.name());
+        assert!(
+            !self.named_fields.is_empty(),
+            "struct {} does not have fields defined",
+            self.name()
+        );
         self.parent
     }
 }
 
 impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
     type Parent = P;
-    fn write_field(mut self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
+    fn write_field(self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
         debug_assert!(self.tuple_fields.is_none(), "using struct method on tuple");
         assert!(
             !self.named_fields.contains(&field),
@@ -252,7 +256,12 @@ impl<W: io::Write, P: StrictParent<W>> DefineTuple for StructWriter<W, P> {
         self
     }
     fn complete(self) -> P {
-        assert_ne!(self.tuple_fields.expect("tuple defined as struct"), 0, "tuple {} does not have fields defined", self.name());
+        assert_ne!(
+            self.tuple_fields.expect("tuple defined as struct"),
+            0,
+            "tuple {} does not have fields defined",
+            self.name()
+        );
         debug_assert!(!self.named_fields.is_empty(), "tuple {} defined as struct", self.name());
         self.parent
     }
@@ -334,11 +343,11 @@ impl<W: io::Write> UnionWriter<W> {
     }
 
     fn _write_field(mut self, name: FieldName, field_type: FieldType) -> io::Result<Self> {
-        let (field, t) = self
-            .variants
-            .iter()
-            .find(|(f, _)| f.name == name)
-            .expect(&format!("variant {:#} was not defined in {}", &name, self.name()));
+        let (field, t) = self.variants.iter().find(|(f, _)| f.name == name).expect(&format!(
+            "variant {:#} was not defined in {}",
+            &name,
+            self.name()
+        ));
         assert_eq!(
             *t,
             field_type,

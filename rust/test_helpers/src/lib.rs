@@ -92,8 +92,7 @@ use strict_encoding::{Error, StrictDecode, StrictEncode};
 /// used in non-test environment.
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error)]
 pub enum EnumEncodingTestFailure<T>
-where
-    T: Clone + PartialEq + Debug,
+where T: Clone + PartialEq + Debug
 {
     /// Failure during encoding enum variant
     #[display("Failure during encoding enum variant `{0:02x?}`: {1:?}")]
@@ -101,8 +100,7 @@ where
 
     /// Failure during decoding binary representation of enum variant
     #[display(
-        "Failure during decoding binary representation of enum variant \
-         `{0:02x?}`: {1}
+        "Failure during decoding binary representation of enum variant `{0:02x?}`: {1}
         \tByte representation: {2:02x?}"
     )]
     DecoderFailure(T, String, Vec<u8>),
@@ -110,8 +108,8 @@ where
     /// Test case failure representing mismatch between enum variant produced
     /// by decoding from the originally encoded enum variant
     #[display(
-        "Roundtrip encoding of enum variant `{original:02x?}` results in \
-         different variant `{decoded:02x?}`"
+        "Roundtrip encoding of enum variant `{original:02x?}` results in different variant \
+         `{decoded:02x?}`"
     )]
     DecodedDiffersFromOriginal {
         /// Original value, which was encoded
@@ -124,9 +122,8 @@ where
     /// primitive value and the actual primitive value assigned to the enum
     /// variant by the rust compiler
     #[display(
-        "Expected value `{expected}` for enum variant \
-         `{enum_name}::{variant_name}` does not match the actual value \
-         `{actual}`"
+        "Expected value `{expected}` for enum variant `{enum_name}::{variant_name}` does not \
+         match the actual value `{actual}`"
     )]
     ValueMismatch {
         /// Name of the enum being tested
@@ -161,8 +158,7 @@ where
     /// Test case failure representing incorrect decoder error during
     /// processing out-of-enum range value
     #[display(
-        "Decoding of out-of-enum-range value `{0}` results in incorrect \
-         decoder error `{1:?}`"
+        "Decoding of out-of-enum-range value `{0}` results in incorrect decoder error `{1:?}`"
     )]
     DecoderWrongErrorOnUnknownValue(
         /// Value which was decoded into an enum variant
@@ -174,8 +170,7 @@ where
     /// Test case failure representing a out-of-enum range primitive value
     /// still being interpreted as one of enum variants
     #[display(
-        "Out-of-enum-range value `{0}` is interpreted as `{1:02x?}` enum \
-         variant by rust compiler"
+        "Out-of-enum-range value `{0}` is interpreted as `{1:02x?}` enum variant by rust compiler"
     )]
     UnknownDecodesToVariant(
         /// Value which was decoded into an enum variant
@@ -191,9 +186,7 @@ where
 
     /// Test case failure due to wrong `PartialEq` or `Eq` implementation:
     /// two distinct enum variants are still equal
-    #[display(
-        "Two distinct enum variants `{0:02x?}` and `{1:02x?}` are equal"
-    )]
+    #[display("Two distinct enum variants `{0:02x?}` and `{1:02x?}` are equal")]
     FailedNe(
         /// First of two enum variants which are treated as equal
         T,
@@ -203,10 +196,7 @@ where
 
     /// Test case failure due to wrong `PartialOrd` or `Ord` implementation
     /// happening when enum variants ordering is broken
-    #[display(
-        "Comparing enum variants `{0:02x?}` and `{1:02x?}` results in wrong \
-         ordering"
-    )]
+    #[display("Comparing enum variants `{0:02x?}` and `{1:02x?}` results in wrong ordering")]
     FailedOrd(
         /// First of two enum variants which are disordered. This variant
         /// should smaller than the second one, but `Ord` operation
@@ -232,8 +222,7 @@ where
 /// # Covered test case
 ///
 /// - Strict encoding must match little-endian encoding of the value
-/// - Roundtrip encoding-decoding of the enum variant must result in the
-///   original value
+/// - Roundtrip encoding-decoding of the enum variant must result in the original value
 ///
 /// # Example
 ///
@@ -311,12 +300,10 @@ macro_rules! test_encoding_enum {
 /// # Covered test cases
 ///
 /// - Each enum variant must have a primitive value
-/// - Primitive value representing enum variant must be equal to strict encoding
-///   of the same variant. If a primitive enum value occupies of several bytes
-///   (`u16`, `u32` and other large integer types), strict encoding must match
-///   little-endian encoding of the value
-/// - Roundtrip encoding-decoding of the enum variant must result in the
-///   original value
+/// - Primitive value representing enum variant must be equal to strict encoding of the same
+///   variant. If a primitive enum value occupies of several bytes (`u16`, `u32` and other large
+///   integer types), strict encoding must match little-endian encoding of the value
+/// - Roundtrip encoding-decoding of the enum variant must result in the original value
 /// - Each enum variant must be equal to itself
 /// - Each enum variant must not be equal to any other enum variant
 /// - Enum variants must be ordered according to their primitive values
@@ -397,18 +384,16 @@ macro_rules! test_encoding_enum_by_values {
 /// # Covered test cases
 ///
 /// - Each enum variant must have a primitive value
-/// - Primitive value representing enum variant must be equal to strict encoding
-///   of the same variant. If a primitive enum value occupies of several bytes
-///   (`u16`, `u32` and other large integer types), strict encoding must match
-///   little-endian encoding of the value
-/// - Roundtrip encoding-decoding of the enum variant must result in the
-///   original value
+/// - Primitive value representing enum variant must be equal to strict encoding of the same
+///   variant. If a primitive enum value occupies of several bytes (`u16`, `u32` and other large
+///   integer types), strict encoding must match little-endian encoding of the value
+/// - Roundtrip encoding-decoding of the enum variant must result in the original value
 /// - Each enum variant must be equal to itself
 /// - Each enum variant must not be equal to any other enum variant
 /// - Enum variants must be ordered according to their primitive values
-/// - All 8-bit integers which do not match any of enum variants must not be
-///   decoded with strict decoder into a valid enum and their decoding must
-///   result in [`Error::EnumValueNotKnown`] error.
+/// - All 8-bit integers which do not match any of enum variants must not be decoded with strict
+///   decoder into a valid enum and their decoding must result in [`Error::EnumValueNotKnown`]
+///   error.
 ///
 /// # Example
 ///
@@ -470,8 +455,7 @@ macro_rules! test_encoding_enum_u8_exhaustive {
 /// used in non-test environment.
 #[derive(Clone, PartialEq, Eq, Debug, Display, Error)]
 pub enum DataEncodingTestFailure<T>
-where
-    T: StrictEncode + StrictDecode + PartialEq + Debug + Clone,
+where T: StrictEncode + StrictDecode + PartialEq + Debug + Clone
 {
     /// Failure during encoding enum variant
     #[display("Failure during encoding: {0:?}")]
@@ -490,8 +474,7 @@ where
     /// Test case failure representing mismatch between object produced
     /// by decoding from the originally encoded object
     #[display(
-        "Roundtrip encoding of `{original:x?}` produced different object \
-         `{transcoded:02x?}`"
+        "Roundtrip encoding of `{original:x?}` produced different object `{transcoded:02x?}`"
     )]
     TranscodedObjectDiffersFromOriginal {
         /// Original value, which was encoded
@@ -503,8 +486,8 @@ where
     /// Test case failure representing mismatch between original test vector
     /// and serialization of the object decoded from that test vector
     #[display(
-        "Serialization of the object `{object:02x?}` decoded from a test \
-         vector results in a different byte string:
+        "Serialization of the object `{object:02x?}` decoded from a test vector results in a \
+         different byte string:
         \tOriginal: {original:02x?}
         \tSerialization: {transcoded:02x?}
         "
@@ -533,8 +516,7 @@ where
 /// Errors on:
 /// - encoding or decoding failures;
 /// - if the original object is not equivalent to its decoded version;
-/// - if encoder returns number of bytes that does not match the length of the
-///   encoded data.
+/// - if encoder returns number of bytes that does not match the length of the encoded data.
 ///
 /// # Panics
 ///
@@ -557,24 +539,16 @@ where
 pub fn test_object_encoding_roundtrip<T>(
     object: &T,
 ) -> Result<Vec<u8>, DataEncodingTestFailure<T>>
-where
-    T: StrictEncode + StrictDecode + PartialEq + Clone + Debug,
-{
+where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
     let mut encoded_object: Vec<u8> = vec![];
-    object
-        .strict_encode(&mut encoded_object)
-        .map_err(DataEncodingTestFailure::EncoderFailure)?;
-    let decoded_object =
-        T::strict_deserialize(&mut encoded_object).map_err(|e| {
-            DataEncodingTestFailure::DecoderFailure(e, encoded_object.clone())
-        })?;
+    object.strict_encode(&mut encoded_object).map_err(DataEncodingTestFailure::EncoderFailure)?;
+    let decoded_object = T::strict_deserialize(&mut encoded_object)
+        .map_err(|e| DataEncodingTestFailure::DecoderFailure(e, encoded_object.clone()))?;
     if &decoded_object != object {
-        return Err(
-            DataEncodingTestFailure::TranscodedObjectDiffersFromOriginal {
-                original: object.clone(),
-                transcoded: decoded_object,
-            },
-        );
+        return Err(DataEncodingTestFailure::TranscodedObjectDiffersFromOriginal {
+            original: object.clone(),
+            transcoded: decoded_object,
+        });
     }
     Ok(encoded_object)
 }
@@ -592,8 +566,7 @@ where
 /// Errors on:
 /// - encoding or decoding failures;
 /// - if the original test vector is not equivalent to its transcoded version;
-/// - if encoder returns number of bytes that does not match the length of the
-///   test vector.
+/// - if encoder returns number of bytes that does not match the length of the test vector.
 ///
 /// # Panics
 ///
@@ -610,30 +583,22 @@ where
 /// struct Data(pub Vec<u8>);
 ///
 /// let data = Data(vec![0x01, 0x02]);
-/// assert_eq!(
-///     test_vec_decoding_roundtrip(&[0x02, 0x00, 0x01, 0x02]),
-///     Ok(data)
-/// );
+/// assert_eq!(test_vec_decoding_roundtrip(&[0x02, 0x00, 0x01, 0x02]), Ok(data));
 /// ```
 pub fn test_vec_decoding_roundtrip<T>(
     test_vec: impl AsRef<[u8]>,
 ) -> Result<T, DataEncodingTestFailure<T>>
-where
-    T: StrictEncode + StrictDecode + PartialEq + Clone + Debug,
-{
+where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
     let test_vec = test_vec.as_ref();
-    let decoded_object = T::strict_deserialize(test_vec).map_err(|e| {
-        DataEncodingTestFailure::DecoderFailure(e, test_vec.to_vec())
-    })?;
+    let decoded_object = T::strict_deserialize(test_vec)
+        .map_err(|e| DataEncodingTestFailure::DecoderFailure(e, test_vec.to_vec()))?;
     let encoded_object = test_object_encoding_roundtrip(&decoded_object)?;
     if test_vec != &encoded_object {
-        return Err(
-            DataEncodingTestFailure::TranscodedVecDiffersFromOriginal {
-                original: test_vec.to_vec(),
-                transcoded: encoded_object,
-                object: decoded_object,
-            },
-        );
+        return Err(DataEncodingTestFailure::TranscodedVecDiffersFromOriginal {
+            original: test_vec.to_vec(),
+            transcoded: encoded_object,
+            object: decoded_object,
+        });
     }
     Ok(decoded_object)
 }
@@ -648,8 +613,7 @@ where
 /// - encoding or decoding failures;
 /// - if the original object is not equivalent to its decoded version;
 /// - if the original test vector is not equivalent to its transcoded version;
-/// - if encoder returns number of bytes that does not match the length of the
-///   test vector.
+/// - if encoder returns number of bytes that does not match the length of the test vector.
 ///
 /// # Panics
 ///
@@ -677,12 +641,10 @@ where
 {
     let decoded_object = test_vec_decoding_roundtrip(test_vec)?;
     if object != &decoded_object {
-        return Err(
-            DataEncodingTestFailure::TranscodedObjectDiffersFromOriginal {
-                original: object.clone(),
-                transcoded: decoded_object,
-            },
-        );
+        return Err(DataEncodingTestFailure::TranscodedObjectDiffersFromOriginal {
+            original: object.clone(),
+            transcoded: decoded_object,
+        });
     }
     Ok(())
 }

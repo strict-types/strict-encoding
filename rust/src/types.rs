@@ -67,7 +67,8 @@ pub trait StrictTuple: StrictProduct {
     fn strict_check_fields() {
         let name = Self::strict_name().unwrap_or_else(|| tn!("__unnamed"));
         assert_ne!(
-            Self::FIELD_COUNT, 0,
+            Self::FIELD_COUNT,
+            0,
             "tuple type {} does not contain a single field defined",
             name
         );
@@ -195,8 +196,8 @@ pub enum TypeClass {
 }
 
 pub struct TypeInfo<T: StrictType> {
-    lib: LibName,
-    name: Option<TypeName>,
-    cls: TypeClass,
-    dumb: T,
+    pub lib: LibName,
+    pub name: Option<TypeName>,
+    pub cls: TypeClass,
+    pub dumb: T,
 }
