@@ -31,9 +31,11 @@
 use std::io;
 
 use crate::{
-    DecodeError, FieldName, ReadStruct, ReadTuple, ReadUnion, StrictDecode, StrictEncode,
-    StrictEnum, StrictStruct, StrictSum, StrictTuple, StrictUnion, TypedParent, TypedRead,
+    DecodeError, FieldName, ReadStruct, ReadTuple, ReadUnion, StrictDecode, StrictEnum,
+    StrictStruct, StrictSum, StrictTuple, StrictUnion, TypedRead,
 };
+
+trait TypedParent: Sized {}
 
 // TODO: Move to amplify crate
 /// A simple way to count bytes read through [`io::Read`].
@@ -106,20 +108,22 @@ impl<R: io::Read> StrictReader<R> {
     pub fn unbox(self) -> R { self.0.unbox() }
 }
 
-impl<R: io::Read> TypedRead for StrictReader<R> {
-    type TupleReader = Self;
-    type StructReader = Self;
+impl<'read, R: io::Read + 'read> TypedRead<'read> for StrictReader<R>
+where &'read R: io::Read
+{
+    type TupleReader = TupleReader<&'read R>;
+    type StructReader = StructReader<&'read R>;
     type UnionReader = Self;
 
     fn read_union<T: StrictUnion>(
-        &mut self,
-        inner: impl FnOnce(FieldName, &mut Self::UnionReader) -> Result<T, DecodeError>,
+        &'read mut self,
+        inner: impl FnOnce(FieldName, &'read mut Self::UnionReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError> {
         todo!()
     }
 
     fn read_enum<T: StrictEnum>(
-        &mut self,
+        &'read mut self,
         inner: impl FnOnce(FieldName) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
@@ -129,58 +133,67 @@ impl<R: io::Read> TypedRead for StrictReader<R> {
     }
 
     fn read_tuple<T: StrictTuple>(
-        &mut self,
-        inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
+        &'read mut self,
+        inner: impl FnOnce(&'read mut Self::TupleReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError> {
         todo!()
     }
 
     fn read_struct<T: StrictStruct>(
-        &mut self,
-        inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
+        &'read mut self,
+        inner: impl FnOnce(&'read mut Self::StructReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError> {
         todo!()
     }
 }
 
-impl<R: io::Read> TypedParent for StrictReader<R> {}
-
-impl<R: io::Read> ReadTuple for StrictReader<R> {
-    type Parent = StrictReader<R>;
-
-    fn read_field<T: StrictDecode>(&mut self) -> Result<T, DecodeError> { todo!() }
+pub struct TupleReader<R: io::Read> {
+    read_fields: u8,
+    reader: R,
 }
 
-impl<R: io::Read> ReadStruct for StrictReader<R> {
-    type Parent = StrictReader<R>;
-
-    fn read_field<T: StrictEncode>(&mut self, field: FieldName) -> Result<T, DecodeError> {
-        todo!()
+impl<R: io::Read> ReadTuple for TupleReader<R> {
+    fn read_field<T: StrictDecode>(&mut self) -> Result<T, DecodeError> {
+        self.read_fields += 1;
+        T::strict_decode(&self.reader)
     }
 }
 
-impl<R: io::Read> ReadUnion for StrictReader<R> {
-    type Parent = StrictReader<R>;
-    type TupleReader = Self;
-    type StructReader = Self;
+pub struct StructReader<R: io::Read> {
+    named_fields: Vec<FieldName>,
+    reader: R,
+}
 
-    fn read_unit<T: StrictSum>(&mut self, name: FieldName) -> Result<T, DecodeError> { todo!() }
+impl<R: io::Read> ReadStruct for StructReader<R> {
+    fn read_field<T: StrictDecode>(&mut self, field: FieldName) -> Result<T, DecodeError> {
+        self.named_fields.push(field);
+        T::strict_decode(&self.reader)
+    }
+}
+
+impl<'read, R: io::Read + 'read> ReadUnion<'read> for StrictReader<R>
+where &'read R: io::Read
+{
+    type TupleReader = TupleReader<&'read R>;
+    type StructReader = StructReader<&'read R>;
+
+    fn read_unit<T: StrictSum>(&'read mut self, name: FieldName) -> Result<T, DecodeError> {
+        todo!()
+    }
 
     fn read_tuple<T: StrictSum>(
-        &mut self,
+        &'read mut self,
         name: FieldName,
-        inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
+        inner: impl FnOnce(&'read mut Self::TupleReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError> {
         todo!()
     }
 
     fn read_struct<T: StrictSum>(
-        &mut self,
+        &'read mut self,
         name: FieldName,
-        inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
+        inner: impl FnOnce(&'read mut Self::StructReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError> {
         todo!()
     }
-
-    fn complete(self) -> Self::Parent { todo!() }
 }
