@@ -127,35 +127,43 @@ pub trait TypedWrite: Sized {
     }
 }
 
-pub trait TypedRead<'read>
-where Self: 'read + Sized
-{
+pub trait TypedRead<'read>: Sized + 'read {
     type TupleReader: ReadTuple;
     type StructReader: ReadStruct;
     type UnionReader: ReadUnion<'read>;
 
-    fn read_union<T: StrictUnion>(
-        &'read mut self,
-        inner: impl FnOnce(FieldName, &'read mut Self::UnionReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>;
-    fn read_enum<T: StrictEnum>(
-        &'read mut self,
+    fn read_union<'me, T: StrictUnion>(
+        &'me mut self,
+        inner: impl FnOnce(FieldName, &mut Self::UnionReader) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>
+    where
+        'me: 'read;
+    fn read_enum<'me, T: StrictEnum>(
+        &'me mut self,
         inner: impl FnOnce(FieldName) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
-        u8: From<T>;
+        u8: From<T>,
+        'me: 'read;
 
-    fn read_tuple<'r, T: StrictTuple>(
-        &'read mut self,
-        inner: impl FnOnce(&'read mut Self::TupleReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>;
-    fn read_struct<'r, T: StrictStruct>(
-        &'read mut self,
-        inner: impl FnOnce(&'read mut Self::StructReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>;
+    fn read_tuple<'me, T: StrictTuple>(
+        &'me mut self,
+        inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>
+    where
+        'me: 'read;
+    fn read_struct<'me, T: StrictStruct>(
+        &'me mut self,
+        inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>
+    where
+        'me: 'read;
 
-    fn read_newtype<T: StrictTuple + Wrapper>(&'read mut self) -> Result<T, DecodeError>
-    where T::Inner: StrictDecode {
+    fn read_newtype<'me, T: StrictTuple + Wrapper>(&'me mut self) -> Result<T, DecodeError>
+    where
+        T::Inner: StrictDecode,
+        'me: 'read,
+    {
         self.read_tuple(|reader| reader.read_field().map(T::from_inner))
     }
 }
@@ -236,28 +244,36 @@ pub trait WriteUnion: Sized {
     fn complete(self) -> Self::Parent;
 }
 
-pub trait ReadUnion<'read>
-where Self: 'read + Sized
-{
+pub trait ReadUnion<'read>: Sized + 'read {
     type TupleReader: ReadTuple;
     type StructReader: ReadStruct;
 
-    fn read_unit<T: StrictSum>(&'read mut self, name: FieldName) -> Result<T, DecodeError>;
-    fn read_tuple<T: StrictSum>(
-        &'read mut self,
-        name: FieldName,
-        inner: impl FnOnce(&'read mut Self::TupleReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>;
-    fn read_struct<T: StrictSum>(
-        &'read mut self,
-        name: FieldName,
-        inner: impl FnOnce(&'read mut Self::StructReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>;
+    fn read_unit<'me, T: StrictSum>(&'me mut self, name: FieldName) -> Result<T, DecodeError>
+    where 'me: 'read;
 
-    fn read_newtype<T: StrictSum + From<I>, I: StrictProduct + StrictDecode>(
-        &'read mut self,
+    fn read_tuple<'me, T: StrictSum>(
+        &'me mut self,
+        name: FieldName,
+        inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>
+    where
+        'me: 'read;
+
+    fn read_struct<'me, T: StrictSum>(
+        &'me mut self,
+        name: FieldName,
+        inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>
+    where
+        'me: 'read;
+
+    fn read_newtype<'me, T: StrictSum + From<I>, I: StrictProduct + StrictDecode>(
+        &'me mut self,
         field: FieldName,
-    ) -> Result<T, DecodeError> {
+    ) -> Result<T, DecodeError>
+    where
+        'me: 'read,
+    {
         self.read_tuple(field, |reader| reader.read_field::<I>().map(T::from))
     }
 }
@@ -267,7 +283,7 @@ pub trait StrictEncode: StrictType {
 }
 
 pub trait StrictDecode: Sized {
-    fn strict_decode<'read>(reader: &'read impl TypedRead<'read>) -> Result<Self, DecodeError>;
+    fn strict_decode<'read>(reader: &mut impl TypedRead<'read>) -> Result<Self, DecodeError>;
 }
 
 impl<T: StrictEncode> StrictEncode for &T {
