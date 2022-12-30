@@ -44,11 +44,11 @@ pub enum DecodeError {
 
     /// unsupported value `{1}` for enum `{0}` encountered during decode
     /// operation
-    EnumValueNotKnown(String, u8, Vec<u8>),
+    EnumValueNotKnown(String, u8),
 
     /// unsupported value `{1}` for union `{0}` encountered during decode
     /// operation
-    UnionValueNotKnown(String, u8, Vec<u8>),
+    UnionValueNotKnown(String, u8),
 
     /// decoding resulted in value `{2}` for type `{0}` that exceeds the
     /// supported range {1:#?}

@@ -120,7 +120,12 @@ impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
     where
         'me: 'read,
     {
-        todo!()
+        let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
+        // TODO: read ord
+        let ord = 0u8;
+        let variant_name = T::variant_name_by_ord(ord)
+            .ok_or(DecodeError::UnionValueNotKnown(name.to_string(), ord))?;
+        inner(variant_name, self)
     }
 
     fn read_enum<'me, T: StrictEnum>(
@@ -131,7 +136,12 @@ impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
         u8: From<T>,
         'me: 'read,
     {
-        todo!()
+        let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
+        // TODO: read ord
+        let ord = 0u8;
+        let variant_name = T::variant_name_by_ord(ord)
+            .ok_or(DecodeError::EnumValueNotKnown(name.to_string(), ord))?;
+        inner(variant_name)
     }
 
     fn read_tuple<'me, T: StrictTuple>(
@@ -164,7 +174,24 @@ impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
     where
         'me: 'read,
     {
-        todo!()
+        let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
+        let mut reader = StructReader {
+            named_fields: empty!(),
+            parent: self,
+        };
+        let res = inner(&mut reader)?;
+        assert!(!reader.named_fields.is_empty(), "you forget to read fields for a tuple {}", name);
+
+        for field in T::ALL_FIELDS {
+            let pos = reader
+                .named_fields
+                .iter()
+                .position(|f| f.as_str() == *field)
+                .unwrap_or_else(|| panic!("field {} is not read for {}", field, name));
+            reader.named_fields.remove(pos);
+        }
+        assert!(reader.named_fields.is_empty(), "excessive fields are read for {}", name);
+        Ok(res)
     }
 }
 
@@ -196,30 +223,31 @@ impl<'read, R: io::Read + 'read> ReadUnion<'read> for StrictReader<R> {
     type TupleReader = TupleReader<'read, R>;
     type StructReader = StructReader<'read, R>;
 
-    fn read_unit<'me, T: StrictSum>(&'me mut self, name: FieldName) -> Result<T, DecodeError>
-    where 'me: 'read {
-        todo!()
-    }
-
     fn read_tuple<'me, T: StrictSum>(
-        &mut self,
-        name: FieldName,
+        &'me mut self,
         inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
         'me: 'read,
     {
-        todo!()
+        let mut reader = TupleReader {
+            read_fields: 0,
+            parent: self,
+        };
+        inner(&mut reader)
     }
 
     fn read_struct<'me, T: StrictSum>(
-        &mut self,
-        name: FieldName,
+        &'me mut self,
         inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
         'me: 'read,
     {
-        todo!()
+        let mut reader = StructReader {
+            named_fields: empty!(),
+            parent: self,
+        };
+        inner(&mut reader)
     }
 }

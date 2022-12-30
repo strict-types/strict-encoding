@@ -248,12 +248,8 @@ pub trait ReadUnion<'read>: Sized + 'read {
     type TupleReader: ReadTuple;
     type StructReader: ReadStruct;
 
-    fn read_unit<'me, T: StrictSum>(&'me mut self, name: FieldName) -> Result<T, DecodeError>
-    where 'me: 'read;
-
     fn read_tuple<'me, T: StrictSum>(
         &'me mut self,
-        name: FieldName,
         inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
@@ -261,7 +257,6 @@ pub trait ReadUnion<'read>: Sized + 'read {
 
     fn read_struct<'me, T: StrictSum>(
         &'me mut self,
-        name: FieldName,
         inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
@@ -269,12 +264,9 @@ pub trait ReadUnion<'read>: Sized + 'read {
 
     fn read_newtype<'me, T: StrictSum + From<I>, I: StrictProduct + StrictDecode>(
         &'me mut self,
-        field: FieldName,
     ) -> Result<T, DecodeError>
-    where
-        'me: 'read,
-    {
-        self.read_tuple(field, |reader| reader.read_field::<I>().map(T::from))
+    where 'me: 'read {
+        self.read_tuple(|reader| reader.read_field::<I>().map(T::from))
     }
 }
 

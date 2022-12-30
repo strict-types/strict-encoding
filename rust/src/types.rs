@@ -140,6 +140,13 @@ pub trait StrictSum: StrictType {
         );
     }
 
+    fn variant_name_by_ord(ord: u8) -> Option<FieldName> {
+        Self::ALL_VARIANTS
+            .iter()
+            .find(|(n, _)| *n == ord)
+            .map(|(_, variant_name)| fname!(*variant_name))
+    }
+
     fn variant_ord(&self) -> u8 {
         let variant = self.variant_name();
         for (ord, name) in Self::ALL_VARIANTS {
