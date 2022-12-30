@@ -29,6 +29,7 @@
 */
 
 use std::io;
+use std::io::Read;
 
 use crate::{
     DecodeError, FieldName, ReadStruct, ReadTuple, ReadUnion, StrictDecode, StrictEnum,
@@ -192,6 +193,18 @@ impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
         }
         assert!(reader.named_fields.is_empty(), "excessive fields are read for {}", name);
         Ok(res)
+    }
+
+    unsafe fn _read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>> {
+        let mut buf = vec![0u8; len];
+        self.0.read_exact(&mut buf)?;
+        Ok(buf)
+    }
+
+    unsafe fn read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]> {
+        let mut buf = [0u8; LEN];
+        self.0.read_exact(&mut buf)?;
+        Ok(buf)
     }
 }
 

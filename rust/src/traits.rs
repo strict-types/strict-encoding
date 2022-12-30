@@ -166,6 +166,38 @@ pub trait TypedRead<'read>: Sized + 'read {
     {
         self.read_tuple(|reader| reader.read_field().map(T::from_inner))
     }
+
+    #[doc(hidden)]
+    unsafe fn _read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>>;
+    #[doc(hidden)]
+    unsafe fn read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]>;
+    #[doc(hidden)]
+    unsafe fn read_raw_bytes<const MAX_LEN: usize>(&mut self) -> Result<Vec<u8>, DecodeError> {
+        let len = self.read_raw_len::<MAX_LEN>()?;
+        self._read_raw::<MAX_LEN>(len).map_err(DecodeError::from)
+    }
+    #[doc(hidden)]
+    unsafe fn read_raw_len<const MAX_LEN: usize>(&mut self) -> Result<usize, DecodeError> {
+        Ok(match MAX_LEN {
+            tiny if tiny <= u8::MAX as usize => u8::strict_decode(self)? as usize,
+            small if small < u16::MAX as usize => u16::strict_decode(self)? as usize,
+            medium if medium < u24::MAX.into_usize() => u24::strict_decode(self)? as usize,
+            large if large < u32::MAX as usize => u32::strict_decode(self)? as usize,
+            _ => unreachable!("confined collections larger than u32::MAX must not exist"),
+        })
+    }
+    #[doc(hidden)]
+    unsafe fn read_raw_collection<C: Collection, const MIN_LEN: usize, const MAX_LEN: usize>(
+        &mut self,
+    ) -> Result<Confined<C, MIN_LEN, MAX_LEN>, DecodeError>
+    where C::Item: StrictDecode {
+        let len = self.read_raw_len()?;
+        let mut col = C::with_capacity(len);
+        for _ in 0..len {
+            col.push(StrictDecode::strict_decode(self)?);
+        }
+        Confined::try_from(col).map_err(DecodeError::from)
+    }
 }
 
 pub trait DefineTuple: Sized {
