@@ -320,9 +320,7 @@ macro_rules! encode_num {
             }
         }
         impl $crate::StrictDecode for $ty {
-            unsafe fn strict_decode<'read>(
-                reader: &mut impl TypedRead<'read>,
-            ) -> Result<Self, DecodeError> {
+            unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
                 let buf = unsafe { reader.read_raw_array::<{ Self::BITS as usize / 8 }>()? };
                 Ok(Self::from_le_bytes(buf))
             }
@@ -343,9 +341,7 @@ macro_rules! encode_float {
             }
         }
         impl $crate::StrictDecode for $ty {
-            unsafe fn strict_decode<'read>(
-                reader: &mut impl TypedRead<'read>,
-            ) -> Result<Self, DecodeError> {
+            unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
                 const BYTES: usize = <$ty>::BITS / 8;
                 let mut inner = [0u8; 32];
                 let buf = unsafe { reader.read_raw_array::<BYTES>()? };
@@ -414,9 +410,7 @@ impl<T: StrictEncode> StrictEncode for Option<T> {
     }
 }
 impl<T: StrictDecode> StrictDecode for Option<T> {
-    unsafe fn strict_decode<'read>(
-        reader: &mut impl TypedRead<'read>,
-    ) -> Result<Self, DecodeError> {
+    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         reader.read_union(|field_name, u| match field_name.as_str() {
             "none" => Ok(None),
             "some" => u.read_tuple(|r| r.read_field().map(Some)),

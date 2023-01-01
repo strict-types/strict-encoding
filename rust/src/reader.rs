@@ -116,18 +116,15 @@ impl<R: io::Read> StrictReader<R> {
     pub fn unbox(self) -> R { self.0.unbox() }
 }
 
-impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
+impl<R: io::Read> TypedRead for StrictReader<R> {
     type TupleReader = TupleReader<'read, R>;
     type StructReader = StructReader<'read, R>;
     type UnionReader = Self;
 
-    fn read_union<'me, T: StrictUnion>(
-        &'me mut self,
+    fn read_union<T: StrictUnion>(
+        &mut self,
         inner: impl FnOnce(FieldName, &mut Self::UnionReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        'me: 'read,
-    {
+    ) -> Result<T, DecodeError> {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
         let ord = unsafe { u8::strict_decode(self)? };
         let variant_name = T::variant_name_by_ord(ord)
@@ -135,13 +132,12 @@ impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
         inner(variant_name, self)
     }
 
-    fn read_enum<'me, T: StrictEnum>(
-        &'me mut self,
+    fn read_enum<T: StrictEnum>(
+        &mut self,
         inner: impl FnOnce(FieldName) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
         u8: From<T>,
-        'me: 'read,
     {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
         let ord = unsafe { u8::strict_decode(self)? };
@@ -150,13 +146,10 @@ impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
         inner(variant_name)
     }
 
-    fn read_tuple<'me, T: StrictTuple>(
-        &'me mut self,
+    fn read_tuple<T: StrictTuple>(
+        &mut self,
         inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        'me: 'read,
-    {
+    ) -> Result<T, DecodeError> {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
         let mut reader = TupleReader {
             read_fields: 0,
@@ -173,13 +166,10 @@ impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
         Ok(res)
     }
 
-    fn read_struct<'me, T: StrictStruct>(
-        &'me mut self,
+    fn read_struct<T: StrictStruct>(
+        &mut self,
         inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        'me: 'read,
-    {
+    ) -> Result<T, DecodeError> {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
         let mut reader = StructReader {
             named_fields: empty!(),
@@ -215,7 +205,7 @@ impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
     }
 }
 
-pub struct TupleReader<'read, R: io::Read> {
+pub struct TupleReader<'read, R: io::Read + 'read> {
     read_fields: u8,
     parent: &'read mut StrictReader<R>,
 }
@@ -227,7 +217,7 @@ impl<'read, R: io::Read> ReadTuple for TupleReader<'read, R> {
     }
 }
 
-pub struct StructReader<'read, R: io::Read> {
+pub struct StructReader<'read, R: io::Read + 'read> {
     named_fields: Vec<FieldName>,
     parent: &'read mut StrictReader<R>,
 }
@@ -239,17 +229,14 @@ impl<'read, R: io::Read> ReadStruct for StructReader<'read, R> {
     }
 }
 
-impl<'read, R: io::Read + 'read> ReadUnion<'read> for StrictReader<R> {
+impl<R: io::Read> ReadUnion for StrictReader<R> {
     type TupleReader = TupleReader<'read, R>;
     type StructReader = StructReader<'read, R>;
 
-    fn read_tuple<'me, T: StrictSum>(
-        &'me mut self,
+    fn read_tuple<T: StrictSum>(
+        &mut self,
         inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        'me: 'read,
-    {
+    ) -> Result<T, DecodeError> {
         let mut reader = TupleReader {
             read_fields: 0,
             parent: self,
@@ -257,13 +244,10 @@ impl<'read, R: io::Read + 'read> ReadUnion<'read> for StrictReader<R> {
         inner(&mut reader)
     }
 
-    fn read_struct<'me, T: StrictSum>(
-        &'me mut self,
+    fn read_struct<T: StrictSum>(
+        &mut self,
         inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        'me: 'read,
-    {
+    ) -> Result<T, DecodeError> {
         let mut reader = StructReader {
             named_fields: empty!(),
             parent: self,

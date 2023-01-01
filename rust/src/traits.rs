@@ -127,43 +127,35 @@ pub trait TypedWrite: Sized {
     }
 }
 
-pub trait TypedRead<'read>: Sized + 'read {
+pub trait TypedRead: Sized {
     type TupleReader: ReadTuple;
     type StructReader: ReadStruct;
-    type UnionReader: ReadUnion<'read>;
+    type UnionReader: ReadUnion;
 
-    fn read_union<'me, T: StrictUnion>(
-        &'me mut self,
+    fn read_union<T: StrictUnion>(
+        &mut self,
         inner: impl FnOnce(FieldName, &mut Self::UnionReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        'me: 'read;
-    fn read_enum<'me, T: StrictEnum>(
-        &'me mut self,
+    ) -> Result<T, DecodeError>;
+
+    fn read_enum<T: StrictEnum>(
+        &mut self,
         inner: impl FnOnce(FieldName) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
-        u8: From<T>,
-        'me: 'read;
+        u8: From<T>;
 
-    fn read_tuple<'me, T: StrictTuple>(
-        &'me mut self,
+    fn read_tuple<T: StrictTuple>(
+        &mut self,
         inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        'me: 'read;
-    fn read_struct<'me, T: StrictStruct>(
-        &'me mut self,
-        inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        'me: 'read;
+    ) -> Result<T, DecodeError>;
 
-    fn read_newtype<'me, T: StrictTuple + Wrapper>(&'me mut self) -> Result<T, DecodeError>
-    where
-        T::Inner: StrictDecode,
-        'me: 'read,
-    {
+    fn read_struct<T: StrictStruct>(
+        &mut self,
+        inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>;
+
+    fn read_newtype<T: StrictTuple + Wrapper>(&mut self) -> Result<T, DecodeError>
+    where T::Inner: StrictDecode {
         self.read_tuple(|reader| reader.read_field().map(T::from_inner))
     }
 
@@ -276,28 +268,23 @@ pub trait WriteUnion: Sized {
     fn complete(self) -> Self::Parent;
 }
 
-pub trait ReadUnion<'read>: Sized + 'read {
+pub trait ReadUnion: Sized {
     type TupleReader: ReadTuple;
     type StructReader: ReadStruct;
 
-    fn read_tuple<'me, T: StrictSum>(
-        &'me mut self,
+    fn read_tuple<T: StrictSum>(
+        &mut self,
         inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        'me: 'read;
+    ) -> Result<T, DecodeError>;
 
-    fn read_struct<'me, T: StrictSum>(
-        &'me mut self,
+    fn read_struct<T: StrictSum>(
+        &mut self,
         inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        'me: 'read;
+    ) -> Result<T, DecodeError>;
 
-    fn read_newtype<'me, T: StrictSum + From<I>, I: StrictProduct + StrictDecode>(
-        &'me mut self,
-    ) -> Result<T, DecodeError>
-    where 'me: 'read {
+    fn read_newtype<T: StrictSum + From<I>, I: StrictProduct + StrictDecode>(
+        &mut self,
+    ) -> Result<T, DecodeError> {
         self.read_tuple(|reader| reader.read_field::<I>().map(T::from))
     }
 }
@@ -307,8 +294,7 @@ pub trait StrictEncode: StrictType {
 }
 
 pub trait StrictDecode: StrictType {
-    unsafe fn strict_decode<'read>(reader: &mut impl TypedRead<'read>)
-        -> Result<Self, DecodeError>;
+    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError>;
 }
 
 impl<T: StrictEncode> StrictEncode for &T {
