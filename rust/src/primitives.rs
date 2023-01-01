@@ -458,6 +458,15 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
         }
     }
 }
+impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
+    for Confined<String, MIN_LEN, MAX_LEN>
+{
+    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let bytes = reader.read_raw_bytes::<MAX_LEN>()?;
+        let s = String::from_utf8(bytes)?;
+        Confined::try_from(s).map_err(DecodeError::from)
+    }
+}
 
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictType
     for Confined<AsciiString, MIN_LEN, MAX_LEN>
@@ -474,6 +483,15 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
                 .register_ascii(Sizing::new(MIN_LEN as u16, MAX_LEN as u16))
                 .write_raw_bytes::<MAX_LEN>(self.as_bytes())
         }
+    }
+}
+impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
+    for Confined<AsciiString, MIN_LEN, MAX_LEN>
+{
+    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let bytes = reader.read_raw_bytes::<MAX_LEN>()?;
+        let s = AsciiString::from_ascii(bytes).map_err(|err| err.ascii_error())?;
+        Confined::try_from(s).map_err(DecodeError::from)
     }
 }
 

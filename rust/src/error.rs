@@ -37,7 +37,11 @@ pub enum DecodeError {
 
     /// string data are not in valid UTF-8 encoding.\nDetails: {0}
     #[from]
-    Utf8(std::str::Utf8Error),
+    Utf8(std::string::FromUtf8Error),
+
+    /// string data are not in valid UTF-8 encoding.\nDetails: {0}
+    #[from]
+    Ascii(amplify::ascii::AsAsciiStrError),
 
     /// the value {0} occurs multiple times in a set
     RepeatedSetValue(String),
