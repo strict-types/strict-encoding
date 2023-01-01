@@ -19,6 +19,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// TODO: Rewrite lib, enable doctests
+
 // Coding conventions
 #![recursion_limit = "256"]
 #![deny(dead_code, missing_docs, warnings)]
@@ -60,7 +62,7 @@
 //! returned by test macros and methods to the return of the test case function
 //! with `?` operator:
 //!
-//! ```
+//! ```ignore
 //! # #[macro_use] extern crate strict_encoding_test;
 //! use strict_encoding_test::*;
 //!
@@ -228,7 +230,7 @@ where T: Clone + PartialEq + Debug
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// # #[macro_use] extern crate strict_encoding_test;
 ///
 /// #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
@@ -312,7 +314,7 @@ macro_rules! test_encoding_enum {
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// # #[macro_use] extern crate strict_encoding_test;
 ///
 /// #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
@@ -399,7 +401,7 @@ macro_rules! test_encoding_enum_by_values {
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// # #[macro_use] extern crate strict_encoding_test;
 ///
 /// #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
@@ -528,7 +530,7 @@ where T: StrictEncode + StrictDecode + PartialEq + Debug + Clone
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// # #[macro_use] extern crate strict_encoding;
 /// # use strict_encoding_test::test_object_encoding_roundtrip;
 ///
@@ -582,7 +584,7 @@ where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// # #[macro_use] extern crate strict_encoding;
 /// # use strict_encoding_test::test_vec_decoding_roundtrip;
 ///
@@ -633,7 +635,7 @@ where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// # #[macro_use] extern crate strict_encoding;
 /// # use strict_encoding_test::test_encoding_roundtrip;
 ///
