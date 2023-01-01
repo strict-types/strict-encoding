@@ -29,7 +29,6 @@
 */
 
 use std::io;
-use std::io::Read;
 
 use crate::{
     DecodeError, FieldName, ReadStruct, ReadTuple, ReadUnion, StrictDecode, StrictEnum,
@@ -55,7 +54,7 @@ impl io::Read for ReadCounter {
 }
 
 // TODO: Move to amplify crate
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct CountingReader<R: io::Read> {
     count: usize,
     limit: usize,
@@ -85,15 +84,23 @@ impl<R: io::Read> CountingReader<R> {
 }
 
 impl<R: io::Read> io::Read for CountingReader<R> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> { todo!() }
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let len = self.reader.read(buf)?;
+        match self.count.checked_add(len) {
+            None => return Err(io::ErrorKind::OutOfMemory.into()),
+            Some(len) if len >= self.limit => return Err(io::ErrorKind::InvalidInput.into()),
+            Some(len) => self.count = len,
+        };
+        Ok(len)
+    }
 }
 
-#[derive(Debug, From)]
+#[derive(Clone, Debug, From)]
 pub struct StrictReader<R: io::Read>(CountingReader<R>);
 
 impl StrictReader<io::Cursor<Vec<u8>>> {
-    pub fn in_memory(limit: usize) -> Self {
-        StrictReader(CountingReader::with(limit, io::Cursor::new(vec![])))
+    pub fn in_memory(data: Vec<u8>, limit: usize) -> Self {
+        StrictReader(CountingReader::with(limit, io::Cursor::new(data)))
     }
 }
 
@@ -122,8 +129,7 @@ impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
         'me: 'read,
     {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
-        // TODO: read ord
-        let ord = 0u8;
+        let ord = unsafe { u8::strict_decode(self)? };
         let variant_name = T::variant_name_by_ord(ord)
             .ok_or(DecodeError::UnionValueNotKnown(name.to_string(), ord))?;
         inner(variant_name, self)
@@ -138,8 +144,7 @@ impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
         'me: 'read,
     {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
-        // TODO: read ord
-        let ord = 0u8;
+        let ord = unsafe { u8::strict_decode(self)? };
         let variant_name = T::variant_name_by_ord(ord)
             .ok_or(DecodeError::EnumValueNotKnown(name.to_string(), ord))?;
         inner(variant_name)
@@ -196,12 +201,14 @@ impl<'read, R: 'read + io::Read> TypedRead<'read> for StrictReader<R> {
     }
 
     unsafe fn _read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>> {
+        use io::Read;
         let mut buf = vec![0u8; len];
         self.0.read_exact(&mut buf)?;
         Ok(buf)
     }
 
     unsafe fn read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]> {
+        use io::Read;
         let mut buf = [0u8; LEN];
         self.0.read_exact(&mut buf)?;
         Ok(buf)
