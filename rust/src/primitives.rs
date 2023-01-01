@@ -419,7 +419,7 @@ impl<T: StrictDecode> StrictDecode for Option<T> {
     }
 }
 
-impl<T: StrictEncode + Copy, const LEN: usize> StrictType for [T; LEN] {
+impl<T: StrictType + Copy + StrictDumb, const LEN: usize> StrictType for [T; LEN] {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
     fn strict_name() -> Option<TypeName> { None }
 }
@@ -431,6 +431,15 @@ impl<T: StrictEncode + Copy + StrictDumb, const LEN: usize> StrictEncode for [T;
             }
         }
         Ok(writer.register_array(&T::strict_dumb(), LEN as u16))
+    }
+}
+impl<T: StrictDecode + Copy + StrictDumb, const LEN: usize> StrictDecode for [T; LEN] {
+    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let mut ar = [T::strict_dumb(); LEN];
+        for i in 0..LEN {
+            ar[i] = T::strict_decode(reader)?;
+        }
+        Ok(ar)
     }
 }
 
