@@ -78,12 +78,7 @@ pub struct Variant {
 }
 
 impl Variant {
-    pub fn named(name: FieldName, value: u8) -> Variant {
-        Variant {
-            name,
-            ord: value,
-        }
-    }
+    pub fn named(name: FieldName, value: u8) -> Variant { Variant { name, ord: value } }
 
     pub fn none() -> Variant {
         Variant {

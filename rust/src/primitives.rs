@@ -26,6 +26,7 @@ use std::io;
 
 use amplify::ascii::AsciiString;
 use amplify::confinement::Confined;
+#[cfg(feature = "float")]
 use amplify::num::apfloat::{ieee, Float};
 use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
 
@@ -330,9 +331,11 @@ macro_rules! encode_num {
 
 macro_rules! encode_float {
     ($ty:ty, $len:literal, $id:ident) => {
+        #[cfg(feature = "float")]
         impl $crate::StrictType for $ty {
             const STRICT_LIB_NAME: &'static str = $crate::STD_LIB;
         }
+        #[cfg(feature = "float")]
         impl $crate::StrictEncode for $ty {
             fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
                 let mut be = [0u8; $len];
@@ -340,6 +343,7 @@ macro_rules! encode_float {
                 unsafe { writer.register_primitive($id).write_raw_array(be) }
             }
         }
+        #[cfg(feature = "float")]
         impl $crate::StrictDecode for $ty {
             fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
                 const BYTES: usize = <$ty>::BITS / 8;

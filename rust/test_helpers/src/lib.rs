@@ -396,8 +396,7 @@ macro_rules! test_encoding_enum_by_values {
 /// - Each enum variant must not be equal to any other enum variant
 /// - Enum variants must be ordered according to their primitive values
 /// - All 8-bit integers which do not match any of enum variants must not be decoded with strict
-///   decoder into a valid enum and their decoding must result in [`Error::EnumValueNotKnown`]
-///   error.
+///   decoder into a valid enum and their decoding must result in an error.
 ///
 /// # Example
 ///
