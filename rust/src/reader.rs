@@ -216,7 +216,7 @@ pub struct TupleReader<'read, R: io::Read> {
 impl<'read, R: io::Read> ReadTuple for TupleReader<'read, R> {
     fn read_field<T: StrictDecode>(&mut self) -> Result<T, DecodeError> {
         self.read_fields += 1;
-        T::strict_decode(self.parent)
+        unsafe { T::strict_decode(self.parent) }
     }
 }
 
@@ -228,7 +228,7 @@ pub struct StructReader<'read, R: io::Read> {
 impl<'read, R: io::Read> ReadStruct for StructReader<'read, R> {
     fn read_field<T: StrictDecode>(&mut self, field: FieldName) -> Result<T, DecodeError> {
         self.named_fields.push(field);
-        T::strict_decode(self.parent)
+        unsafe { T::strict_decode(self.parent) }
     }
 }
 

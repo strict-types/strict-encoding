@@ -181,7 +181,7 @@ pub trait TypedRead<'read>: Sized + 'read {
         Ok(match MAX_LEN {
             tiny if tiny <= u8::MAX as usize => u8::strict_decode(self)? as usize,
             small if small < u16::MAX as usize => u16::strict_decode(self)? as usize,
-            medium if medium < u24::MAX.into_usize() => u24::strict_decode(self)? as usize,
+            medium if medium < u24::MAX.into_usize() => u24::strict_decode(self)?.into_usize(),
             large if large < u32::MAX as usize => u32::strict_decode(self)? as usize,
             _ => unreachable!("confined collections larger than u32::MAX must not exist"),
         })
@@ -191,7 +191,7 @@ pub trait TypedRead<'read>: Sized + 'read {
         &mut self,
     ) -> Result<Confined<C, MIN_LEN, MAX_LEN>, DecodeError>
     where C::Item: StrictDecode {
-        let len = self.read_raw_len()?;
+        let len = self.read_raw_len::<MAX_LEN>()?;
         let mut col = C::with_capacity(len);
         for _ in 0..len {
             col.push(StrictDecode::strict_decode(self)?);
@@ -306,8 +306,9 @@ pub trait StrictEncode: StrictType {
     unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W>;
 }
 
-pub trait StrictDecode: Sized {
-    fn strict_decode<'read>(reader: &mut impl TypedRead<'read>) -> Result<Self, DecodeError>;
+pub trait StrictDecode: StrictType {
+    unsafe fn strict_decode<'read>(reader: &mut impl TypedRead<'read>)
+        -> Result<Self, DecodeError>;
 }
 
 impl<T: StrictEncode> StrictEncode for &T {
@@ -348,7 +349,7 @@ pub trait Deserialize: StrictDecode {
     ) -> Result<Self, DeserializeError> {
         let cursor = io::Cursor::new(ast_data.into_inner());
         let mut reader = StrictReader::with(MAX, cursor);
-        let me = Self::strict_decode(&mut reader)?;
+        let me = unsafe { Self::strict_decode(&mut reader)? };
         let mut cursor = reader.unbox();
         if !cursor.fill_buf()?.is_empty() {
             return Err(DeserializeError::DataNotEntirelyConsumed);
@@ -361,7 +362,7 @@ pub trait Deserialize: StrictDecode {
     ) -> Result<Self, DeserializeError> {
         let file = fs::File::open(path)?;
         let mut reader = StrictReader::with(MAX, file);
-        let me = Self::strict_decode(&mut reader)?;
+        let me = unsafe { Self::strict_decode(&mut reader)? };
         let mut file = reader.unbox();
         if file.stream_position()? != file.seek(io::SeekFrom::End(0))? {
             return Err(DeserializeError::DataNotEntirelyConsumed);

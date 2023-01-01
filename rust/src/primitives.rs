@@ -30,8 +30,8 @@ use amplify::num::apfloat::{ieee, Float};
 use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
 
 use crate::{
-    DefineUnion, Sizing, StrictDumb, StrictEncode, StrictSum, StrictType, StrictUnion, TypeName,
-    TypedWrite, WriteUnion, STD_LIB,
+    DecodeError, DefineUnion, Sizing, StrictDumb, StrictEncode, StrictSum, StrictType, StrictUnion,
+    TypeName, TypedRead, TypedWrite, WriteUnion, STD_LIB,
 };
 
 pub mod constants {
@@ -317,6 +317,14 @@ macro_rules! encode_num {
         impl $crate::StrictEncode for $ty {
             unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
                 unsafe { writer.register_primitive($id).write_raw_array(self.to_le_bytes()) }
+            }
+        }
+        impl $crate::StrictDecode for $ty {
+            unsafe fn strict_decode<'read>(
+                reader: &mut impl TypedRead<'read>,
+            ) -> Result<Self, DecodeError> {
+                let buf = unsafe { reader.read_raw_array::<{ <$ty>::BITS as usize / 8 }>()? };
+                Ok(<$ty>::from_le_bytes(buf))
             }
         }
     };
