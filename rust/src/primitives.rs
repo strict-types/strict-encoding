@@ -30,8 +30,8 @@ use amplify::num::apfloat::{ieee, Float};
 use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
 
 use crate::{
-    DecodeError, DefineUnion, Sizing, StrictDumb, StrictEncode, StrictSum, StrictType, StrictUnion,
-    TypeName, TypedRead, TypedWrite, WriteUnion, STD_LIB,
+    DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
+    StrictSum, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteUnion, STD_LIB,
 };
 
 pub mod constants {
@@ -410,6 +410,17 @@ impl<T: StrictEncode> StrictEncode for Option<T> {
                 Some(val) => u.write_type(fname!("some"), val),
             }?
             .complete())
+        })
+    }
+}
+impl<T: StrictDecode> StrictDecode for Option<T> {
+    unsafe fn strict_decode<'read>(
+        reader: &mut impl TypedRead<'read>,
+    ) -> Result<Self, DecodeError> {
+        reader.read_union(|field_name, u| match field_name.as_str() {
+            "none" => Ok(None),
+            "some" => u.read_tuple(|r| r.read_field().map(Some)),
+            _ => unreachable!("unknown option field"),
         })
     }
 }
