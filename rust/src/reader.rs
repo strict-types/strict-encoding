@@ -146,12 +146,13 @@ impl<R: io::Read> TypedRead for StrictReader<R> {
         inner(variant_name)
     }
 
-    fn read_tuple<'parent, T: StrictTuple>(
-        &mut self,
+    fn read_tuple<'parent, 'me, T: StrictTuple>(
+        &'me mut self,
         inner: impl FnOnce(&mut Self::TupleReader<'parent>) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
         Self: 'parent,
+        'me: 'parent,
     {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
         let mut reader = TupleReader {
@@ -169,12 +170,13 @@ impl<R: io::Read> TypedRead for StrictReader<R> {
         Ok(res)
     }
 
-    fn read_struct<'parent, T: StrictStruct>(
-        &mut self,
+    fn read_struct<'parent, 'me, T: StrictStruct>(
+        &'me mut self,
         inner: impl FnOnce(&mut Self::StructReader<'parent>) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
         Self: 'parent,
+        'me: 'parent,
     {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
         let mut reader = StructReader {
@@ -239,12 +241,13 @@ impl<R: io::Read> ReadUnion for StrictReader<R> {
     type TupleReader<'parent> = TupleReader<'parent, R> where Self: 'parent;
     type StructReader<'parent> = StructReader<'parent, R> where Self: 'parent;
 
-    fn read_tuple<'parent, T: StrictSum>(
-        &mut self,
+    fn read_tuple<'parent, 'me, T: StrictSum>(
+        &'me mut self,
         inner: impl FnOnce(&mut Self::TupleReader<'parent>) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
         Self: 'parent,
+        'me: 'parent,
     {
         let mut reader = TupleReader {
             read_fields: 0,
@@ -253,12 +256,13 @@ impl<R: io::Read> ReadUnion for StrictReader<R> {
         inner(&mut reader)
     }
 
-    fn read_struct<'parent, T: StrictSum>(
-        &mut self,
+    fn read_struct<'parent, 'me, T: StrictSum>(
+        &'me mut self,
         inner: impl FnOnce(&mut Self::StructReader<'parent>) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>
     where
         Self: 'parent,
+        'me: 'parent,
     {
         let mut reader = StructReader {
             named_fields: empty!(),
