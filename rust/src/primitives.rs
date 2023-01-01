@@ -528,7 +528,7 @@ impl<
 
 #[cfg(test)]
 mod test {
-    use crate::primitive::U8;
+    use super::constants::U8;
 
     #[test]
     fn u8() {

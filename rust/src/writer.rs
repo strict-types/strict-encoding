@@ -65,7 +65,7 @@ impl<W: io::Write> CountingWriter<W> {
 impl<W: io::Write> io::Write for CountingWriter<W> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         if self.count + buf.len() > self.limit {
-            return Err(io::Error::from(io::ErrorKind::InvalidInput));
+            return Err(io::ErrorKind::InvalidInput.into());
         }
         let count = self.writer.write(buf)?;
         self.count += count;

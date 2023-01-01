@@ -25,7 +25,7 @@ use std::io::BufRead;
 
 use amplify::confinement::Confined;
 
-use crate::primitives::{StrictDecode, StrictEncode, StrictReader, StrictWriter};
+use crate::{StrictDecode, StrictEncode, StrictReader, StrictWriter};
 
 pub fn encode<T: StrictEncode + Debug + Eq>(val: &T) -> Vec<u8> {
     const MAX: usize = u16::MAX as usize;
@@ -40,7 +40,7 @@ pub fn decode<T: StrictDecode + Debug + Eq>(data: impl AsRef<[u8]>) -> T {
 
     let cursor = io::Cursor::new(data);
     let mut reader = StrictReader::with(MAX, cursor);
-    let val2 = T::strict_decode(&mut reader).unwrap();
+    let val2 = unsafe { T::strict_decode(&mut reader).unwrap() };
     let mut cursor = reader.unbox();
     assert!(!cursor.fill_buf().unwrap().is_empty(), "data not entirely consumed");
 
