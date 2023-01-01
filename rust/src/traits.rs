@@ -128,8 +128,10 @@ pub trait TypedWrite: Sized {
 }
 
 pub trait TypedRead: Sized {
-    type TupleReader: ReadTuple;
-    type StructReader: ReadStruct;
+    type TupleReader<'parent>: ReadTuple
+    where Self: 'parent;
+    type StructReader<'parent>: ReadStruct
+    where Self: 'parent;
     type UnionReader: ReadUnion;
 
     fn read_union<T: StrictUnion>(
@@ -144,15 +146,19 @@ pub trait TypedRead: Sized {
     where
         u8: From<T>;
 
-    fn read_tuple<T: StrictTuple>(
+    fn read_tuple<'parent, T: StrictTuple>(
         &mut self,
-        inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>;
+        inner: impl FnOnce(&mut Self::TupleReader<'parent>) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>
+    where
+        Self: 'parent;
 
-    fn read_struct<T: StrictStruct>(
+    fn read_struct<'parent, T: StrictStruct>(
         &mut self,
-        inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>;
+        inner: impl FnOnce(&mut Self::StructReader<'parent>) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>
+    where
+        Self: 'parent;
 
     fn read_newtype<T: StrictTuple + Wrapper>(&mut self) -> Result<T, DecodeError>
     where T::Inner: StrictDecode {
@@ -269,18 +275,24 @@ pub trait WriteUnion: Sized {
 }
 
 pub trait ReadUnion: Sized {
-    type TupleReader: ReadTuple;
-    type StructReader: ReadStruct;
+    type TupleReader<'parent>: ReadTuple
+    where Self: 'parent;
+    type StructReader<'parent>: ReadStruct
+    where Self: 'parent;
 
-    fn read_tuple<T: StrictSum>(
+    fn read_tuple<'parent, T: StrictSum>(
         &mut self,
-        inner: impl FnOnce(&mut Self::TupleReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>;
+        inner: impl FnOnce(&mut Self::TupleReader<'parent>) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>
+    where
+        Self: 'parent;
 
-    fn read_struct<T: StrictSum>(
+    fn read_struct<'parent, T: StrictSum>(
         &mut self,
-        inner: impl FnOnce(&mut Self::StructReader) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>;
+        inner: impl FnOnce(&mut Self::StructReader<'parent>) -> Result<T, DecodeError>,
+    ) -> Result<T, DecodeError>
+    where
+        Self: 'parent;
 
     fn read_newtype<T: StrictSum + From<I>, I: StrictProduct + StrictDecode>(
         &mut self,
