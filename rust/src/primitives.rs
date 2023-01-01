@@ -323,8 +323,8 @@ macro_rules! encode_num {
             unsafe fn strict_decode<'read>(
                 reader: &mut impl TypedRead<'read>,
             ) -> Result<Self, DecodeError> {
-                let buf = unsafe { reader.read_raw_array::<{ <$ty>::BITS as usize / 8 }>()? };
-                Ok(<$ty>::from_le_bytes(buf))
+                let buf = unsafe { reader.read_raw_array::<{ Self::BITS as usize / 8 }>()? };
+                Ok(Self::from_le_bytes(buf))
             }
         }
     };
@@ -340,6 +340,18 @@ macro_rules! encode_float {
                 let mut be = [0u8; $len];
                 be.copy_from_slice(&self.to_bits().to_le_bytes()[..$len]);
                 unsafe { writer.register_primitive($id).write_raw_array(be) }
+            }
+        }
+        impl $crate::StrictDecode for $ty {
+            unsafe fn strict_decode<'read>(
+                reader: &mut impl TypedRead<'read>,
+            ) -> Result<Self, DecodeError> {
+                const BYTES: usize = <$ty>::BITS / 8;
+                let mut inner = [0u8; 32];
+                let buf = unsafe { reader.read_raw_array::<BYTES>()? };
+                inner[..BYTES].copy_from_slice(&buf[..]);
+                let bits = u256::from_le_bytes(inner);
+                Ok(Self::from_bits(bits))
             }
         }
     };
