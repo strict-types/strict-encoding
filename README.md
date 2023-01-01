@@ -77,6 +77,23 @@ strict-encoded formats are standardized as using *bitcoin consensus
 encoding*.
 
 
+```rust
+#[strict_encode_ext]
+pub trait StEnExt {}
+#[strict_decode_ext]
+pub trait StDeExt {}
+
+#[derive(StrictEncode, StrictDecode)]
+pub struct Some {
+    #[strict_encoding(encode = StEnExt, decode = StDeExt)]
+    txid: Txid
+}
+
+impl StEnExt for Txid {
+    
+}
+```
+
 ## Contributing
 
 Contribution guidelines can be found in [CONTRIBUTING](../CONTRIBUTING.md)

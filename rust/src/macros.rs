@@ -1,59 +1,68 @@
-// LNP/BP client-side-validation foundation libraries implementing LNPBP
-// specifications & standards (LNPBP-4, 7, 8, 9, 42, 81)
+// Strict encoding library for deterministic binary serialization.
 //
-// Written in 2019-2022 by
-//     Dr. Maxim Orlovsky <orlovsky@pandoracore.com>
+// SPDX-License-Identifier: Apache-2.0
 //
-// To the extent possible under law, the author(s) have dedicated all
-// copyright and related and neighboring rights to this software to
-// the public domain worldwide. This software is distributed without
-// any warranty.
+// Written in 2019-2023 by
+//     Dr. Maxim Orlovsky <orlovsky@ubideco.org>
 //
-// You should have received a copy of the Apache 2.0 License along with this
-// software. If not, see <https://opensource.org/licenses/Apache-2.0>.
+// Copyright 2022-2023 UBIDECO Institute
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-/// Macro simplifying encoding for a given list of items
 #[macro_export]
-macro_rules! strict_encode_list {
-    ( $encoder:ident; $($item:expr),+ ) => {
-        {
-            let mut len = 0usize;
-            $(
-                len += $item.strict_encode(&mut $encoder)?;
-            )+
-            len
+macro_rules! strict_newtype {
+    ($ty:ident, $lib:expr) => {
+        impl $crate::StrictType for $ty {
+            const STRICT_LIB_NAME: &'static str = $lib;
+        }
+        impl $crate::StrictProduct for $ty {}
+        impl $crate::StrictTuple for $ty {
+            const FIELD_COUNT: u8 = 0;
         }
     };
-
-    ( $encoder:ident; $len:ident; $($item:expr),+ ) => {
-        {
-            $(
-                $len += $item.strict_encode(&mut $encoder)?;
-            )+
-            $len
-        }
-    }
 }
 
-/// Macro simplifying decoding of a structure with a given list of fields
 #[macro_export]
-macro_rules! strict_decode_self {
-    ( $decoder:ident; $($item:ident),+ ) => {
-        {
-            Self {
-            $(
-                $item: ::strict_encoding::StrictDecode::strict_decode(&mut $decoder)?,
-            )+
-            }
-        }
+macro_rules! tn {
+    ($name:literal) => {
+        $crate::TypeName::from($name).into()
     };
-    ( $decoder:ident; $($item:ident),+ ; crate) => {
-        {
-            Self {
-            $(
-                $item: $crate::StrictDecode::strict_decode(&mut $decoder)?,
-            )+
-            }
-        }
+    ($name:ident) => {
+        $crate::TypeName::try_from($name)
+            .expect("invalid type name from formatter")
+            .into()
+    };
+    ($name:literal, $($arg:expr),+) => {
+        tn!(format!($name, $($arg),+))
+    };
+}
+
+#[macro_export]
+macro_rules! fname {
+    ($name:literal) => {
+        $crate::FieldName::from($name).into()
+    };
+    ($name:expr) => {
+        $crate::FieldName::from($name).into()
+    };
+}
+
+#[macro_export]
+macro_rules! libname {
+    ($name:literal) => {
+        $crate::LibName::from($name)
+    };
+    ($name:expr) => {
+        $crate::LibName::from($name)
     };
 }
