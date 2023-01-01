@@ -193,9 +193,7 @@ impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
         self.named_fields.as_slice()
     }
 
-    pub fn fields_count(&self) -> u8 {
-        self.tuple_fields.unwrap_or_else(|| self.named_fields.len() as u8)
-    }
+    pub fn fields_count(&self) -> u8 { self.tuple_fields.unwrap_or(self.named_fields.len() as u8) }
 
     pub fn name(&self) -> &str { self.name.as_ref().map(|n| n.as_str()).unwrap_or("<unnamed>") }
 
@@ -343,11 +341,10 @@ impl<W: io::Write> UnionWriter<W> {
     }
 
     fn _write_variant(mut self, name: FieldName, variant_type: VariantType) -> io::Result<Self> {
-        let (variant, t) = self.variants.iter().find(|(f, _)| f.name == name).expect(&format!(
-            "variant {:#} was not defined in {}",
-            &name,
-            self.name()
-        ));
+        let (variant, t) =
+            self.variants.iter().find(|(f, _)| f.name == name).unwrap_or_else(|| {
+                panic!("variant {:#} was not defined in {}", &name, self.name())
+            });
         assert_eq!(
             *t,
             variant_type,

@@ -55,6 +55,6 @@ pub use types::*;
 pub use util::{Sizing, Variant};
 pub use writer::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWriter};
 
-pub const NO_LIB: &'static str = "No";
-const STD_LIB: &'static str = "StdLib";
-pub const STEN_LIB: &'static str = "StEn";
+pub const NO_LIB: &str = "No";
+const STD_LIB: &str = "StdLib";
+pub const STEN_LIB: &str = "StEn";

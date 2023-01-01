@@ -45,12 +45,12 @@ pub trait StrictType: Sized {
         fn get_ident(path: &str) -> &str { path.rsplit_once("::").map(|(_, n)| n).unwrap_or(path) }
 
         let name = any::type_name::<Self>();
-        let (base, generics) = name.split_once("<").unwrap_or((name, ""));
+        let (base, generics) = name.split_once('<').unwrap_or((name, ""));
         let generics = generics.trim_end_matches('>');
         let mut ident = get_ident(base).to_owned();
         for arg in generics.split(',') {
             ident.push('_');
-            ident.extend(get_ident(arg).chars());
+            ident.push_str(get_ident(arg));
         }
         Some(tn!(ident))
     }

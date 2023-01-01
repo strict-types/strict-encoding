@@ -436,8 +436,8 @@ impl<T: StrictEncode + Copy + StrictDumb, const LEN: usize> StrictEncode for [T;
 impl<T: StrictDecode + Copy + StrictDumb, const LEN: usize> StrictDecode for [T; LEN] {
     unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         let mut ar = [T::strict_dumb(); LEN];
-        for i in 0..LEN {
-            ar[i] = T::strict_decode(reader)?;
+        for c in ar.iter_mut() {
+            *c = T::strict_decode(reader)?;
         }
         Ok(ar)
     }
