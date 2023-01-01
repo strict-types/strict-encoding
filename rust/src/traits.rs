@@ -306,30 +306,30 @@ pub trait ReadUnion: Sized {
 }
 
 pub trait StrictEncode: StrictType {
-    unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W>;
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W>;
 }
 
 pub trait StrictDecode: StrictType {
-    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError>;
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError>;
 }
 
 impl<T: StrictEncode> StrictEncode for &T {
-    unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        unsafe { (*self).strict_encode(writer) }
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        (*self).strict_encode(writer)
     }
 }
 
 pub trait Serialize: StrictEncode {
     fn strict_serialized_len(&self) -> io::Result<usize> {
         let counter = StrictWriter::counter();
-        Ok(unsafe { self.strict_encode(counter)? }.unbox().count)
+        Ok(self.strict_encode(counter)?.unbox().count)
     }
 
     fn to_strict_serialized<const MAX: usize>(
         &self,
     ) -> Result<Confined<Vec<u8>, 0, MAX>, SerializeError> {
         let ast_data = StrictWriter::in_memory(MAX);
-        let data = unsafe { self.strict_encode(ast_data)? }.unbox();
+        let data = self.strict_encode(ast_data)?.unbox();
         Confined::<Vec<u8>, 0, MAX>::try_from(data).map_err(SerializeError::from)
     }
 
@@ -338,9 +338,7 @@ pub trait Serialize: StrictEncode {
         path: impl AsRef<std::path::Path>,
     ) -> Result<(), SerializeError> {
         let file = StrictWriter::with(MAX, fs::File::create(path)?);
-        unsafe {
-            self.strict_encode(file)?;
-        }
+        self.strict_encode(file)?;
         Ok(())
     }
 }
@@ -351,7 +349,7 @@ pub trait Deserialize: StrictDecode {
     ) -> Result<Self, DeserializeError> {
         let cursor = io::Cursor::new(ast_data.into_inner());
         let mut reader = StrictReader::with(MAX, cursor);
-        let me = unsafe { Self::strict_decode(&mut reader)? };
+        let me = Self::strict_decode(&mut reader)?;
         let mut cursor = reader.unbox();
         if !cursor.fill_buf()?.is_empty() {
             return Err(DeserializeError::DataNotEntirelyConsumed);
@@ -364,7 +362,7 @@ pub trait Deserialize: StrictDecode {
     ) -> Result<Self, DeserializeError> {
         let file = fs::File::open(path)?;
         let mut reader = StrictReader::with(MAX, file);
-        let me = unsafe { Self::strict_decode(&mut reader)? };
+        let me = Self::strict_decode(&mut reader)?;
         let mut file = reader.unbox();
         if file.stream_position()? != file.seek(io::SeekFrom::End(0))? {
             return Err(DeserializeError::DataNotEntirelyConsumed);

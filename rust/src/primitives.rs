@@ -315,12 +315,12 @@ macro_rules! encode_num {
             const STRICT_LIB_NAME: &'static str = $crate::STD_LIB;
         }
         impl $crate::StrictEncode for $ty {
-            unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+            fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
                 unsafe { writer.register_primitive($id).write_raw_array(self.to_le_bytes()) }
             }
         }
         impl $crate::StrictDecode for $ty {
-            unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+            fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
                 let buf = unsafe { reader.read_raw_array::<{ Self::BITS as usize / 8 }>()? };
                 Ok(Self::from_le_bytes(buf))
             }
@@ -334,14 +334,14 @@ macro_rules! encode_float {
             const STRICT_LIB_NAME: &'static str = $crate::STD_LIB;
         }
         impl $crate::StrictEncode for $ty {
-            unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+            fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
                 let mut be = [0u8; $len];
                 be.copy_from_slice(&self.to_bits().to_le_bytes()[..$len]);
                 unsafe { writer.register_primitive($id).write_raw_array(be) }
             }
         }
         impl $crate::StrictDecode for $ty {
-            unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+            fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
                 const BYTES: usize = <$ty>::BITS / 8;
                 let mut inner = [0u8; 32];
                 let buf = unsafe { reader.read_raw_array::<BYTES>()? };
@@ -397,7 +397,7 @@ where T: StrictType
 }
 impl<T> StrictUnion for Option<T> where T: StrictType {}
 impl<T: StrictEncode> StrictEncode for Option<T> {
-    unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_union::<Self>(|u| {
             let u = u.define_unit(fname!("none")).define_type::<T>(fname!("some")).complete();
 
@@ -410,7 +410,7 @@ impl<T: StrictEncode> StrictEncode for Option<T> {
     }
 }
 impl<T: StrictDecode> StrictDecode for Option<T> {
-    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         reader.read_union(|field_name, u| match field_name.as_str() {
             "none" => Ok(None),
             "some" => u.read_tuple(|r| r.read_field().map(Some)),
@@ -424,17 +424,15 @@ impl<T: StrictType + Copy + StrictDumb, const LEN: usize> StrictType for [T; LEN
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<T: StrictEncode + Copy + StrictDumb, const LEN: usize> StrictEncode for [T; LEN] {
-    unsafe fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
-        unsafe {
-            for item in self {
-                writer = item.strict_encode(writer)?;
-            }
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+        for item in self {
+            writer = item.strict_encode(writer)?;
         }
-        Ok(writer.register_array(&T::strict_dumb(), LEN as u16))
+        Ok(unsafe { writer.register_array(&T::strict_dumb(), LEN as u16) })
     }
 }
 impl<T: StrictDecode + Copy + StrictDumb, const LEN: usize> StrictDecode for [T; LEN] {
-    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         let mut ar = [T::strict_dumb(); LEN];
         for c in ar.iter_mut() {
             *c = T::strict_decode(reader)?;
@@ -450,7 +448,7 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictType for Confined<String,
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<String, MIN_LEN, MAX_LEN>
 {
-    unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         unsafe {
             writer
                 .register_unicode(Sizing::new(MIN_LEN as u16, MAX_LEN as u16))
@@ -461,8 +459,8 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
     for Confined<String, MIN_LEN, MAX_LEN>
 {
-    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        let bytes = reader.read_raw_bytes::<MAX_LEN>()?;
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let bytes = unsafe { reader.read_raw_bytes::<MAX_LEN>()? };
         let s = String::from_utf8(bytes)?;
         Confined::try_from(s).map_err(DecodeError::from)
     }
@@ -477,7 +475,7 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictType
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<AsciiString, MIN_LEN, MAX_LEN>
 {
-    unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         unsafe {
             writer
                 .register_ascii(Sizing::new(MIN_LEN as u16, MAX_LEN as u16))
@@ -488,8 +486,8 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
     for Confined<AsciiString, MIN_LEN, MAX_LEN>
 {
-    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        let bytes = reader.read_raw_bytes::<MAX_LEN>()?;
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let bytes = unsafe { reader.read_raw_bytes::<MAX_LEN>()? };
         let s = AsciiString::from_ascii(bytes).map_err(|err| err.ascii_error())?;
         Confined::try_from(s).map_err(DecodeError::from)
     }
@@ -504,18 +502,20 @@ impl<T: StrictType, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
 impl<T: StrictEncode + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<Vec<T>, MIN_LEN, MAX_LEN>
 {
-    unsafe fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
         unsafe {
             writer = writer.write_raw_collection::<Vec<T>, MIN_LEN, MAX_LEN>(self)?;
         }
-        Ok(writer.register_list(&T::strict_dumb(), Sizing::new(MIN_LEN as u16, MAX_LEN as u16)))
+        Ok(unsafe {
+            writer.register_list(&T::strict_dumb(), Sizing::new(MIN_LEN as u16, MAX_LEN as u16))
+        })
     }
 }
 impl<T: StrictDecode, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
     for Confined<Vec<T>, MIN_LEN, MAX_LEN>
 {
-    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_raw_collection::<_, MIN_LEN, MAX_LEN>()
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        unsafe { reader.read_raw_collection::<_, MIN_LEN, MAX_LEN>() }
     }
 }
 
@@ -528,18 +528,20 @@ impl<T: StrictType + Ord, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
 impl<T: StrictEncode + Ord + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<BTreeSet<T>, MIN_LEN, MAX_LEN>
 {
-    unsafe fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
         unsafe {
             writer = writer.write_raw_collection::<BTreeSet<T>, MIN_LEN, MAX_LEN>(self)?;
         }
-        Ok(writer.register_set(&T::strict_dumb(), Sizing::new(MIN_LEN as u16, MAX_LEN as u16)))
+        Ok(unsafe {
+            writer.register_set(&T::strict_dumb(), Sizing::new(MIN_LEN as u16, MAX_LEN as u16))
+        })
     }
 }
 impl<T: StrictDecode + Ord, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
     for Confined<BTreeSet<T>, MIN_LEN, MAX_LEN>
 {
-    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_raw_collection::<_, MIN_LEN, MAX_LEN>()
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        unsafe { reader.read_raw_collection::<_, MIN_LEN, MAX_LEN>() }
     }
 }
 
@@ -556,7 +558,7 @@ impl<
         const MAX_LEN: usize,
     > StrictEncode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
 {
-    unsafe fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
         unsafe {
             writer = writer.write_raw_len::<MAX_LEN>(self.len())?;
         }
@@ -564,11 +566,13 @@ impl<
             writer = k.strict_encode(writer)?;
             writer = v.strict_encode(writer)?
         }
-        Ok(writer.register_map(
-            &K::strict_dumb(),
-            &V::strict_dumb(),
-            Sizing::new(MIN_LEN as u16, MAX_LEN as u16),
-        ))
+        Ok(unsafe {
+            writer.register_map(
+                &K::strict_dumb(),
+                &V::strict_dumb(),
+                Sizing::new(MIN_LEN as u16, MAX_LEN as u16),
+            )
+        })
     }
 }
 impl<
@@ -578,8 +582,8 @@ impl<
         const MAX_LEN: usize,
     > StrictDecode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
 {
-    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        let len = reader.read_raw_len::<MAX_LEN>()?;
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let len = unsafe { reader.read_raw_len::<MAX_LEN>()? };
         let mut col = BTreeMap::new();
         for _ in 0..len {
             let key = StrictDecode::strict_decode(reader)?;

@@ -112,7 +112,7 @@ impl StrictDumb for Ident {
     fn strict_dumb() -> Self { Ident::from("Dumb") }
 }
 impl StrictEncode for Ident {
-    unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_newtype::<Self>(Wrapper::as_inner(self))
     }
 }
@@ -142,7 +142,7 @@ impl StrictDumb for TypeName {
     fn strict_dumb() -> Self { tn!("Dumb") }
 }
 impl StrictEncode for TypeName {
-    unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_newtype::<Self>(Wrapper::as_inner(self))
     }
 }
@@ -172,7 +172,7 @@ impl StrictDumb for FieldName {
     fn strict_dumb() -> Self { fname!("dumb") }
 }
 impl StrictEncode for FieldName {
-    unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_newtype::<Self>(Wrapper::as_inner(self))
     }
 }
@@ -202,7 +202,7 @@ impl StrictDumb for LibName {
     fn strict_dumb() -> Self { libname!("Dumb") }
 }
 impl StrictEncode for LibName {
-    unsafe fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_newtype::<Self>(Wrapper::as_inner(self))
     }
 }

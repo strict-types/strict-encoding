@@ -546,13 +546,11 @@ pub fn test_object_encoding_roundtrip<T, const MAX: usize>(
 ) -> Result<Vec<u8>, DataEncodingTestFailure<T>>
 where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
     let ast_data = StrictWriter::in_memory(MAX);
-    let encoded_object = unsafe { object.strict_encode(ast_data)? }.unbox();
+    let encoded_object = object.strict_encode(ast_data)?.unbox();
     let mut reader = StrictReader::in_memory(encoded_object, MAX);
-    let decoded_object = unsafe {
-        T::strict_decode(&mut reader).map_err(|e| {
-            DataEncodingTestFailure::DecoderFailure(e, reader.clone().unbox().into_inner())
-        })?
-    };
+    let decoded_object = T::strict_decode(&mut reader).map_err(|e| {
+        DataEncodingTestFailure::DecoderFailure(e, reader.clone().unbox().into_inner())
+    })?;
     if &decoded_object != object {
         return Err(DataEncodingTestFailure::TranscodedObjectDiffersFromOriginal {
             original: object.clone(),
@@ -599,11 +597,9 @@ pub fn test_vec_decoding_roundtrip<T, const MAX: usize>(
 ) -> Result<T, DataEncodingTestFailure<T>>
 where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
     let mut reader = StrictReader::in_memory(test_vec, MAX);
-    let decoded_object = unsafe {
-        T::strict_decode(&mut reader).map_err(|e| {
-            DataEncodingTestFailure::DecoderFailure(e, reader.clone().unbox().into_inner())
-        })?
-    };
+    let decoded_object = T::strict_decode(&mut reader).map_err(|e| {
+        DataEncodingTestFailure::DecoderFailure(e, reader.clone().unbox().into_inner())
+    })?;
     let encoded_object = test_object_encoding_roundtrip::<T, MAX>(&decoded_object)?;
     let inner = reader.unbox().into_inner();
     if inner != encoded_object {

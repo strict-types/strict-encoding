@@ -126,7 +126,7 @@ impl<R: io::Read> TypedRead for StrictReader<R> {
         inner: impl FnOnce(FieldName, &mut Self::UnionReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError> {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
-        let ord = unsafe { u8::strict_decode(self)? };
+        let ord = u8::strict_decode(self)?;
         let variant_name = T::variant_name_by_ord(ord)
             .ok_or(DecodeError::UnionValueNotKnown(name.to_string(), ord))?;
         inner(variant_name, self)
@@ -140,7 +140,7 @@ impl<R: io::Read> TypedRead for StrictReader<R> {
         u8: From<T>,
     {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
-        let ord = unsafe { u8::strict_decode(self)? };
+        let ord = u8::strict_decode(self)?;
         let variant_name = T::variant_name_by_ord(ord)
             .ok_or(DecodeError::EnumValueNotKnown(name.to_string(), ord))?;
         inner(variant_name)
@@ -221,7 +221,7 @@ pub struct TupleReader<'parent, R: io::Read> {
 impl<'parent, R: io::Read> ReadTuple for TupleReader<'parent, R> {
     fn read_field<T: StrictDecode>(&mut self) -> Result<T, DecodeError> {
         self.read_fields += 1;
-        unsafe { T::strict_decode(self.parent) }
+        T::strict_decode(self.parent)
     }
 }
 
@@ -233,7 +233,7 @@ pub struct StructReader<'parent, R: io::Read> {
 impl<'parent, R: io::Read> ReadStruct for StructReader<'parent, R> {
     fn read_field<T: StrictDecode>(&mut self, field: FieldName) -> Result<T, DecodeError> {
         self.named_fields.push(field);
-        unsafe { T::strict_decode(self.parent) }
+        T::strict_decode(self.parent)
     }
 }
 
