@@ -1,13 +1,12 @@
 # Strict encoding library
 
-![Build](https://github.com/LNP-BP/client_side_validation/workflows/Build/badge.svg)
-![Tests](https://github.com/LNP-BP/client_side_validation/workflows/Tests/badge.svg)
-![Lints](https://github.com/LNP-BP/client_side_validation/workflows/Lints/badge.svg)
-[![codecov](https://codecov.io/gh/LNP-BP/client_side_validation/branch/master/graph/badge.svg)](https://codecov.io/gh/LNP-BP/client_side_validation)
+![Build](https://github.com/strict-types/strict-encoding/workflows/Build/badge.svg)
+![Tests](https://github.com/strict-types/strict-encoding/workflows/Tests/badge.svg)
+![Lints](https://github.com/strict-types/strict-encoding/workflows/Lints/badge.svg)
+[![codecov](https://codecov.io/gh/strict-types/strict-encoding/branch/master/graph/badge.svg)](https://codecov.io/gh/strict-types/strict-encoding)
 
-[![crates.io](https://meritbadge.herokuapp.com/strict_encoding)](https://crates.io/crates/strict_encoding)
+[![crates.io](https://img.shields.io/crates/v/strict_encoding)](https://crates.io/crates/strict_encoding)
 [![Docs](https://docs.rs/strict_encoding/badge.svg)](https://docs.rs/strict_encoding)
-[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![Apache-2 licensed](https://img.shields.io/crates/l/strict_encoding)](./LICENSE)
 
 Deterministic binary serialization for client-side-validation.
