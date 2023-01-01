@@ -495,7 +495,7 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
     }
 }
 
-impl<T: StrictEncode, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
+impl<T: StrictType, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
     for Confined<Vec<T>, MIN_LEN, MAX_LEN>
 {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
@@ -511,8 +511,15 @@ impl<T: StrictEncode + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> S
         Ok(writer.register_list(&T::strict_dumb(), Sizing::new(MIN_LEN as u16, MAX_LEN as u16)))
     }
 }
+impl<T: StrictDecode, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
+    for Confined<Vec<T>, MIN_LEN, MAX_LEN>
+{
+    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_raw_collection::<_, MIN_LEN, MAX_LEN>()
+    }
+}
 
-impl<T: StrictEncode + Ord, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
+impl<T: StrictType + Ord, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
     for Confined<BTreeSet<T>, MIN_LEN, MAX_LEN>
 {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
@@ -528,8 +535,15 @@ impl<T: StrictEncode + Ord + StrictDumb, const MIN_LEN: usize, const MAX_LEN: us
         Ok(writer.register_set(&T::strict_dumb(), Sizing::new(MIN_LEN as u16, MAX_LEN as u16)))
     }
 }
+impl<T: StrictDecode + Ord, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
+    for Confined<BTreeSet<T>, MIN_LEN, MAX_LEN>
+{
+    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_raw_collection::<_, MIN_LEN, MAX_LEN>()
+    }
+}
 
-impl<K: StrictEncode + Ord + Hash, V: StrictEncode, const MIN_LEN: usize, const MAX_LEN: usize>
+impl<K: StrictType + Ord + Hash, V: StrictType, const MIN_LEN: usize, const MAX_LEN: usize>
     StrictType for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
 {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
@@ -555,6 +569,24 @@ impl<
             &V::strict_dumb(),
             Sizing::new(MIN_LEN as u16, MAX_LEN as u16),
         ))
+    }
+}
+impl<
+        K: StrictDecode + Ord + Hash + StrictDumb,
+        V: StrictDecode + StrictDumb,
+        const MIN_LEN: usize,
+        const MAX_LEN: usize,
+    > StrictDecode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
+{
+    unsafe fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let len = reader.read_raw_len::<MAX_LEN>()?;
+        let mut col = BTreeMap::new();
+        for _ in 0..len {
+            let key = StrictDecode::strict_decode(reader)?;
+            let val = StrictDecode::strict_decode(reader)?;
+            col.insert(key, val);
+        }
+        Confined::try_from(col).map_err(DecodeError::from)
     }
 }
 
