@@ -186,18 +186,6 @@ pub trait TypedRead: Sized {
             _ => unreachable!("confined collections larger than u32::MAX must not exist"),
         })
     }
-    #[doc(hidden)]
-    unsafe fn read_raw_collection<C: Collection, const MIN_LEN: usize, const MAX_LEN: usize>(
-        &mut self,
-    ) -> Result<Confined<C, MIN_LEN, MAX_LEN>, DecodeError>
-    where C::Item: StrictDecode {
-        let len = self.read_raw_len::<MAX_LEN>()?;
-        let mut col = C::with_capacity(len);
-        for _ in 0..len {
-            col.push(StrictDecode::strict_decode(self)?);
-        }
-        Confined::try_from(col).map_err(DecodeError::from)
-    }
 }
 
 pub trait DefineTuple: Sized {

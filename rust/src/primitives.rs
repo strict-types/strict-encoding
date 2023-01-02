@@ -519,7 +519,12 @@ impl<T: StrictDecode, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
     for Confined<Vec<T>, MIN_LEN, MAX_LEN>
 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        unsafe { reader.read_raw_collection::<_, MIN_LEN, MAX_LEN>() }
+        let len = unsafe { reader.read_raw_len::<MAX_LEN>()? };
+        let mut col = Vec::<T>::with_capacity(len);
+        for _ in 0..len {
+            col.push(StrictDecode::strict_decode(reader)?);
+        }
+        Confined::try_from(col).map_err(DecodeError::from)
     }
 }
 
@@ -545,7 +550,18 @@ impl<T: StrictDecode + Ord, const MIN_LEN: usize, const MAX_LEN: usize> StrictDe
     for Confined<BTreeSet<T>, MIN_LEN, MAX_LEN>
 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        unsafe { reader.read_raw_collection::<_, MIN_LEN, MAX_LEN>() }
+        let len = unsafe { reader.read_raw_len::<MAX_LEN>()? };
+        let mut col = BTreeSet::<T>::new();
+        for _ in 0..len {
+            let item = StrictDecode::strict_decode(reader)?;
+            if matches!(col.last(), Some(last) if last > &item) {
+                return Err(DecodeError::BrokenSetOrder);
+            }
+            if !col.insert(item) {
+                return Err(DecodeError::RepeatedSetValue);
+            }
+        }
+        Confined::try_from(col).map_err(DecodeError::from)
     }
 }
 
@@ -592,7 +608,12 @@ impl<
         for _ in 0..len {
             let key = StrictDecode::strict_decode(reader)?;
             let val = StrictDecode::strict_decode(reader)?;
-            col.insert(key, val);
+            if matches!(col.last_key_value(), Some((last, _)) if last > &key) {
+                return Err(DecodeError::BrokenMapOrder);
+            }
+            if col.insert(key, val).is_some() {
+                return Err(DecodeError::RepeatedMapValue);
+            }
         }
         Confined::try_from(col).map_err(DecodeError::from)
     }

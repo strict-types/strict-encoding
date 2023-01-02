@@ -43,8 +43,11 @@ pub enum DecodeError {
     #[from]
     Ascii(amplify::ascii::AsAsciiStrError),
 
-    /// the value {0} occurs multiple times in a set
-    RepeatedSetValue(String),
+    /// value occurs multiple times in a set
+    RepeatedSetValue,
+
+    /// key occurs multiple times in a map
+    RepeatedMapValue,
 
     /// unsupported value `{1}` for enum `{0}` encountered during decode
     /// operation
@@ -58,21 +61,11 @@ pub enum DecodeError {
     /// supported range {1:#?}
     ValueOutOfRange(String, Range<u128>, u128),
 
-    /// encoded values are not deterministically ordered within a set {name}:
-    /// value `{prev}` precedes `{next}`
-    BrokenSetOrder {
-        name: String,
-        prev: String,
-        next: String,
-    },
+    /// encoded values are not deterministically ordered within a set
+    BrokenSetOrder,
 
-    /// encoded map {name} has wrong order of keys: key `{prev}` precedes
-    /// `{next}`
-    BrokenMapOrder {
-        name: String,
-        prev: String,
-        next: String,
-    },
+    /// encoded map has wrong order of keys
+    BrokenMapOrder,
 
     /// data integrity problem during strict decoding operation.\nDetails: {0}
     DataIntegrityError(String),
