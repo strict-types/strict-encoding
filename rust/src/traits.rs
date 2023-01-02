@@ -39,7 +39,7 @@ pub trait TypedWrite: Sized {
     type TupleWriter: WriteTuple<Parent = Self>;
     type StructWriter: WriteStruct<Parent = Self>;
     type UnionDefiner: DefineUnion<Parent = Self>;
-    type EnumDefiner: DefineEnum<Parent = Self>;
+    type EnumWriter: WriteEnum<Parent = Self>;
 
     fn write_union<T: StrictUnion>(
         self,
@@ -47,7 +47,7 @@ pub trait TypedWrite: Sized {
     ) -> io::Result<Self>;
     fn write_enum<T: StrictEnum>(
         self,
-        inner: impl FnOnce(Self::EnumDefiner) -> io::Result<Self>,
+        inner: impl FnOnce(Self::EnumWriter) -> io::Result<Self>,
     ) -> io::Result<Self>
     where
         u8: From<T>;
