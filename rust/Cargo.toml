@@ -1,12 +1,12 @@
 [package]
 name = "strict_encoding"
-version = "2.0.0-alpha.3"
+version = "2.0.0-beta.1"
 license = "Apache-2.0"
 authors = ["Dr. Maxim Orlovsky <orlovsky@ubideco.org>"]
-description = "Strict encoding: deterministic binary serialization"
-repository = "https://github.com/strict-encoding/strict_encoding"
+description = "Strict encoding: deterministic & confined binary serialization for strict types"
+repository = "https://github.com/strict-types/strict_encoding"
 homepage = "https://strict-encoding.org"
-keywords = ["lnp-bp", "strict-encoding", "networking", "bitcoin", "internet2"]
+keywords = ["strict-types", "gadt", "serialization", "serde", "protobuf"]
 categories = ["encoding", "parsing"]
 readme = "README.md"
 edition = "2021"
