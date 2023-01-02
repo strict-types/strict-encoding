@@ -26,8 +26,8 @@ use std::fmt::{Debug, Display};
 use crate::{FieldName, LibName, TypeName};
 
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error)]
-#[display("unexpected variant {1} for enum or union {0}")]
-pub struct VariantError<V: Debug + Display>(TypeName, V);
+#[display("unexpected variant {1} for enum or union {0:?}")]
+pub struct VariantError<V: Debug + Display>(Option<TypeName>, V);
 
 pub trait StrictDumb: Sized {
     fn strict_dumb() -> Self;
@@ -180,7 +180,14 @@ where
     Self: StrictSum + Copy + TryFrom<u8, Error = VariantError<u8>>,
     u8: From<Self>,
 {
-    fn from_variant_name(name: &FieldName) -> Result<Self, VariantError<&FieldName>>;
+    fn from_variant_name(name: &FieldName) -> Result<Self, VariantError<&FieldName>> {
+        for (ord, n) in Self::ALL_VARIANTS {
+            if *n == name.as_str() {
+                return Self::try_from(*ord).map_err(|_| VariantError(Self::strict_name(), name));
+            }
+        }
+        Err(VariantError(Self::strict_name(), name))
+    }
 
     fn strict_type_info() -> TypeInfo<Self> {
         Self::strict_check_variants();
