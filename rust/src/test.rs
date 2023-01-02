@@ -31,7 +31,7 @@ pub fn encode<T: StrictEncode + Debug + Eq>(val: &T) -> Vec<u8> {
     const MAX: usize = u16::MAX as usize;
 
     let ast_data = StrictWriter::in_memory(MAX);
-    let data = unsafe { val.strict_encode(ast_data).unwrap() }.unbox();
+    let data = val.strict_encode(ast_data).unwrap().unbox();
     Confined::<Vec<u8>, 0, MAX>::try_from(data).unwrap().into_inner()
 }
 
@@ -40,7 +40,7 @@ pub fn decode<T: StrictDecode + Debug + Eq>(data: impl AsRef<[u8]>) -> T {
 
     let cursor = io::Cursor::new(data);
     let mut reader = StrictReader::with(MAX, cursor);
-    let val2 = unsafe { T::strict_decode(&mut reader).unwrap() };
+    let val2 = T::strict_decode(&mut reader).unwrap();
     let mut cursor = reader.unbox();
     assert!(!cursor.fill_buf().unwrap().is_empty(), "data not entirely consumed");
 

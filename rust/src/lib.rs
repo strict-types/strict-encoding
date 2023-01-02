@@ -32,6 +32,9 @@
 
 #[macro_use]
 extern crate amplify;
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde_crate as serde;
 
 #[macro_use]
 mod macros;

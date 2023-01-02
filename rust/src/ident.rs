@@ -26,7 +26,10 @@ use amplify::ascii::{AsAsciiStrError, AsciiChar, AsciiString, FromAsciiError};
 use amplify::confinement::Confined;
 use amplify::{confinement, Wrapper};
 
-use crate::{strict_newtype, StrictDumb, StrictEncode, TypedWrite, STEN_LIB};
+use crate::{
+    strict_newtype, DecodeError, StrictDecode, StrictDumb, StrictEncode, TypedRead, TypedWrite,
+    STEN_LIB,
+};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
@@ -116,6 +119,11 @@ impl StrictEncode for Ident {
         writer.write_newtype::<Self>(Wrapper::as_inner(self))
     }
 }
+impl StrictDecode for Ident {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_newtype()
+    }
+}
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, Display, FromStr)]
@@ -144,6 +152,11 @@ impl StrictDumb for TypeName {
 impl StrictEncode for TypeName {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_newtype::<Self>(Wrapper::as_inner(self))
+    }
+}
+impl StrictDecode for TypeName {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_newtype()
     }
 }
 
@@ -176,6 +189,11 @@ impl StrictEncode for FieldName {
         writer.write_newtype::<Self>(Wrapper::as_inner(self))
     }
 }
+impl StrictDecode for FieldName {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_newtype()
+    }
+}
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, Display, FromStr)]
@@ -204,5 +222,10 @@ impl StrictDumb for LibName {
 impl StrictEncode for LibName {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_newtype::<Self>(Wrapper::as_inner(self))
+    }
+}
+impl StrictDecode for LibName {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_newtype()
     }
 }

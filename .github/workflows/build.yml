@@ -32,6 +32,7 @@ jobs:
         feature:
           - float
           - derive
+          - serde
     steps:
       - uses: actions/checkout@v2
       - name: Install rust stable
