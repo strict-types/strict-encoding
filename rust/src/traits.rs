@@ -28,8 +28,8 @@ use amplify::Wrapper;
 
 use super::DecodeError;
 use crate::{
-    DeserializeError, FieldName, Primitive, SerializeError, Sizing, StrictEnum, StrictProduct,
-    StrictReader, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, StrictWriter,
+    DeserializeError, FieldName, Primitive, SerializeError, Sizing, StrictEnum, StrictReader,
+    StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, StrictWriter,
 };
 
 pub trait TypedParent: Sized {}
@@ -289,9 +289,7 @@ pub trait ReadUnion: Sized {
         Self: 'parent,
         'me: 'parent;
 
-    fn read_newtype<T: StrictSum + From<I>, I: StrictProduct + StrictDecode>(
-        &mut self,
-    ) -> Result<T, DecodeError> {
+    fn read_newtype<T: StrictSum + From<I>, I: StrictDecode>(&mut self) -> Result<T, DecodeError> {
         self.read_tuple(|reader| reader.read_field::<I>().map(T::from))
     }
 }
