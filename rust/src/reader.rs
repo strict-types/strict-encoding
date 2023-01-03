@@ -132,18 +132,11 @@ impl<R: io::Read> TypedRead for StrictReader<R> {
         inner(variant_name, self)
     }
 
-    fn read_enum<T: StrictEnum>(
-        &mut self,
-        inner: impl FnOnce(FieldName) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        u8: From<T>,
-    {
+    fn read_enum<T: StrictEnum>(&mut self) -> Result<T, DecodeError>
+    where u8: From<T> {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
         let ord = u8::strict_decode(self)?;
-        let variant_name = T::variant_name_by_ord(ord)
-            .ok_or(DecodeError::EnumValueNotKnown(name.to_string(), ord))?;
-        inner(variant_name)
+        T::try_from(ord).map_err(|_| DecodeError::EnumValueNotKnown(name.to_string(), ord))
     }
 
     fn read_tuple<'parent, 'me, T: StrictTuple>(

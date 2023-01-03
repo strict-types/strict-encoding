@@ -134,12 +134,8 @@ pub trait TypedRead: Sized {
         inner: impl FnOnce(FieldName, &mut Self::UnionReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>;
 
-    fn read_enum<T: StrictEnum>(
-        &mut self,
-        inner: impl FnOnce(FieldName) -> Result<T, DecodeError>,
-    ) -> Result<T, DecodeError>
-    where
-        u8: From<T>;
+    fn read_enum<T: StrictEnum>(&mut self) -> Result<T, DecodeError>
+    where u8: From<T>;
 
     fn read_tuple<'parent, 'me, T: StrictTuple>(
         &'me mut self,
