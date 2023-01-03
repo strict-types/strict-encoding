@@ -33,6 +33,7 @@ use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
 use crate::{
     DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
     StrictSum, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteUnion, STD_LIB,
+    STEN_LIB,
 };
 
 pub mod constants {
@@ -140,7 +141,7 @@ pub mod constants {
 }
 use self::constants::*;
 
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug)]
+#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Primitive(u8);
 
@@ -212,6 +213,21 @@ impl Display for Primitive {
         })?;
 
         write!(f, "{}", info.byte_size() * 8)
+    }
+}
+
+impl StrictDumb for Primitive {
+    fn strict_dumb() -> Self { Primitive(0) }
+}
+strict_newtype!(Primitive, STEN_LIB);
+impl StrictEncode for Primitive {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        writer.write_newtype::<Self>(self)
+    }
+}
+impl StrictDecode for Primitive {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_newtype()
     }
 }
 
