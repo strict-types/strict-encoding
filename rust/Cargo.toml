@@ -10,7 +10,7 @@ keywords = ["strict-types", "gadt", "serialization", "serde", "protobuf"]
 categories = ["encoding", "parsing"]
 readme = "README.md"
 edition = "2021"
-rust-version = "1.65.0" # Due to GAT
+rust-version = "1.66.0" # Due to GAT & map_last feature
 exclude = ["derive"]
 
 [dependencies]
