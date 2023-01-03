@@ -101,7 +101,6 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
     type TupleWriter = StructWriter<W, Self>;
     type StructWriter = StructWriter<W, Self>;
     type UnionDefiner = UnionWriter<W>;
-    type EnumWriter = UnionWriter<W>;
 
     fn write_union<T: StrictUnion>(
         self,
@@ -111,18 +110,15 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
         inner(writer)
     }
 
-    fn write_enum<T: StrictEnum>(
-        self,
-        inner: impl FnOnce(Self::EnumWriter) -> io::Result<Self>,
-    ) -> io::Result<Self>
-    where
-        u8: From<T>,
-    {
+    fn write_enum<T: StrictEnum>(self, value: T) -> io::Result<Self>
+    where u8: From<T> {
         let mut writer = UnionWriter::with::<T>(self);
         for (ord, name) in T::ALL_VARIANTS {
             writer = writer.define_variant(fname!(*name), *ord);
         }
-        inner(DefineEnum::complete(writer))
+        writer = DefineEnum::complete(writer);
+        writer = writer.write_variant(fname!(value.variant_name()))?;
+        Ok(WriteEnum::complete(writer))
     }
 
     fn write_tuple<T: StrictTuple>(
