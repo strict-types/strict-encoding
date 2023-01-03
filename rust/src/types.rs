@@ -27,7 +27,7 @@ use crate::{FieldName, LibName, TypeName};
 
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error)]
 #[display("unexpected variant {1} for enum or union {0:?}")]
-pub struct VariantError<V: Debug + Display>(Option<TypeName>, V);
+pub struct VariantError<V: Debug + Display>(pub Option<TypeName>, pub V);
 
 pub trait StrictDumb: Sized {
     fn strict_dumb() -> Self;
