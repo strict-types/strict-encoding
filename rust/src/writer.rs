@@ -388,15 +388,25 @@ impl<W: io::Write> DefineUnion for UnionWriter<W> {
         let field = Variant::named(name, self.next_ord());
         self._define_variant(field, VariantType::Unit)
     }
-    fn define_tuple(mut self, name: FieldName) -> Self::TupleDefiner {
+    fn define_tuple(
+        mut self,
+        name: FieldName,
+        inner: impl FnOnce(Self::TupleDefiner) -> Self,
+    ) -> Self {
         let field = Variant::named(name, self.next_ord());
         self = self._define_variant(field, VariantType::Tuple);
-        StructWriter::unnamed(self, true)
+        let definer = StructWriter::unnamed(self, true);
+        inner(definer)
     }
-    fn define_struct(mut self, name: FieldName) -> Self::StructDefiner {
+    fn define_struct(
+        mut self,
+        name: FieldName,
+        inner: impl FnOnce(Self::StructDefiner) -> Self,
+    ) -> Self {
         let field = Variant::named(name, self.next_ord());
         self = self._define_variant(field, VariantType::Struct);
-        StructWriter::unnamed(self, false)
+        let definer = StructWriter::unnamed(self, false);
+        inner(definer)
     }
     fn complete(self) -> Self::UnionWriter { self._complete_definition() }
 }
@@ -409,13 +419,23 @@ impl<W: io::Write> WriteUnion for UnionWriter<W> {
     fn write_unit(self, name: FieldName) -> io::Result<Self> {
         self._write_variant(name, VariantType::Unit)
     }
-    fn write_tuple(mut self, name: FieldName) -> io::Result<Self::TupleWriter> {
+    fn write_tuple(
+        mut self,
+        name: FieldName,
+        inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
+    ) -> io::Result<Self> {
         self = self._write_variant(name, VariantType::Tuple)?;
-        Ok(StructWriter::unnamed(self, true))
+        let writer = StructWriter::unnamed(self, true);
+        inner(writer)
     }
-    fn write_struct(mut self, name: FieldName) -> io::Result<Self::StructWriter> {
+    fn write_struct(
+        mut self,
+        name: FieldName,
+        inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
+    ) -> io::Result<Self> {
         self = self._write_variant(name, VariantType::Struct)?;
-        Ok(StructWriter::unnamed(self, false))
+        let writer = StructWriter::unnamed(self, false);
+        inner(writer)
     }
     fn complete(self) -> Self::Parent { self._complete_write() }
 }

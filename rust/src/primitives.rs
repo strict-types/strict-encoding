@@ -403,11 +403,11 @@ impl<T> StrictUnion for Option<T> where T: StrictType {}
 impl<T: StrictEncode> StrictEncode for Option<T> {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_union::<Self>(|u| {
-            let u = u.define_unit(fname!("none")).define_type::<T>(fname!("some")).complete();
+            let u = u.define_unit(fname!("none")).define_newtype::<T>(fname!("some")).complete();
 
             Ok(match self {
                 None => u.write_unit(fname!("none")),
-                Some(val) => u.write_type(fname!("some"), val),
+                Some(val) => u.write_newtype(fname!("some"), val),
             }?
             .complete())
         })

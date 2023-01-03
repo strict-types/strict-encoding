@@ -240,11 +240,15 @@ pub trait DefineUnion: Sized {
     type UnionWriter: WriteUnion<Parent = Self::Parent>;
 
     fn define_unit(self, name: FieldName) -> Self;
-    fn define_type<T: StrictEncode>(self, name: FieldName) -> Self {
-        self.define_tuple(name).define_field::<T>().complete()
+    fn define_newtype<T: StrictEncode>(self, name: FieldName) -> Self {
+        self.define_tuple(name, |definer| definer.define_field::<T>().complete())
     }
-    fn define_tuple(self, name: FieldName) -> Self::TupleDefiner;
-    fn define_struct(self, name: FieldName) -> Self::StructDefiner;
+    fn define_tuple(self, name: FieldName, inner: impl FnOnce(Self::TupleDefiner) -> Self) -> Self;
+    fn define_struct(
+        self,
+        name: FieldName,
+        inner: impl FnOnce(Self::StructDefiner) -> Self,
+    ) -> Self;
 
     fn complete(self) -> Self::UnionWriter;
 }
@@ -255,11 +259,19 @@ pub trait WriteUnion: Sized {
     type StructWriter: WriteStruct<Parent = Self>;
 
     fn write_unit(self, name: FieldName) -> io::Result<Self>;
-    fn write_type(self, name: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
-        Ok(self.write_tuple(name)?.write_field(value)?.complete())
+    fn write_newtype(self, name: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
+        self.write_tuple(name, |writer| Ok(writer.write_field(value)?.complete()))
     }
-    fn write_tuple(self, name: FieldName) -> io::Result<Self::TupleWriter>;
-    fn write_struct(self, name: FieldName) -> io::Result<Self::StructWriter>;
+    fn write_tuple(
+        self,
+        name: FieldName,
+        inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
+    ) -> io::Result<Self>;
+    fn write_struct(
+        self,
+        name: FieldName,
+        inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
+    ) -> io::Result<Self>;
 
     fn complete(self) -> Self::Parent;
 }
