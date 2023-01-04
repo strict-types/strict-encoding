@@ -263,7 +263,7 @@ impl<W: io::Write, P: StrictParent<W>> DefineTuple for StructWriter<W, P> {
             "tuple {} does not have fields defined",
             self.name()
         );
-        debug_assert!(!self.named_fields.is_empty(), "tuple {} defined as struct", self.name());
+        debug_assert!(self.named_fields.is_empty(), "tuple {} defined as struct", self.name());
         self.parent
     }
 }
