@@ -237,7 +237,7 @@ impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
     fn write_field(self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
         debug_assert!(self.tuple_fields.is_none(), "using struct method on tuple");
         assert!(
-            !self.named_fields.contains(&field),
+            self.named_fields.contains(&field),
             "field {:#} was not defined in {}",
             field,
             self.name()
