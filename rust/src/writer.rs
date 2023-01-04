@@ -234,11 +234,12 @@ impl<W: io::Write, P: StrictParent<W>> DefineStruct for StructWriter<W, P> {
 
 impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
     type Parent = P;
-    fn write_field(self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
+    fn write_field(mut self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
         debug_assert!(self.tuple_fields.is_none(), "using struct method on tuple");
-        assert!(
-            self.named_fields.contains(&field),
-            "field '{:#}' was not defined for '{}'",
+        assert_eq!(
+            self.named_fields.pop().as_ref(),
+            Some(&field),
+            "field '{:#}' was not defined for '{}' or is written outside of the order",
             field,
             self.name()
         );
