@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::BTreeMap;
 use std::io;
 use std::io::Sink;
 use std::marker::PhantomData;
@@ -147,9 +147,10 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
 pub struct StructWriter<W: io::Write, P: StrictParent<W>> {
     lib: LibName,
     name: Option<TypeName>,
-    named_fields: VecDeque<FieldName>,
+    named_fields: Vec<FieldName>,
     tuple_fields: Option<u8>,
     parent: P,
+    cursor: usize,
     _phantom: PhantomData<W>,
 }
 
@@ -161,6 +162,7 @@ impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
             named_fields: T::ALL_FIELDS.iter().map(|name| fname!(*name)).collect(),
             tuple_fields: None,
             parent,
+            cursor: 0,
             _phantom: default!(),
         }
     }
@@ -172,6 +174,7 @@ impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
             named_fields: empty!(),
             tuple_fields: Some(T::FIELD_COUNT),
             parent,
+            cursor: 0,
             _phantom: default!(),
         }
     }
@@ -183,6 +186,7 @@ impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
             named_fields: empty!(),
             tuple_fields: if tuple { Some(0) } else { None },
             parent,
+            cursor: 0,
             _phantom: default!(),
         }
     }
@@ -191,9 +195,9 @@ impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
 
     pub fn is_struct(&self) -> bool { !self.is_tuple() }
 
-    pub fn named_fields(&mut self) -> &[FieldName] {
+    pub fn named_fields(&self) -> &[FieldName] {
         debug_assert!(self.tuple_fields.is_none(), "tuples do not contain named fields");
-        self.named_fields.make_contiguous()
+        self.named_fields.as_slice()
     }
 
     pub fn fields_count(&self) -> u8 { self.tuple_fields.unwrap_or(self.named_fields.len() as u8) }
@@ -219,7 +223,7 @@ impl<W: io::Write, P: StrictParent<W>> DefineStruct for StructWriter<W, P> {
             field,
             self.name()
         );
-        self.named_fields.push_back(field);
+        self.named_fields.push(field);
         self
     }
     fn complete(self) -> P {
@@ -237,16 +241,22 @@ impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
     fn write_field(mut self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
         debug_assert!(self.tuple_fields.is_none(), "using struct method on tuple");
         assert_eq!(
-            self.named_fields.pop_front().as_ref(),
-            Some(&field),
+            &self.named_fields[self.cursor],
+            &field,
             "field '{:#}' was not defined for '{}' or is written outside of the order",
             field,
             self.name()
         );
+        self.cursor += 1;
         self.write_value(value)
     }
     fn complete(self) -> P {
-        assert!(self.named_fields.is_empty(), "not all fields were written for {}", self.name());
+        assert_eq!(
+            self.cursor,
+            self.named_fields.len(),
+            "not all fields were written for {}",
+            self.name()
+        );
         self.parent
     }
 }
@@ -275,19 +285,11 @@ impl<W: io::Write, P: StrictParent<W>> DefineTuple for StructWriter<W, P> {
 impl<W: io::Write, P: StrictParent<W>> WriteTuple for StructWriter<W, P> {
     type Parent = P;
     fn write_field(mut self, value: &impl StrictEncode) -> io::Result<Self> {
-        self.tuple_fields
-            .as_mut()
-            .map(|count| *count += 1)
-            .expect("calling tuple method on struct");
+        self.cursor += 1;
         self.write_value(value)
     }
     fn complete(self) -> P {
-        assert_ne!(
-            self.tuple_fields.expect("tuple written as struct"),
-            0,
-            "tuple {} does not have fields written",
-            self.name()
-        );
+        assert_ne!(self.cursor, 0, "tuple {} does not have fields written", self.name());
         debug_assert!(self.named_fields.is_empty(), "tuple {} written as struct", self.name());
         self.parent
     }
@@ -538,6 +540,7 @@ impl<W: io::Write, P: StrictParent<W>> SplitParent for StructWriter<W, P> {
             named_fields: remnant.named_fields,
             tuple_fields: remnant.tuple_fields,
             parent,
+            cursor: remnant.cursor,
             _phantom: none!(),
         }
     }
@@ -548,6 +551,7 @@ impl<W: io::Write, P: StrictParent<W>> SplitParent for StructWriter<W, P> {
             named_fields: self.named_fields,
             tuple_fields: self.tuple_fields,
             parent: none!(),
+            cursor: self.cursor,
             _phantom: none!(),
         };
         (self.parent, remnant)
