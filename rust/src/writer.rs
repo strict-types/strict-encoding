@@ -215,7 +215,7 @@ impl<W: io::Write, P: StrictParent<W>> DefineStruct for StructWriter<W, P> {
     fn define_field<T: StrictEncode>(mut self, field: FieldName) -> Self {
         assert!(
             !self.named_fields.contains(&field),
-            "field {:#} is already defined as a part of {}",
+            "field '{:#}' is already defined as a part of '{}'",
             field,
             self.name()
         );
@@ -225,7 +225,7 @@ impl<W: io::Write, P: StrictParent<W>> DefineStruct for StructWriter<W, P> {
     fn complete(self) -> P {
         assert!(
             !self.named_fields.is_empty(),
-            "struct {} does not have fields defined",
+            "struct '{}' does not have fields defined",
             self.name()
         );
         self.parent
@@ -237,8 +237,8 @@ impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
     fn write_field(self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
         debug_assert!(self.tuple_fields.is_none(), "using struct method on tuple");
         assert!(
-            !self.named_fields.contains(&field),
-            "field {:#} was not defined in {}",
+            self.named_fields.contains(&field),
+            "field '{:#}' was not defined for '{}'",
             field,
             self.name()
         );
