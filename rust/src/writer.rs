@@ -187,8 +187,12 @@ impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
         }
     }
 
+    pub fn is_tuple(&self) -> bool { self.tuple_fields.is_some() }
+
+    pub fn is_struct(&self) -> bool { !self.is_tuple() }
+
     pub fn named_fields(&self) -> &[FieldName] {
-        debug_assert!(self.tuple_fields.is_none(), "tuples does not contain named fields");
+        debug_assert!(self.tuple_fields.is_none(), "tuples do not contain named fields");
         self.named_fields.as_slice()
     }
 
