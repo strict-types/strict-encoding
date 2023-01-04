@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 use std::io;
 use std::io::Sink;
 use std::marker::PhantomData;
@@ -147,7 +147,7 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
 pub struct StructWriter<W: io::Write, P: StrictParent<W>> {
     lib: LibName,
     name: Option<TypeName>,
-    named_fields: Vec<FieldName>,
+    named_fields: VecDeque<FieldName>,
     tuple_fields: Option<u8>,
     parent: P,
     _phantom: PhantomData<W>,
@@ -191,9 +191,9 @@ impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
 
     pub fn is_struct(&self) -> bool { !self.is_tuple() }
 
-    pub fn named_fields(&self) -> &[FieldName] {
+    pub fn named_fields(&mut self) -> &[FieldName] {
         debug_assert!(self.tuple_fields.is_none(), "tuples do not contain named fields");
-        self.named_fields.as_slice()
+        self.named_fields.make_contiguous()
     }
 
     pub fn fields_count(&self) -> u8 { self.tuple_fields.unwrap_or(self.named_fields.len() as u8) }
@@ -219,7 +219,7 @@ impl<W: io::Write, P: StrictParent<W>> DefineStruct for StructWriter<W, P> {
             field,
             self.name()
         );
-        self.named_fields.push(field);
+        self.named_fields.push_back(field);
         self
     }
     fn complete(self) -> P {
@@ -237,7 +237,7 @@ impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
     fn write_field(mut self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
         debug_assert!(self.tuple_fields.is_none(), "using struct method on tuple");
         assert_eq!(
-            self.named_fields.pop().as_ref(),
+            self.named_fields.pop_front().as_ref(),
             Some(&field),
             "field '{:#}' was not defined for '{}' or is written outside of the order",
             field,
