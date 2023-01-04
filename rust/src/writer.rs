@@ -214,7 +214,7 @@ impl<W: io::Write, P: StrictParent<W>> DefineStruct for StructWriter<W, P> {
     type Parent = P;
     fn define_field<T: StrictEncode>(mut self, field: FieldName) -> Self {
         assert!(
-            self.named_fields.contains(&field),
+            !self.named_fields.contains(&field),
             "field {:#} is already defined as a part of {}",
             field,
             self.name()
@@ -237,7 +237,7 @@ impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
     fn write_field(self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
         debug_assert!(self.tuple_fields.is_none(), "using struct method on tuple");
         assert!(
-            self.named_fields.contains(&field),
+            !self.named_fields.contains(&field),
             "field {:#} was not defined in {}",
             field,
             self.name()
@@ -253,7 +253,10 @@ impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
 impl<W: io::Write, P: StrictParent<W>> DefineTuple for StructWriter<W, P> {
     type Parent = P;
     fn define_field<T: StrictEncode>(mut self) -> Self {
-        self.tuple_fields = Some(self.tuple_fields.expect("calling tuple method on struct") + 1);
+        self.tuple_fields
+            .as_mut()
+            .map(|count| *count += 1)
+            .expect("calling tuple method on struct");
         self
     }
     fn complete(self) -> P {
@@ -271,7 +274,10 @@ impl<W: io::Write, P: StrictParent<W>> DefineTuple for StructWriter<W, P> {
 impl<W: io::Write, P: StrictParent<W>> WriteTuple for StructWriter<W, P> {
     type Parent = P;
     fn write_field(mut self, value: &impl StrictEncode) -> io::Result<Self> {
-        self.tuple_fields = Some(self.tuple_fields.expect("using struct method on tuple") - 1);
+        self.tuple_fields
+            .as_mut()
+            .map(|count| *count += 1)
+            .expect("calling tuple method on struct");
         self.write_value(value)
     }
     fn complete(self) -> P {
