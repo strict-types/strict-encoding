@@ -29,7 +29,7 @@ use amplify::WriteCounter;
 use crate::{
     DefineEnum, DefineStruct, DefineTuple, DefineUnion, FieldName, LibName, StrictEncode,
     StrictEnum, StrictStruct, StrictSum, StrictTuple, StrictUnion, TypeName, TypedParent,
-    TypedWrite, Variant, WriteEnum, WriteStruct, WriteTuple, WriteUnion, NO_LIB,
+    TypedWrite, Variant, WriteEnum, WriteStruct, WriteTuple, WriteUnion, NO_LIB, STD_LIB,
 };
 
 // TODO: Move to amplify crate
@@ -296,6 +296,19 @@ pub struct UnionWriter<W: io::Write> {
     parent_ident: Option<TypeName>,
 }
 
+impl UnionWriter<Sink> {
+    pub fn sink() -> Self {
+        UnionWriter {
+            lib: libname!(STD_LIB),
+            name: None,
+            variants: Default::default(),
+            parent: StrictWriter::sink(),
+            written: false,
+            parent_ident: None,
+        }
+    }
+}
+
 impl<W: io::Write> UnionWriter<W> {
     pub fn with<T: StrictSum>(parent: StrictWriter<W>) -> Self {
         UnionWriter {
@@ -503,7 +516,7 @@ pub trait SplitParent {
 }
 impl<W: io::Write, P: StrictParent<W>> SplitParent for StructWriter<W, P> {
     type Parent = P;
-    type Remnant = StructWriter<Vec<u8>, ParentDumb>;
+    type Remnant = StructWriter<Sink, ParentDumb>;
     fn from_parent_split(parent: P, remnant: Self::Remnant) -> Self {
         Self {
             lib: remnant.lib,
@@ -515,7 +528,7 @@ impl<W: io::Write, P: StrictParent<W>> SplitParent for StructWriter<W, P> {
         }
     }
     fn into_parent_split(self) -> (P, Self::Remnant) {
-        let remnant = StructWriter::<Vec<u8>, ParentDumb> {
+        let remnant = StructWriter::<Sink, ParentDumb> {
             lib: self.lib,
             name: self.name,
             named_fields: self.named_fields,
