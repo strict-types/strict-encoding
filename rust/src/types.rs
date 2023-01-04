@@ -49,6 +49,9 @@ pub trait StrictType: Sized {
         let generics = generics.trim_end_matches('>');
         let mut ident = get_ident(base).to_owned();
         for arg in generics.split(',') {
+            if arg.is_empty() {
+                continue;
+            }
             ident.push('_');
             ident.push_str(get_ident(arg));
         }
