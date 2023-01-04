@@ -471,7 +471,7 @@ impl<W: io::Write> StrictParent<W> for StrictWriter<W> {
     fn into_write_split(self) -> (StrictWriter<W>, Self::Remnant) { (self, ()) }
 }
 impl<W: io::Write> StrictParent<W> for UnionWriter<W> {
-    type Remnant = UnionWriter<Vec<u8>>;
+    type Remnant = UnionWriter<Sink>;
     fn from_write_split(writer: StrictWriter<W>, remnant: Self::Remnant) -> Self {
         Self {
             lib: remnant.lib,
@@ -487,7 +487,7 @@ impl<W: io::Write> StrictParent<W> for UnionWriter<W> {
             lib: self.lib,
             name: self.name,
             variants: self.variants,
-            parent: StrictWriter::in_memory(0),
+            parent: StrictWriter::sink(),
             written: self.written,
             parent_ident: self.parent_ident,
         };
