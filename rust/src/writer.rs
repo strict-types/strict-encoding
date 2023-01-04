@@ -254,7 +254,7 @@ impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
         assert_eq!(
             self.cursor,
             self.named_fields.len(),
-            "not all fields were written for {}",
+            "not all fields were written for '{}'",
             self.name()
         );
         self.parent
@@ -274,10 +274,10 @@ impl<W: io::Write, P: StrictParent<W>> DefineTuple for StructWriter<W, P> {
         assert_ne!(
             self.tuple_fields.expect("tuple defined as struct"),
             0,
-            "tuple {} does not have fields defined",
+            "tuple '{}' does not have fields defined",
             self.name()
         );
-        debug_assert!(self.named_fields.is_empty(), "tuple {} defined as struct", self.name());
+        debug_assert!(self.named_fields.is_empty(), "tuple '{}' defined as struct", self.name());
         self.parent
     }
 }
@@ -289,8 +289,8 @@ impl<W: io::Write, P: StrictParent<W>> WriteTuple for StructWriter<W, P> {
         self.write_value(value)
     }
     fn complete(self) -> P {
-        assert_ne!(self.cursor, 0, "tuple {} does not have fields written", self.name());
-        debug_assert!(self.named_fields.is_empty(), "tuple {} written as struct", self.name());
+        assert_ne!(self.cursor, 0, "tuple '{}' does not have any fields written", self.name());
+        debug_assert!(self.named_fields.is_empty(), "tuple '{}' written as struct", self.name());
         self.parent
     }
 }

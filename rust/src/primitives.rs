@@ -222,7 +222,7 @@ impl StrictDumb for Primitive {
 strict_newtype!(Primitive, STEN_LIB);
 impl StrictEncode for Primitive {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_newtype::<Self>(self)
+        writer.write_newtype::<Self>(&self.into_code())
     }
 }
 impl StrictDecode for Primitive {
