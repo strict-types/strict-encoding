@@ -416,7 +416,7 @@ where T: StrictType
     }
 }
 impl<T> StrictUnion for Option<T> where T: StrictType {}
-impl<T: StrictEncode> StrictEncode for Option<T> {
+impl<T: StrictEncode + StrictDumb> StrictEncode for Option<T> {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_union::<Self>(|u| {
             let u = u.define_unit(fname!("none")).define_newtype::<T>(fname!("some")).complete();

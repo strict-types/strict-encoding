@@ -28,8 +28,8 @@ use amplify::Wrapper;
 
 use super::DecodeError;
 use crate::{
-    DeserializeError, FieldName, Primitive, SerializeError, Sizing, StrictEnum, StrictReader,
-    StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, StrictWriter,
+    DeserializeError, FieldName, Primitive, SerializeError, Sizing, StrictDumb, StrictEnum,
+    StrictReader, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, StrictWriter,
 };
 
 pub trait TypedParent: Sized {}
@@ -181,7 +181,7 @@ pub trait TypedRead: Sized {
 
 pub trait DefineTuple: Sized {
     type Parent: TypedParent;
-    fn define_field<T: StrictEncode>(self) -> Self;
+    fn define_field<T: StrictEncode + StrictDumb>(self) -> Self;
     fn complete(self) -> Self::Parent;
 }
 
@@ -197,7 +197,7 @@ pub trait ReadTuple {
 
 pub trait DefineStruct: Sized {
     type Parent: TypedParent;
-    fn define_field<T: StrictEncode>(self, name: FieldName) -> Self;
+    fn define_field<T: StrictEncode + StrictDumb>(self, name: FieldName) -> Self;
     fn complete(self) -> Self::Parent;
 }
 
@@ -231,7 +231,7 @@ pub trait DefineUnion: Sized {
     type UnionWriter: WriteUnion<Parent = Self::Parent>;
 
     fn define_unit(self, name: FieldName) -> Self;
-    fn define_newtype<T: StrictEncode>(self, name: FieldName) -> Self {
+    fn define_newtype<T: StrictEncode + StrictDumb>(self, name: FieldName) -> Self {
         self.define_tuple(name, |definer| definer.define_field::<T>().complete())
     }
     fn define_tuple(self, name: FieldName, inner: impl FnOnce(Self::TupleDefiner) -> Self) -> Self;
