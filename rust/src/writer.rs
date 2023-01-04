@@ -281,7 +281,13 @@ impl<W: io::Write, P: StrictParent<W>> WriteTuple for StructWriter<W, P> {
         self.write_value(value)
     }
     fn complete(self) -> P {
-        assert_eq!(self.tuple_fields, Some(0), "not all fields were written for {}", self.name());
+        assert_ne!(
+            self.tuple_fields.expect("tuple written as struct"),
+            0,
+            "tuple {} does not have fields written",
+            self.name()
+        );
+        debug_assert!(self.named_fields.is_empty(), "tuple {} written as struct", self.name());
         self.parent
     }
 }
@@ -293,6 +299,7 @@ pub enum VariantType {
     Struct,
 }
 
+// TODO: Collect data about defined variant types and check them on write
 pub struct UnionWriter<W: io::Write> {
     lib: LibName,
     name: Option<TypeName>,
