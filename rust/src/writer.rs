@@ -144,6 +144,7 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
     }
 }
 
+#[derive(Debug)]
 pub struct StructWriter<W: io::Write, P: StrictParent<W>> {
     lib: LibName,
     name: Option<TypeName>,
@@ -303,6 +304,7 @@ pub enum VariantType {
 }
 
 // TODO: Collect data about defined variant types and check them on write
+#[derive(Debug)]
 pub struct UnionWriter<W: io::Write> {
     lib: LibName,
     name: Option<TypeName>,

@@ -19,15 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/*
-       reader.read_union("Test", Some("Example"), |field, r| match field {
-           f!(0u8, "init") => Example::Init(r.read_type()),
-           f!(2u8, "connect") => Example::Connect {
-               host: r.read_struct().read_field("host").complete(),
-           },
-       })
-*/
-
 use std::io;
 
 use crate::{
@@ -206,6 +197,7 @@ impl<R: io::Read> TypedRead for StrictReader<R> {
     }
 }
 
+#[derive(Debug)]
 pub struct TupleReader<'parent, R: io::Read> {
     read_fields: u8,
     parent: &'parent mut StrictReader<R>,
@@ -218,6 +210,7 @@ impl<'parent, R: io::Read> ReadTuple for TupleReader<'parent, R> {
     }
 }
 
+#[derive(Debug)]
 pub struct StructReader<'parent, R: io::Read> {
     named_fields: Vec<FieldName>,
     parent: &'parent mut StrictReader<R>,
