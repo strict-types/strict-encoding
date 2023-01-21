@@ -365,7 +365,7 @@ impl<W: io::Write> UnionWriter<W> {
     fn _define_variant(mut self, variant: Variant, variant_type: VariantType) -> Self {
         assert!(
             self.variants.insert(variant.clone(), variant_type).is_none(),
-            "variant {:#} is already defined as a part of {}",
+            "variant '{:#}' is already defined as a part of '{}'",
             &variant,
             self.name()
         );
@@ -375,18 +375,18 @@ impl<W: io::Write> UnionWriter<W> {
     fn _write_variant(mut self, name: FieldName, variant_type: VariantType) -> io::Result<Self> {
         let (variant, t) =
             self.variants.iter().find(|(f, _)| f.name == name).unwrap_or_else(|| {
-                panic!("variant {:#} was not defined in {}", &name, self.name())
+                panic!("variant '{:#}' was not defined in '{}'", &name, self.name())
             });
         assert_eq!(
             *t,
             variant_type,
-            "variant {:#} in {} must be a {:?} while it is written as {:?}",
+            "variant '{:#}' in '{}' must be a {:?} while it is written as {:?}",
             &variant,
             self.name(),
             t,
             variant_type
         );
-        assert!(!self.written, "multiple attempts to write variants of {}", self.name());
+        assert!(!self.written, "multiple attempts to write variants of '{}'", self.name());
         self.written = true;
         self.parent = variant.ord.strict_encode(self.parent)?;
         Ok(self)
@@ -395,14 +395,14 @@ impl<W: io::Write> UnionWriter<W> {
     fn _complete_definition(self) -> Self {
         assert!(
             !self.variants.is_empty(),
-            "unit or enum {} does not have fields defined",
+            "unit or enum '{}' does not have fields defined",
             self.name()
         );
         self
     }
 
     fn _complete_write(self) -> StrictWriter<W> {
-        assert!(self.written, "not a single variant is written for {}", self.name());
+        assert!(self.written, "not a single variant is written for '{}'", self.name());
         self.parent
     }
 }
