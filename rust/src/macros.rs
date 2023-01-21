@@ -22,12 +22,31 @@
 #[macro_export]
 macro_rules! strict_newtype {
     ($ty:ident, $lib:expr) => {
+        strict_newtype!($ty, $lib, Self($crate::StrictDumb::strict_dumb()));
+    };
+    ($ty:ident, $lib:expr, $dumb:expr) => {
+        impl $crate::StrictDumb for $ty {
+            fn strict_dumb() -> Self { Self::from($dumb) }
+        }
         impl $crate::StrictType for $ty {
             const STRICT_LIB_NAME: &'static str = $lib;
         }
         impl $crate::StrictProduct for $ty {}
         impl $crate::StrictTuple for $ty {
-            const FIELD_COUNT: u8 = 0;
+            const FIELD_COUNT: u8 = 1;
+        }
+        impl $crate::StrictEncode for $ty {
+            fn strict_encode<W: $crate::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
+                writer.write_newtype::<Self>(&self.0)
+            }
+        }
+        impl $crate::StrictDecode for $ty {
+            fn strict_decode(
+                reader: &mut impl $crate::TypedRead,
+            ) -> Result<Self, $crate::DecodeError> {
+                use $crate::ReadTuple;
+                reader.read_tuple(|r| Ok(Self(r.read_field()?)))
+            }
         }
     };
 }

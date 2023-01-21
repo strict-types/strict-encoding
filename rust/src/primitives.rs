@@ -216,20 +216,7 @@ impl Display for Primitive {
     }
 }
 
-impl StrictDumb for Primitive {
-    fn strict_dumb() -> Self { Primitive(0) }
-}
 strict_newtype!(Primitive, STEN_LIB);
-impl StrictEncode for Primitive {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_newtype::<Self>(&self.into_code())
-    }
-}
-impl StrictDecode for Primitive {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_newtype()
-    }
-}
 
 /// Information about numeric type
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]

@@ -19,17 +19,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::io;
 use std::str::FromStr;
 
 use amplify::ascii::{AsAsciiStrError, AsciiChar, AsciiString, FromAsciiError};
 use amplify::confinement::Confined;
 use amplify::{confinement, Wrapper};
 
-use crate::{
-    strict_newtype, DecodeError, StrictDecode, StrictDumb, StrictEncode, TypedRead, TypedWrite,
-    STEN_LIB,
-};
+use crate::{strict_newtype, STEN_LIB};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
@@ -110,20 +106,7 @@ impl TryFrom<AsciiString> for Ident {
     }
 }
 
-strict_newtype!(Ident, STEN_LIB);
-impl StrictDumb for Ident {
-    fn strict_dumb() -> Self { Ident::from("Dumb") }
-}
-impl StrictEncode for Ident {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_newtype::<Self>(Wrapper::as_inner(self))
-    }
-}
-impl StrictDecode for Ident {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_newtype()
-    }
-}
+strict_newtype!(Ident, STEN_LIB, "Dumb");
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, Display, FromStr)]
@@ -146,19 +129,6 @@ impl TryFrom<String> for TypeName {
 }
 
 strict_newtype!(TypeName, STEN_LIB);
-impl StrictDumb for TypeName {
-    fn strict_dumb() -> Self { tn!("Dumb") }
-}
-impl StrictEncode for TypeName {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_newtype::<Self>(Wrapper::as_inner(self))
-    }
-}
-impl StrictDecode for TypeName {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_newtype()
-    }
-}
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, Display, FromStr)]
@@ -181,19 +151,6 @@ impl TryFrom<String> for FieldName {
 }
 
 strict_newtype!(FieldName, STEN_LIB);
-impl StrictDumb for FieldName {
-    fn strict_dumb() -> Self { fname!("dumb") }
-}
-impl StrictEncode for FieldName {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_newtype::<Self>(Wrapper::as_inner(self))
-    }
-}
-impl StrictDecode for FieldName {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_newtype()
-    }
-}
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, Display, FromStr)]
@@ -216,16 +173,3 @@ impl TryFrom<String> for LibName {
 }
 
 strict_newtype!(LibName, STEN_LIB);
-impl StrictDumb for LibName {
-    fn strict_dumb() -> Self { libname!("Dumb") }
-}
-impl StrictEncode for LibName {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_newtype::<Self>(Wrapper::as_inner(self))
-    }
-}
-impl StrictDecode for LibName {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_newtype()
-    }
-}
