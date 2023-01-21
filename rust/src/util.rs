@@ -23,10 +23,7 @@ use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::io;
 
-use crate::{
-    DecodeError, FieldName, ReadStruct, StrictDecode, StrictDumb, StrictEncode, StrictProduct,
-    StrictStruct, StrictType, TypedRead, TypedWrite, WriteStruct, STEN_LIB,
-};
+use crate::{FieldName, ReadStruct, WriteStruct, STEN_LIB};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
@@ -34,6 +31,7 @@ pub struct Sizing {
     pub min: u16,
     pub max: u16,
 }
+impl_strict_struct!(Sizing, STEN_LIB; min, max);
 
 impl Sizing {
     pub const ONE: Sizing = Sizing { min: 1, max: 1 };
@@ -74,41 +72,13 @@ impl Display for Sizing {
     }
 }
 
-impl StrictDumb for Sizing {
-    fn strict_dumb() -> Self { Sizing::U16 }
-}
-impl StrictType for Sizing {
-    const STRICT_LIB_NAME: &'static str = STEN_LIB;
-}
-impl StrictProduct for Sizing {}
-impl StrictStruct for Sizing {
-    const ALL_FIELDS: &'static [&'static str] = &["min", "max"];
-}
-impl StrictEncode for Sizing {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_struct::<Self>(|w| {
-            Ok(w.write_field(fname!("min"), &self.min)?
-                .write_field(fname!("max"), &self.max)?
-                .complete())
-        })
-    }
-}
-impl StrictDecode for Sizing {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_struct(|r| {
-            let min = r.read_field(fname!("min"))?;
-            let max = r.read_field(fname!("max"))?;
-            Ok(Sizing { min, max })
-        })
-    }
-}
-
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Variant {
     pub name: FieldName,
     pub ord: u8,
 }
+impl_strict_struct!(Variant, STEN_LIB; name, ord);
 
 impl Variant {
     pub fn named(name: FieldName, value: u8) -> Variant { Variant { name, ord: value } }
@@ -148,39 +118,5 @@ impl Display for Variant {
             Display::fmt(&self.ord, f)?;
         }
         Ok(())
-    }
-}
-
-impl StrictDumb for Variant {
-    fn strict_dumb() -> Self {
-        Variant {
-            name: fname!("dumb"),
-            ord: 0,
-        }
-    }
-}
-impl StrictType for Variant {
-    const STRICT_LIB_NAME: &'static str = STEN_LIB;
-}
-impl StrictProduct for Variant {}
-impl StrictStruct for Variant {
-    const ALL_FIELDS: &'static [&'static str] = &["name", "ord"];
-}
-impl StrictEncode for Variant {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_struct::<Self>(|w| {
-            Ok(w.write_field(fname!("name"), &self.name)?
-                .write_field(fname!("ord"), &self.ord)?
-                .complete())
-        })
-    }
-}
-impl StrictDecode for Variant {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_struct(|r| {
-            let name = r.read_field(fname!("name"))?;
-            let ord = r.read_field(fname!("ord"))?;
-            Ok(Variant { name, ord })
-        })
     }
 }

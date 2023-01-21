@@ -20,9 +20,16 @@
 // limitations under the License.
 
 #[macro_export]
-macro_rules! strict_newtype {
+macro_rules! strict_dumb {
+    () => {
+        $crate::StrictDumb::strict_dumb()
+    };
+}
+
+#[macro_export]
+macro_rules! impl_strict_newtype {
     ($ty:ident, $lib:expr) => {
-        strict_newtype!($ty, $lib, Self($crate::StrictDumb::strict_dumb()));
+        impl_strict_newtype!($ty, $lib, Self($crate::StrictDumb::strict_dumb()));
     };
     ($ty:ident, $lib:expr, $dumb:expr) => {
         impl $crate::StrictDumb for $ty {
@@ -46,6 +53,46 @@ macro_rules! strict_newtype {
             ) -> Result<Self, $crate::DecodeError> {
                 use $crate::ReadTuple;
                 reader.read_tuple(|r| Ok(Self(r.read_field()?)))
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! impl_strict_struct {
+    ($ty:ty, $lib:expr; $($field:ident),+ $(,)?) => {
+        impl_strict_struct!($ty, $lib; $($field => $crate::strict_dumb!()),+);
+    };
+    ($ty:ty, $lib:expr; $($field:ident => $dumb:expr),+ $(,)?) => {
+        impl $crate::StrictDumb for $ty {
+            fn strict_dumb() -> Self {
+                Self {
+                    $($field: $dumb),+
+                }
+            }
+        }
+        impl $crate::StrictType for $ty {
+            const STRICT_LIB_NAME: &'static str = $lib;
+        }
+        impl $crate::StrictProduct for $ty {}
+        impl $crate::StrictStruct for $ty {
+            const ALL_FIELDS: &'static [&'static str] = &[$(stringify!($field)),+];
+        }
+        impl $crate::StrictEncode for $ty {
+            fn strict_encode<W: $crate::TypedWrite>(&self, writer: W) -> io::Result<W> {
+                writer.write_struct::<Self>(|w| {
+                    Ok(w
+                        $(.write_field(fname!(stringify!($field)), &self.$field)?)+
+                        .complete())
+                })
+            }
+        }
+        impl $crate::StrictDecode for $ty {
+            fn strict_decode(reader: &mut impl $crate::TypedRead) -> Result<Self, $crate::DecodeError> {
+                reader.read_struct(|r| {
+                    $(let $field = r.read_field(fname!(stringify!($field)))?;)+
+                    Ok(Self { $($field),+ })
+                })
             }
         }
     };

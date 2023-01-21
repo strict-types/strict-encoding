@@ -216,7 +216,7 @@ impl Display for Primitive {
     }
 }
 
-strict_newtype!(Primitive, STEN_LIB);
+impl_strict_newtype!(Primitive, STEN_LIB);
 
 /// Information about numeric type
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
