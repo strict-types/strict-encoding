@@ -308,7 +308,7 @@ impl<T: StrictEncode> StrictEncode for &T {
     }
 }
 
-pub trait Serialize: StrictEncode {
+pub trait StrictSerialize: StrictEncode {
     fn strict_serialized_len(&self) -> io::Result<usize> {
         let counter = StrictWriter::counter();
         Ok(self.strict_encode(counter)?.unbox().count)
@@ -332,7 +332,7 @@ pub trait Serialize: StrictEncode {
     }
 }
 
-pub trait Deserialize: StrictDecode {
+pub trait StrictDeserialize: StrictDecode {
     fn from_strict_serialized<const MAX: usize>(
         ast_data: Confined<Vec<u8>, 0, MAX>,
     ) -> Result<Self, DeserializeError> {
