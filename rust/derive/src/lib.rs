@@ -29,31 +29,17 @@
 //! # Derivation macros
 //!
 //! Library exports derivation macros `#[derive(`[`StrictEncode`]`)]`,
-//! `#[derive(`[`StrictDecode`]`)]`, `#[derive(`[`NetworkEncode`]`)]` and
-//! `#[derive(`[`NetworkDecode`]`)]`, which can be added on top of any structure
+//! `#[derive(`[`StrictDecode`]`)]`, which can be added on top of any structure
 //! you'd like to support string encoding (see Example section below).
 //!
 //! Encoding/decoding implemented by both of these macros may be configured at
-//! type and individual field level using `#[strict_encoding(...)]` and
-//! `#[network_encoding(...)]` attributes.
-//!
-//! The difference between strict and network encoding is in the support of
-//! TLV (type-length-value) extensions: strict encoding, used for pure
-//! client-side-validation, does not allow use of TLVs, while in network
-//! protocol context this requirement is relaxed and specially-designed TLV
-//! encoding is allowed (see sections below on how to use TLV encoding). Network
-//! encoding TLV is not strictly BOLT-1 compatible; if you are looking for
-//! BOLT-1 TLV implementation, please check `lightning_encoding_derive` crate.
+//! type and individual field level using `#[strict_encoding(...)]` attributes.
 //!
 //! # Attribute
 //!
 //! [`StrictEncode`] and [`StrictDecode`] behavior can be customized with
 //! `#[strict_encoding(...)]` attribute, which accepts different arguments
 //! depending to which part of the data type it is applied.
-//!
-//! The same applies to [`NetworkEncode`] and [`NetworkDecode`], which use
-//! `#[network_encoding(...)]` attribute with the same syntax and internal
-//! parameters.
 //!
 //! ## Attribute arguments at type declaration level
 //!
@@ -89,10 +75,9 @@
 //!
 //! Can be used with enum types only, where they define which encoding strategy
 //! should be used for representation of enum variants:
-//! - `by_value` - encodes enum variants using their value representation (see
-//!   `repr` above)
-//! - `by_order` - encodes enum variants by their ordinal position starting from
-//!   zero. Can't be combined with `by_value`.
+//! - `by_value` - encodes enum variants using their value representation (see `repr` above)
+//! - `by_order` - encodes enum variants by their ordinal position starting from zero. Can't be
+//!   combined with `by_value`.
 //!
 //! If neither of these two arguments is provided, the macro defaults to
 //! `by_order` encoding.
@@ -220,76 +205,36 @@ extern crate syn;
 #[macro_use]
 extern crate amplify_syn;
 
+mod derive;
+
 use encoding_derive_helpers::{decode_derive, encode_derive};
 use proc_macro::TokenStream;
 use syn::DeriveInput;
 
+/// Derives [`StrictDumb`] implementation for the type.
+#[proc_macro_derive(StrictDumb, attributes(strict_type))]
+pub fn derive_strict_dumb(input: TokenStream) -> TokenStream {
+    let derive_input = parse_macro_input!(input as DeriveInput);
+    encode_derive(derive_input, false).unwrap_or_else(|e| e.to_compile_error()).into()
+}
+
+/// Derives [`StrictType`] implementation for the type.
+#[proc_macro_derive(StrictType, attributes(strict_type))]
+pub fn derive_strict_type(input: TokenStream) -> TokenStream {
+    let derive_input = parse_macro_input!(input as DeriveInput);
+    encode_derive(derive_input, false).unwrap_or_else(|e| e.to_compile_error()).into()
+}
+
 /// Derives [`StrictEncode`] implementation for the type.
-#[proc_macro_derive(StrictEncode, attributes(strict_encoding))]
+#[proc_macro_derive(StrictEncode, attributes(strict_type))]
 pub fn derive_strict_encode(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
-    encode_derive(
-        "strict_encoding",
-        ident!(strict_encoding),
-        ident!(StrictEncode),
-        ident!(strict_encode),
-        ident!(strict_serialize),
-        derive_input,
-        false,
-    )
-    .unwrap_or_else(|e| e.to_compile_error())
-    .into()
+    encode_derive(derive_input, false).unwrap_or_else(|e| e.to_compile_error()).into()
 }
 
 /// Derives [`StrictDecode`] implementation for the type.
-#[proc_macro_derive(StrictDecode, attributes(strict_encoding))]
+#[proc_macro_derive(StrictDecode, attributes(strict_type))]
 pub fn derive_strict_decode(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
-    decode_derive(
-        "strict_encoding",
-        ident!(strict_encoding),
-        ident!(StrictDecode),
-        ident!(strict_decode),
-        ident!(strict_deserialize),
-        derive_input,
-        false,
-    )
-    .unwrap_or_else(|e| e.to_compile_error())
-    .into()
-}
-
-/// Derives [`StrictEncode`] implementation for the type, also providing TLV
-/// extension support.
-#[proc_macro_derive(NetworkEncode, attributes(network_encoding))]
-pub fn derive_network_encode(input: TokenStream) -> TokenStream {
-    let derive_input = parse_macro_input!(input as DeriveInput);
-    encode_derive(
-        "network_encoding",
-        ident!(strict_encoding),
-        ident!(StrictEncode),
-        ident!(strict_encode),
-        ident!(strict_serialize),
-        derive_input,
-        true,
-    )
-    .unwrap_or_else(|e| e.to_compile_error())
-    .into()
-}
-
-/// Derives [`StrictDecode`] implementation for the type, also providing TLV
-/// extension support.
-#[proc_macro_derive(NetworkDecode, attributes(network_encoding))]
-pub fn derive_network_decode(input: TokenStream) -> TokenStream {
-    let derive_input = parse_macro_input!(input as DeriveInput);
-    decode_derive(
-        "network_encoding",
-        ident!(strict_encoding),
-        ident!(StrictDecode),
-        ident!(strict_decode),
-        ident!(strict_deserialize),
-        derive_input,
-        true,
-    )
-    .unwrap_or_else(|e| e.to_compile_error())
-    .into()
+    decode_derive(derive_input, false).unwrap_or_else(|e| e.to_compile_error()).into()
 }
