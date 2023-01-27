@@ -29,14 +29,18 @@ mod common;
 use common::Result;
 use strict_encoding_test::test_encoding_roundtrip;
 
+const TEST_LIB: &str = "TestLib";
+
 #[test]
 fn enum_associated_types() -> Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
     struct Heap(Box<[u8]>);
 
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
     enum Hi {
         /// Docstring
         First(u8),
@@ -51,13 +55,9 @@ fn enum_associated_types() -> Result {
 
     let heap = Heap(Box::from([0xA1, 0xA2]));
     test_encoding_roundtrip(&Hi::First(0xC8), [0x00, 0xC8])?;
-    test_encoding_roundtrip(&Hi::Second(heap.clone()), [
-        0x01, 0x02, 0x00, 0xA1, 0xA2,
-    ])?;
+    test_encoding_roundtrip(&Hi::Second(heap.clone()), [0x01, 0x02, 0x00, 0xA1, 0xA2])?;
     test_encoding_roundtrip(&Hi::Third, [0x02])?;
-    test_encoding_roundtrip(&Hi::Fourth { heap }, [
-        0x03, 0x02, 0x00, 0xA1, 0xA2,
-    ])?;
+    test_encoding_roundtrip(&Hi::Fourth { heap }, [0x03, 0x02, 0x00, 0xA1, 0xA2])?;
     test_encoding_roundtrip(&Hi::Seventh, [0x07])?;
 
     Ok(())
@@ -67,6 +67,7 @@ fn enum_associated_types() -> Result {
 fn enum_default_values() -> Result {
     #[derive(Clone, Copy, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
     #[derive(StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
     #[repr(u16)]
     #[display(Debug)]
     enum ContractType {

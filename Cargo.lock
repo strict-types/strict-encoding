@@ -505,6 +505,7 @@ dependencies = [
  "amplify_syn",
  "compiletest_rs",
  "proc-macro2",
+ "quote",
  "strict_encoding",
  "strict_encoding_test",
  "syn",

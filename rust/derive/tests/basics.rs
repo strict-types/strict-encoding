@@ -32,6 +32,8 @@ use common::{compile_test, Error, Result};
 use strict_encoding::{StrictDecode, StrictEncode};
 use strict_encoding_test::test_encoding_roundtrip;
 
+const TEST_LIB: &str = "TestLib";
+
 #[test]
 #[should_panic]
 fn no_strict_units() { compile_test("basics-failures/no_strict_units"); }
@@ -48,7 +50,7 @@ fn no_empty_types() { compile_test("basics-failures/no_empty_types"); }
 fn unit_struct() -> Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(lib = TestLib)]
+    #[strict_type(lib = TEST_LIB, rename = "ShortLen")]
     struct Strict(u16);
     test_encoding_roundtrip(&Strict(0xcafe), [0xFE, 0xCA])?;
 
@@ -64,6 +66,7 @@ fn bytes() -> Result {
 
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
     struct Vect {
         data: Vec<u8>,
     }
@@ -76,6 +79,7 @@ fn bytes() -> Result {
 
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictEncode)]
+    #[strict_type(lib = TEST_LIB)]
     struct Slice<'a> {
         slice: &'a [u8],
     }
@@ -83,6 +87,7 @@ fn bytes() -> Result {
 
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
     struct Array {
         bytes: [u8; 16],
     }
@@ -92,6 +97,7 @@ fn bytes() -> Result {
 
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
     struct Heap(Box<[u8]>);
     test_encoding_roundtrip(&Heap(Box::from(&data[2..])), &data).map_err(Error::from)
 }
@@ -100,6 +106,7 @@ fn bytes() -> Result {
 fn skipping() -> Result {
     #[derive(Clone, PartialEq, Eq, Debug, Default)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
     struct Skipping {
         pub data: String,
 
@@ -124,7 +131,7 @@ fn custom_crate() {
     use strict_encoding as custom_crate;
 
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(crate = custom_crate)]
+    #[strict_type(lib = TEST_LIB, crate = custom_crate)]
     struct One {
         a: Vec<u8>,
     }
@@ -133,6 +140,7 @@ fn custom_crate() {
 #[test]
 fn generics() {
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
     enum CustomErr<Err>
     where Err: std::error::Error + StrictEncode + StrictDecode
     {

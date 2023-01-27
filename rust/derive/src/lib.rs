@@ -198,6 +198,8 @@
 //! assert_eq!(obj.data, de.data);
 //! ```
 
+#[macro_use]
+extern crate quote;
 extern crate proc_macro;
 #[macro_use]
 extern crate syn;

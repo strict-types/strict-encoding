@@ -23,12 +23,13 @@ use std::collections::HashMap;
 
 use amplify_syn::{ArgValueReq, AttrReq, ParametrizedAttr, TypeClass, ValueClass};
 use proc_macro2::TokenStream as TokenStream2;
+use syn::spanned::Spanned;
 use syn::{Attribute, DeriveInput, Expr, LitStr, Path, Result};
 
 static ATTR: &str = "strict_type";
 static ATTR_CRATE: &str = "crate";
 static ATTR_LIB: &str = "lib";
-static ATTR_NAME: &str = "name";
+static ATTR_RENAME: &str = "rename";
 static ATTR_WITH: &str = "with";
 static ATTR_ENCODE_WITH: &str = "encode_with";
 static ATTR_DECODE_WITH: &str = "decode_with";
@@ -36,7 +37,7 @@ static ATTR_DECODE_WITH: &str = "decode_with";
 struct ContainerAttr {
     pub strict_crate: Path,
     pub lib: Path,
-    pub name: Option<LitStr>,
+    pub rename: Option<LitStr>,
     pub encode_with: Option<Path>,
     pub decode_with: Option<Path>,
 }
@@ -56,7 +57,7 @@ impl TryFrom<&[Attribute]> for ContainerAttr {
         let map = HashMap::from_iter(vec![
             (ATTR_CRATE, ArgValueReq::optional(TypeClass::Path)),
             (ATTR_LIB, ArgValueReq::required(TypeClass::Path)),
-            (ATTR_NAME, ArgValueReq::optional(ValueClass::str())),
+            (ATTR_RENAME, ArgValueReq::optional(ValueClass::str())),
             (ATTR_ENCODE_WITH, ArgValueReq::optional(TypeClass::Path)),
             (ATTR_DECODE_WITH, ArgValueReq::optional(TypeClass::Path)),
         ]);
@@ -67,7 +68,7 @@ impl TryFrom<&[Attribute]> for ContainerAttr {
         Ok(ContainerAttr {
             strict_crate: params.arg_value(ATTR_CRATE).unwrap_or_else(|_| path!(strict_encoding)),
             lib: params.unwrap_arg_value(ATTR_LIB),
-            name: params.arg_value(ATTR_NAME).ok(),
+            rename: params.arg_value(ATTR_RENAME).ok(),
             encode_with: params
                 .arg_value(ATTR_ENCODE_WITH)
                 .or_else(|_| params.arg_value(ATTR_WITH))
@@ -97,6 +98,8 @@ impl TryFrom<DeriveInput> for StrictDerive {
 impl StrictDerive {
     pub fn strict_dumb(&self) -> Result<TokenStream2> {
         let (impl_generics, ty_generics, where_clause) = self.input.generics.split_for_impl();
-        todo!()
+        Ok(quote_spanned! { self.input.span() =>
+
+        })
     }
 }
