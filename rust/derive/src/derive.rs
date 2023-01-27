@@ -21,12 +21,17 @@
 
 use std::collections::HashMap;
 
-use amplify_syn::{ArgValue, ArgValueReq, AttrReq, ParametrizedAttr, TypeClass, ValueClass};
-use proc_macro2::{Span, TokenStream as TokenStream2};
-use syn::{
-    Attribute, DeriveInput, Expr, Ident, ImplGenerics, LitStr, Path, Result, Type, TypeGenerics,
-    WhereClause,
-};
+use amplify_syn::{ArgValueReq, AttrReq, ParametrizedAttr, TypeClass, ValueClass};
+use proc_macro2::TokenStream as TokenStream2;
+use syn::{Attribute, DeriveInput, Expr, LitStr, Path, Result};
+
+static ATTR: &str = "strict_type";
+static ATTR_CRATE: &str = "crate";
+static ATTR_LIB: &str = "lib";
+static ATTR_NAME: &str = "name";
+static ATTR_WITH: &str = "with";
+static ATTR_ENCODE_WITH: &str = "encode_with";
+static ATTR_DECODE_WITH: &str = "decode_with";
 
 struct ContainerAttr {
     pub strict_crate: Path,
@@ -49,56 +54,49 @@ impl TryFrom<&[Attribute]> for ContainerAttr {
 
     fn try_from(attr: &[Attribute]) -> Result<Self> {
         let map = HashMap::from_iter(vec![
-            ("crate", ArgValueReq::with_default(ident!("strict_encoding"))),
-            ("lib", ArgValueReq::required(TypeClass::Path.into())),
-            ("name", ArgValueReq::Optional(ValueClass::str())),
-            ("encode_with", ArgValueReq::Optional(TypeClass::Path.into())),
-            ("decode_with", ArgValueReq::Optional(TypeClass::Path.into())),
+            (ATTR_CRATE, ArgValueReq::with_default(ident!(strict_encoding))),
+            (ATTR_LIB, ArgValueReq::required(TypeClass::Path)),
+            (ATTR_NAME, ArgValueReq::optional(ValueClass::str())),
+            (ATTR_ENCODE_WITH, ArgValueReq::optional(TypeClass::Path)),
+            (ATTR_DECODE_WITH, ArgValueReq::optional(TypeClass::Path)),
         ]);
 
-        let mut params = ParametrizedAttr::with("strict_type", &attr)?;
+        let mut params = ParametrizedAttr::with(ATTR, &attr)?;
         params.check(AttrReq::with(map))?;
 
         Ok(ContainerAttr {
-            strict_crate: params
-                .args
-                .get("crate")
-                .map(|a| a.clone().try_into())
-                .transpose()?
-                .expect("amplify_syn AttrReq guarantees"),
-            lib: Path {},
-            name: None,
-            encode_with: None,
-            decode_with: None,
+            strict_crate: params.unwrap_arg_value(ATTR_CRATE),
+            lib: params.unwrap_arg_value(ATTR_LIB),
+            name: params.arg_value(ATTR_NAME).ok(),
+            encode_with: params
+                .arg_value(ATTR_ENCODE_WITH)
+                .or_else(|_| params.arg_value(ATTR_WITH))
+                .ok(),
+            decode_with: params
+                .arg_value(ATTR_DECODE_WITH)
+                .or_else(|_| params.arg_value(ATTR_WITH))
+                .ok(),
         })
     }
 }
 
-struct StrictDerive<'a> {
+pub struct StrictDerive {
     input: DeriveInput,
-    impl_generics: ImplGenerics<'a>,
-    ty_generics: TypeGenerics<'a>,
-    where_clause: Option<&'a WhereClause>,
-
     conf: ContainerAttr,
 }
 
-impl<'a> TryFrom<DeriveInput> for StrictDerive<'a> {
+impl TryFrom<DeriveInput> for StrictDerive {
     type Error = syn::Error;
 
     fn try_from(input: DeriveInput) -> Result<Self> {
-        let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-        let conf = ContainerAttr::try_from(&input.attrs)?;
-        Ok(Self {
-            input,
-            impl_generics,
-            ty_generics,
-            where_clause,
-            conf,
-        })
+        let conf = ContainerAttr::try_from(input.attrs.as_ref())?;
+        Ok(Self { input, conf })
     }
 }
 
 impl StrictDerive {
-    pub fn strict_dumb(&self) -> Result<TokenStream2> {}
+    pub fn strict_dumb(&self) -> Result<TokenStream2> {
+        let (impl_generics, ty_generics, where_clause) = self.input.generics.split_for_impl();
+        todo!()
+    }
 }

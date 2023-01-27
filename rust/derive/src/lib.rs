@@ -21,7 +21,6 @@
 
 // Coding conventions
 #![recursion_limit = "256"]
-#![deny(dead_code, missing_docs, warnings)]
 
 //! Derivation macros for strict encoding. To learn more about the strict
 //! encoding please check `strict_encoding` crate.
@@ -207,34 +206,47 @@ extern crate amplify_syn;
 
 mod derive;
 
-use encoding_derive_helpers::{decode_derive, encode_derive};
 use proc_macro::TokenStream;
 use syn::DeriveInput;
+
+use crate::derive::StrictDerive;
 
 /// Derives [`StrictDumb`] implementation for the type.
 #[proc_macro_derive(StrictDumb, attributes(strict_type))]
 pub fn derive_strict_dumb(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
-    encode_derive(derive_input, false).unwrap_or_else(|e| e.to_compile_error()).into()
+    StrictDerive::try_from(derive_input)
+        .and_then(|engine| engine.strict_dumb())
+        .unwrap_or_else(|e| e.to_compile_error())
+        .into()
 }
 
 /// Derives [`StrictType`] implementation for the type.
 #[proc_macro_derive(StrictType, attributes(strict_type))]
 pub fn derive_strict_type(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
-    encode_derive(derive_input, false).unwrap_or_else(|e| e.to_compile_error()).into()
+    StrictDerive::try_from(derive_input)
+        .and_then(|engine| engine.strict_dumb())
+        .unwrap_or_else(|e| e.to_compile_error())
+        .into()
 }
 
 /// Derives [`StrictEncode`] implementation for the type.
 #[proc_macro_derive(StrictEncode, attributes(strict_type))]
 pub fn derive_strict_encode(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
-    encode_derive(derive_input, false).unwrap_or_else(|e| e.to_compile_error()).into()
+    StrictDerive::try_from(derive_input)
+        .and_then(|engine| engine.strict_dumb())
+        .unwrap_or_else(|e| e.to_compile_error())
+        .into()
 }
 
 /// Derives [`StrictDecode`] implementation for the type.
 #[proc_macro_derive(StrictDecode, attributes(strict_type))]
 pub fn derive_strict_decode(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
-    decode_derive(derive_input, false).unwrap_or_else(|e| e.to_compile_error()).into()
+    StrictDerive::try_from(derive_input)
+        .and_then(|engine| engine.strict_dumb())
+        .unwrap_or_else(|e| e.to_compile_error())
+        .into()
 }
