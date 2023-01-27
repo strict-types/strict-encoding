@@ -86,7 +86,7 @@ dependencies = [
 [[package]]
 name = "amplify_syn"
 version = "1.2.0"
-source = "git+https://github.com/rust-amplify/amplify-derive#2267416044d0c75ee2ce759a1dc5e81aa048992a"
+source = "git+https://github.com/rust-amplify/amplify-derive#2de49e0e7ce9874b35b6154494e4e144601eff7c"
 dependencies = [
  "proc-macro2",
  "quote",

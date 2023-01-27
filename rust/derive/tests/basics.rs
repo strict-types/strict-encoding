@@ -38,18 +38,6 @@ fn no_strict_units() { compile_test("basics-failures/no_strict_units"); }
 
 #[test]
 #[should_panic]
-fn no_networking_unions() {
-    compile_test("basics-failures/no_networking_unions");
-}
-
-#[test]
-#[should_panic]
-fn strict_network_exclusivity() {
-    compile_test("basics-failures/strict_network_exclusivity");
-}
-
-#[test]
-#[should_panic]
 fn no_unit_types() { compile_test("basics-failures/no_unit_types"); }
 
 #[test]
@@ -59,14 +47,10 @@ fn no_empty_types() { compile_test("basics-failures/no_empty_types"); }
 #[test]
 fn unit_struct() -> Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
-    #[derive(StrictEncode, StrictDecode)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TestLib)]
     struct Strict(u16);
     test_encoding_roundtrip(&Strict(0xcafe), [0xFE, 0xCA])?;
-
-    #[derive(Clone, PartialEq, Eq, Debug)]
-    #[derive(NetworkEncode, NetworkDecode)]
-    struct Network(u16);
-    test_encoding_roundtrip(&Network(0xcafe), [0xFE, 0xCA])?;
 
     Ok(())
 }
@@ -74,12 +58,12 @@ fn unit_struct() -> Result {
 #[test]
 fn bytes() -> Result {
     let data = [
-        0x10, 0x00, 0xCA, 0xFE, 0xDE, 0xAD, 0xBE, 0xD8, 0x12, 0x34, 0x56, 0x78,
-        0x9A, 0xBC, 0xDE, 0xFF, 0x00, 0x01,
+        0x10, 0x00, 0xCA, 0xFE, 0xDE, 0xAD, 0xBE, 0xD8, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE,
+        0xFF, 0x00, 0x01,
     ];
 
     #[derive(Clone, PartialEq, Eq, Debug)]
-    #[derive(StrictEncode, StrictDecode)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
     struct Vect {
         data: Vec<u8>,
     }
@@ -98,7 +82,7 @@ fn bytes() -> Result {
     assert_eq!(&Slice { slice: &data[2..] }.strict_serialize()?, &data);
 
     #[derive(Clone, PartialEq, Eq, Debug)]
-    #[derive(StrictEncode, StrictDecode)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
     struct Array {
         bytes: [u8; 16],
     }
@@ -107,16 +91,15 @@ fn bytes() -> Result {
     test_encoding_roundtrip(&Array { bytes }, &data[2..])?;
 
     #[derive(Clone, PartialEq, Eq, Debug)]
-    #[derive(StrictEncode, StrictDecode)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
     struct Heap(Box<[u8]>);
-    test_encoding_roundtrip(&Heap(Box::from(&data[2..])), &data)
-        .map_err(Error::from)
+    test_encoding_roundtrip(&Heap(Box::from(&data[2..])), &data).map_err(Error::from)
 }
 
 #[test]
 fn skipping() -> Result {
     #[derive(Clone, PartialEq, Eq, Debug, Default)]
-    #[derive(StrictEncode, StrictDecode)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
     struct Skipping {
         pub data: String,
 
@@ -140,33 +123,18 @@ fn skipping() -> Result {
 fn custom_crate() {
     use strict_encoding as custom_crate;
 
-    #[derive(StrictEncode, StrictDecode)]
-    #[strict_encoding(crate = custom_crate)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(crate = custom_crate)]
     struct One {
-        a: Vec<u8>,
-    }
-
-    #[derive(NetworkEncode, NetworkDecode)]
-    #[network_encoding(crate = custom_crate)]
-    struct Two {
         a: Vec<u8>,
     }
 }
 
 #[test]
 fn generics() {
-    #[derive(StrictEncode, StrictDecode)]
-    enum CustomErr1<Err>
-    where
-        Err: std::error::Error + StrictEncode + StrictDecode,
-    {
-        Other(Err),
-    }
-
-    #[derive(NetworkEncode, NetworkDecode)]
-    enum CustomErr2<Err>
-    where
-        Err: std::error::Error + StrictEncode + StrictDecode,
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    enum CustomErr<Err>
+    where Err: std::error::Error + StrictEncode + StrictDecode
     {
         Other(Err),
     }

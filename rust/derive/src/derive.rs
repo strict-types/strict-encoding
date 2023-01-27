@@ -54,7 +54,7 @@ impl TryFrom<&[Attribute]> for ContainerAttr {
 
     fn try_from(attr: &[Attribute]) -> Result<Self> {
         let map = HashMap::from_iter(vec![
-            (ATTR_CRATE, ArgValueReq::with_default(ident!(strict_encoding))),
+            (ATTR_CRATE, ArgValueReq::optional(TypeClass::Path)),
             (ATTR_LIB, ArgValueReq::required(TypeClass::Path)),
             (ATTR_NAME, ArgValueReq::optional(ValueClass::str())),
             (ATTR_ENCODE_WITH, ArgValueReq::optional(TypeClass::Path)),
@@ -65,7 +65,7 @@ impl TryFrom<&[Attribute]> for ContainerAttr {
         params.check(AttrReq::with(map))?;
 
         Ok(ContainerAttr {
-            strict_crate: params.unwrap_arg_value(ATTR_CRATE),
+            strict_crate: params.arg_value(ATTR_CRATE).unwrap_or_else(|_| path!(strict_encoding)),
             lib: params.unwrap_arg_value(ATTR_LIB),
             name: params.arg_value(ATTR_NAME).ok(),
             encode_with: params
