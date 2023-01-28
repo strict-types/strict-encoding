@@ -23,7 +23,7 @@ use std::collections::HashMap;
 
 use amplify_syn::{ArgValueReq, AttrReq, ParametrizedAttr, TypeClass, ValueClass};
 use proc_macro2::{Span, TokenStream as TokenStream2};
-use quote::{ToTokens, TokenStreamExt};
+use quote::ToTokens;
 use syn::{Attribute, DeriveInput, Error, Expr, LitInt, LitStr, Path, Result};
 
 use crate::types::{DataType, Derive, Field, Items, NamedField, Variant};
@@ -43,8 +43,9 @@ const ATTR_TAGS_CUSTOM: &str = "custom";
 
 struct ContainerAttr {
     pub strict_crate: Path,
-    pub lib: Path,
+    pub lib: Expr,
     pub rename: Option<LitStr>,
+    pub dumb: Option<Expr>,
     pub encode_with: Option<Path>,
     pub decode_with: Option<Path>,
 }
@@ -76,19 +77,22 @@ impl TryFrom<&[Attribute]> for ContainerAttr {
     fn try_from(attr: &[Attribute]) -> Result<Self> {
         let map = HashMap::from_iter(vec![
             (ATTR_CRATE, ArgValueReq::optional(TypeClass::Path)),
-            (ATTR_LIB, ArgValueReq::required(TypeClass::Path)),
+            (ATTR_LIB, ArgValueReq::required(ValueClass::Expr)),
             (ATTR_RENAME, ArgValueReq::optional(ValueClass::str())),
+            (ATTR_DUMB, ArgValueReq::required(ValueClass::Expr)),
             (ATTR_ENCODE_WITH, ArgValueReq::optional(TypeClass::Path)),
             (ATTR_DECODE_WITH, ArgValueReq::optional(TypeClass::Path)),
         ]);
 
         let mut params = ParametrizedAttr::with(ATTR, &attr)?;
+        eprintln!("{:#?}", params);
         params.check(AttrReq::with(map))?;
 
         Ok(ContainerAttr {
             strict_crate: params.arg_value(ATTR_CRATE).unwrap_or_else(|_| path!(strict_encoding)),
             lib: params.unwrap_arg_value(ATTR_LIB),
             rename: params.arg_value(ATTR_RENAME).ok(),
+            dumb: params.arg_value(ATTR_DUMB).ok(),
             encode_with: params
                 .arg_value(ATTR_ENCODE_WITH)
                 .or_else(|_| params.arg_value(ATTR_WITH))

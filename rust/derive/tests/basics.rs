@@ -34,7 +34,7 @@ const TEST_LIB: &str = "TestLib";
 fn wrapper_struct() -> Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(lib = TEST_LIB, rename = "ShortLen")]
+    #[strict_type(lib = TEST_LIB, dumb = u8::MAX, rename = "ShortLen")]
     struct Strict(u16);
 
     Ok(())
