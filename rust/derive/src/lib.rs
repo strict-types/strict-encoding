@@ -53,12 +53,13 @@ extern crate syn;
 #[macro_use]
 extern crate amplify_syn;
 
-mod derive;
+pub(crate) mod params;
+mod derive_dumb;
 
 use proc_macro::TokenStream;
 use syn::DeriveInput;
 
-use crate::derive::StrictDerive;
+use crate::params::StrictDerive;
 
 /// Derives [`StrictDumb`] implementation for the type.
 #[proc_macro_derive(StrictDumb, attributes(strict_type))]

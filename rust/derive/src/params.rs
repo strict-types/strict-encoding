@@ -22,10 +22,9 @@
 use std::collections::HashMap;
 
 use amplify_syn::{
-    ArgValueReq, AttrReq, DataType, Derive, Field, Items, ListReq, NamedField, ParametrizedAttr,
-    TypeClass, ValueClass, Variant,
+    ArgValueReq, AttrReq, DataType, ListReq, ParametrizedAttr, TypeClass, ValueClass,
 };
-use proc_macro2::{Span, TokenStream as TokenStream2};
+use proc_macro2::Span;
 use quote::ToTokens;
 use syn::{DeriveInput, Error, Expr, LitInt, LitStr, Path, Result};
 
@@ -43,7 +42,7 @@ const ATTR_TAGS_REPR: &str = "repr";
 const ATTR_TAGS_CUSTOM: &str = "custom";
 const ATTR_TAG: &str = "tag";
 
-struct ContainerAttr {
+pub struct ContainerAttr {
     pub strict_crate: Path,
     pub lib: Expr,
     pub rename: Option<LitStr>,
@@ -52,22 +51,22 @@ struct ContainerAttr {
     pub decode_with: Option<Path>,
 }
 
-struct EnumAttr {
+pub struct EnumAttr {
     pub tags: VariantTags,
 }
 
-struct FieldAttr {
+pub struct FieldAttr {
     pub dumb: Option<Expr>,
     pub rename: Option<LitStr>,
 }
 
-struct VariantAttr {
+pub struct VariantAttr {
     pub dumb: bool,
     pub rename: Option<LitStr>,
     pub value: Option<LitInt>,
 }
 
-enum VariantTags {
+pub enum VariantTags {
     Repr,
     Order,
     Custom,
@@ -177,8 +176,8 @@ impl TryFrom<ParametrizedAttr> for VariantAttr {
 }
 
 pub struct StrictDerive {
-    data: DataType,
-    conf: ContainerAttr,
+    pub data: DataType,
+    pub conf: ContainerAttr,
 }
 
 impl TryFrom<DeriveInput> for StrictDerive {
@@ -189,117 +188,5 @@ impl TryFrom<DeriveInput> for StrictDerive {
         let conf = ContainerAttr::try_from(params)?;
         let data = DataType::with(input, ident!(strict_type))?;
         Ok(Self { data, conf })
-    }
-}
-
-struct DeriveDumb<'a>(&'a StrictDerive);
-
-impl StrictDerive {
-    pub fn derive_dumb(&self) -> Result<TokenStream2> {
-        self.data.derive(self.conf.strict_crate.clone(), ident!(StrictDumb), &DeriveDumb(self))
-    }
-    pub fn derive_type(&self) -> Result<TokenStream2> { Ok(quote! {}) }
-    pub fn derive_encode(&self) -> Result<TokenStream2> { Ok(quote! {}) }
-    pub fn derive_decode(&self) -> Result<TokenStream2> { Ok(quote! {}) }
-}
-
-impl Derive for DeriveDumb<'_> {
-    fn derive_unit(&self) -> Result<TokenStream2> {
-        Ok(quote! {
-            fn strict_dumb() -> Self {
-                Self()
-            }
-        })
-    }
-
-    fn derive_named_fields(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
-        if let Some(ref dumb_expr) = self.0.conf.dumb {
-            return Ok(quote! {
-                fn strict_dumb() -> Self {
-                    #dumb_expr
-                }
-            });
-        }
-
-        let crate_name = &self.0.conf.strict_crate;
-        let trait_name = quote!(::#crate_name::StrictDumb);
-        let items = fields.iter().map(|named| {
-            let attr = FieldAttr::try_from(named.field.attr.clone()).expect("invalid attribute");
-            let name = &named.name;
-            match attr.dumb {
-                None => quote! { #name: StrictDumb::strict_dumb() },
-                Some(dumb_value) => quote! { #name: #dumb_value },
-            }
-        });
-
-        Ok(quote! {
-            fn strict_dumb() -> Self {
-                use #trait_name;
-                Self {
-                    #( #items ),*
-                }
-            }
-        })
-    }
-
-    fn derive_fields(&self, fields: &Items<Field>) -> Result<TokenStream2> {
-        if let Some(ref dumb_expr) = self.0.conf.dumb {
-            return Ok(quote! {
-                fn strict_dumb() -> Self {
-                    #dumb_expr
-                }
-            });
-        }
-
-        let crate_name = &self.0.conf.strict_crate;
-        let trait_name = quote!(::#crate_name::StrictDumb);
-        let items = fields.iter().map(|field| {
-            let attr = FieldAttr::try_from(field.attr.clone()).expect("invalid attribute");
-            match attr.dumb {
-                None => quote! { StrictDumb::strict_dumb() },
-                Some(dumb_value) => quote! { #dumb_value },
-            }
-        });
-
-        Ok(quote! {
-            fn strict_dumb() -> Self {
-                use #trait_name;
-                Self(#( #items ),*)
-            }
-        })
-    }
-
-    fn derive_variants(&self, variants: &Items<Variant>) -> Result<TokenStream2> {
-        if let Some(ref dumb_expr) = self.0.conf.dumb {
-            return Ok(quote! {
-                fn strict_dumb() -> Self {
-                    #dumb_expr
-                }
-            });
-        }
-
-        let dumb_variant = variants
-            .iter()
-            .find_map(|variant| {
-                let attr = VariantAttr::try_from(variant.attr.clone()).expect("invalid attribute");
-                let name = &variant.name;
-                match attr.dumb {
-                    false => Some(quote! { Self::#name }),
-                    true => None,
-                }
-            })
-            .ok_or_else(|| {
-                Error::new(
-                    Span::call_site(),
-                    "enum must mark one of its variants with `#[strict_type(dumb)]` attribute, or \
-                     provide a dumb value in eponym attribute at container level",
-                )
-            })?;
-
-        Ok(quote! {
-            fn strict_dumb() -> Self {
-                #dumb_variant
-            }
-        })
     }
 }

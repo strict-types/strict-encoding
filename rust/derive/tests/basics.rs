@@ -61,13 +61,14 @@ fn struct_base() -> Result {
     {
         name: u8,
         value: V,
-    };
+    }
 
     Ok(())
 }
 
 #[test]
 fn enum_base() -> Result {
+    #[allow(dead_code)]
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = TEST_LIB)]
@@ -75,7 +76,7 @@ fn enum_base() -> Result {
         One,
         Two,
         Three,
-    };
+    }
 
     Ok(())
 }
