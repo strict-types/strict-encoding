@@ -41,6 +41,8 @@ const ATTR_TAGS_ORDER: &str = "order";
 const ATTR_TAGS_REPR: &str = "repr";
 const ATTR_TAGS_CUSTOM: &str = "custom";
 const ATTR_TAG: &str = "tag";
+const ATTR_INTO_U8: &str = "into_u8";
+const ATTR_TRY_FROM_U8: &str = "try_from_u8";
 
 pub struct ContainerAttr {
     pub strict_crate: Path,
@@ -53,6 +55,8 @@ pub struct ContainerAttr {
 
 pub struct EnumAttr {
     pub tags: VariantTags,
+    pub try_from_u8: bool,
+    pub into_u8: bool,
 }
 
 pub struct FieldAttr {
@@ -72,21 +76,36 @@ pub enum VariantTags {
     Custom,
 }
 
-impl TryFrom<ParametrizedAttr> for ContainerAttr {
-    type Error = Error;
-
-    fn try_from(mut params: ParametrizedAttr) -> Result<Self> {
-        let map = HashMap::from_iter(vec![
+impl ContainerAttr {
+    fn shared_attrs() -> Vec<(&'static str, ArgValueReq)> {
+        vec![
             (ATTR_CRATE, ArgValueReq::optional(TypeClass::Path)),
             (ATTR_LIB, ArgValueReq::required(ValueClass::Expr)),
             (ATTR_RENAME, ArgValueReq::optional(ValueClass::str())),
             (ATTR_DUMB, ArgValueReq::optional(ValueClass::Expr)),
             (ATTR_ENCODE_WITH, ArgValueReq::optional(TypeClass::Path)),
             (ATTR_DECODE_WITH, ArgValueReq::optional(TypeClass::Path)),
-            (ATTR_TAGS, ArgValueReq::optional(TypeClass::Path)),
-        ]);
+        ]
+    }
+}
 
-        params.check(AttrReq::with(map))?;
+impl EnumAttr {
+    fn attr_req(map: HashMap<&str, ArgValueReq>) -> AttrReq {
+        let mut req = AttrReq::with(map);
+        req.path_req = ListReq::any_of(vec![path!(try_from_u8), path!(into_u8)], false);
+        req
+    }
+}
+
+impl TryFrom<ParametrizedAttr> for ContainerAttr {
+    type Error = Error;
+
+    fn try_from(mut params: ParametrizedAttr) -> Result<Self> {
+        let mut attrs = ContainerAttr::shared_attrs();
+        attrs.extend([(ATTR_TAGS, ArgValueReq::optional(TypeClass::Path))]);
+        let map = HashMap::from_iter(attrs);
+
+        params.check(EnumAttr::attr_req(map))?;
 
         Ok(ContainerAttr {
             strict_crate: params.arg_value(ATTR_CRATE).unwrap_or_else(|_| path!(strict_encoding)),
@@ -109,16 +128,11 @@ impl TryFrom<ParametrizedAttr> for EnumAttr {
     type Error = Error;
 
     fn try_from(mut params: ParametrizedAttr) -> Result<Self> {
-        let map = HashMap::from_iter(vec![
-            (ATTR_CRATE, ArgValueReq::optional(TypeClass::Path)),
-            (ATTR_LIB, ArgValueReq::required(ValueClass::Expr)),
-            (ATTR_RENAME, ArgValueReq::optional(ValueClass::str())),
-            (ATTR_DUMB, ArgValueReq::optional(ValueClass::Expr)),
-            (ATTR_ENCODE_WITH, ArgValueReq::optional(TypeClass::Path)),
-            (ATTR_DECODE_WITH, ArgValueReq::optional(TypeClass::Path)),
-            (ATTR_TAGS, ArgValueReq::required(TypeClass::Path)),
-        ]);
-        params.check(AttrReq::with(map))?;
+        let mut attrs = ContainerAttr::shared_attrs();
+        attrs.extend([(ATTR_TAGS, ArgValueReq::required(TypeClass::Path))]);
+        let map = HashMap::from_iter(attrs);
+
+        params.check(EnumAttr::attr_req(map))?;
 
         let tags = match params
             .arg_value(ATTR_TAGS)
@@ -141,7 +155,11 @@ impl TryFrom<ParametrizedAttr> for EnumAttr {
             }
         };
 
-        Ok(EnumAttr { tags })
+        Ok(EnumAttr {
+            tags,
+            try_from_u8: params.has_verbatim(ATTR_TRY_FROM_U8),
+            into_u8: params.has_verbatim(ATTR_INTO_U8),
+        })
     }
 }
 

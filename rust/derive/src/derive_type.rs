@@ -37,6 +37,7 @@ struct DeriveUnion<'a>(&'a Items<Variant>);
 impl StrictDerive {
     pub fn derive_type(&self) -> Result<TokenStream2> {
         let trait_crate = &self.conf.strict_crate;
+        let type_name = &self.data.name;
 
         let impl_type = self.data.derive(trait_crate, &ident!(StrictType), &DeriveType(self))?;
 
@@ -46,11 +47,50 @@ impl StrictDerive {
             }
             DataInner::Enum(variants) => {
                 let enum_attr = EnumAttr::try_from(self.data.attr.clone())?;
-                self.data.derive(
+
+                let impl_try_from_u8 = if enum_attr.try_from_u8 {
+                    let type_name_str = LitStr::new(&type_name.to_string(), Span::call_site());
+                    let variant_name = variants.iter().map(|var| &var.name);
+
+                    quote! {
+                        impl TryFrom<u8> for #type_name {
+                            type Error = #trait_crate::VariantError<u8>;
+                            fn try_from(value: u8) -> Result<Self, Self::Error> {
+                                match value {
+                                    #( x if x == Self::#variant_name as u8 => Ok(Self::#variant_name), )*
+                                    wrong => Err(#trait_crate::VariantError(#trait_crate::tn!(#type_name_str), wrong)),
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    TokenStream2::new()
+                };
+
+                let impl_into_u8 = if enum_attr.into_u8 {
+                    quote! {
+                        impl From<#type_name> for u8 {
+                            #[inline]
+                            fn from(value: #type_name) -> u8 {
+                                value as u8
+                            }
+                        }
+                    }
+                } else {
+                    TokenStream2::new()
+                };
+
+                let impl_struct_enum = self.data.derive(
                     trait_crate,
                     &ident!(StrictSum),
                     &DeriveSum(variants, &self.conf, enum_attr),
-                )?
+                )?;
+
+                quote! {
+                    #impl_into_u8
+                    #impl_try_from_u8
+                    #impl_struct_enum
+                }
             }
             _ => TokenStream2::new(),
         };
@@ -137,7 +177,7 @@ impl DeriveInner for DeriveSum<'_> {
                     panic!("tag is required for variant `{}`", variant.name)
                 }
             };
-            quote! { (#ord, #name) }
+            quote! { (#ord as u8, #name) }
         });
 
         let trait_crate = &self.1.strict_crate;
@@ -149,7 +189,7 @@ impl DeriveInner for DeriveSum<'_> {
 
             fn variant_name(&self) -> &'static str {
                 use #trait_crate::StrictSum;
-                Self::ALL_VARIANTS[self.variant_ord()].1
+                Self::ALL_VARIANTS[self.variant_ord() as usize].1
             }
         })
     }

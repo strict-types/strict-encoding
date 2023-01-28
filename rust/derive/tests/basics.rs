@@ -26,13 +26,12 @@ extern crate strict_encoding_derive;
 
 mod common;
 
-use common::Result;
 use strict_encoding::{StrictDumb, StrictType};
 
 const TEST_LIB: &str = "TestLib";
 
 #[test]
-fn wrapper_base() -> Result {
+fn wrapper_base() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = TEST_LIB)]
@@ -42,7 +41,7 @@ fn wrapper_base() -> Result {
 }
 
 #[test]
-fn tuple_base() -> Result {
+fn tuple_base() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = TEST_LIB)]
@@ -52,7 +51,7 @@ fn tuple_base() -> Result {
 }
 
 #[test]
-fn struct_base() -> Result {
+fn struct_base() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = TEST_LIB)]
@@ -65,7 +64,7 @@ fn struct_base() -> Result {
 }
 
 #[test]
-fn struct_base_default() -> Result {
+fn struct_base_default() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug, Default)]
     #[derive(StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = TEST_LIB)]
@@ -80,11 +79,11 @@ fn struct_base_default() -> Result {
 }
 
 #[test]
-fn enum_base() -> Result {
+fn enum_base() -> common::Result {
     #[allow(dead_code)]
     #[derive(Copy, Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(lib = TEST_LIB, tags = order)]
+    #[strict_type(lib = TEST_LIB, tags = order, into_u8, try_from_u8)]
     #[repr(u8)]
     enum Variants {
         One,
@@ -96,7 +95,7 @@ fn enum_base() -> Result {
 }
 
 #[test]
-fn dumb_wrapper_container() -> Result {
+fn dumb_wrapper_container() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb)]
     #[strict_type(lib = TEST_LIB, dumb = ShortLen(u16::MAX))]
@@ -107,7 +106,7 @@ fn dumb_wrapper_container() -> Result {
 }
 
 #[test]
-fn dumb_wrapper_field() -> Result {
+fn dumb_wrapper_field() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb)]
     #[strict_type(lib = TEST_LIB)]
@@ -118,7 +117,7 @@ fn dumb_wrapper_field() -> Result {
 }
 
 #[test]
-fn dumb_wrapper_precedence() -> Result {
+fn dumb_wrapper_precedence() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb)]
     #[strict_type(lib = TEST_LIB, dumb = ShortLen(u16::MAX))]
@@ -130,7 +129,7 @@ fn dumb_wrapper_precedence() -> Result {
 
 #[cfg(feature = "unstable")]
 #[test]
-fn rename() -> Result {
+fn rename() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = TEST_LIB, rename = "ShortLen")]
