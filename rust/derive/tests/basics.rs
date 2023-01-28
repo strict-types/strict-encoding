@@ -82,9 +82,10 @@ fn struct_base_default() -> Result {
 #[test]
 fn enum_base() -> Result {
     #[allow(dead_code)]
-    #[derive(Clone, PartialEq, Eq, Debug)]
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(lib = TEST_LIB)]
+    #[strict_type(lib = TEST_LIB, tags = order)]
+    #[repr(u8)]
     enum Variants {
         One,
         Two,

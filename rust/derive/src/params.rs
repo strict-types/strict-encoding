@@ -63,7 +63,7 @@ pub struct FieldAttr {
 pub struct VariantAttr {
     pub dumb: bool,
     pub rename: Option<LitStr>,
-    pub value: Option<LitInt>,
+    pub tag: Option<LitInt>,
 }
 
 pub enum VariantTags {
@@ -83,6 +83,7 @@ impl TryFrom<ParametrizedAttr> for ContainerAttr {
             (ATTR_DUMB, ArgValueReq::optional(ValueClass::Expr)),
             (ATTR_ENCODE_WITH, ArgValueReq::optional(TypeClass::Path)),
             (ATTR_DECODE_WITH, ArgValueReq::optional(TypeClass::Path)),
+            (ATTR_TAGS, ArgValueReq::optional(TypeClass::Path)),
         ]);
 
         params.check(AttrReq::with(map))?;
@@ -108,7 +109,15 @@ impl TryFrom<ParametrizedAttr> for EnumAttr {
     type Error = Error;
 
     fn try_from(mut params: ParametrizedAttr) -> Result<Self> {
-        let map = HashMap::from_iter(vec![(ATTR_TAGS, ArgValueReq::required(TypeClass::Path))]);
+        let map = HashMap::from_iter(vec![
+            (ATTR_CRATE, ArgValueReq::optional(TypeClass::Path)),
+            (ATTR_LIB, ArgValueReq::required(ValueClass::Expr)),
+            (ATTR_RENAME, ArgValueReq::optional(ValueClass::str())),
+            (ATTR_DUMB, ArgValueReq::optional(ValueClass::Expr)),
+            (ATTR_ENCODE_WITH, ArgValueReq::optional(TypeClass::Path)),
+            (ATTR_DECODE_WITH, ArgValueReq::optional(TypeClass::Path)),
+            (ATTR_TAGS, ArgValueReq::required(TypeClass::Path)),
+        ]);
         params.check(AttrReq::with(map))?;
 
         let tags = match params
@@ -169,7 +178,7 @@ impl TryFrom<ParametrizedAttr> for VariantAttr {
 
         Ok(VariantAttr {
             rename: params.arg_value(ATTR_RENAME).ok(),
-            value: params.arg_value(ATTR_TAG).ok(),
+            tag: params.arg_value(ATTR_TAG).ok(),
             dumb: params.has_verbatim("dumb"),
         })
     }
