@@ -1,3 +1,6 @@
+use std::ops::{Deref, DerefMut};
+use std::slice;
+
 use amplify_syn::ParametrizedAttr;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::ToTokens;
@@ -33,6 +36,22 @@ pub trait Element: Sized {
 
 #[derive(Clone)]
 pub struct Items<E: Element>(Vec<E>);
+
+impl<E: Element> Deref for Items<E> {
+    type Target = Vec<E>;
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
+
+impl<E: Element> DerefMut for Items<E> {
+    fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+}
+
+impl<'a, E: Element> IntoIterator for &'a Items<E> {
+    type Item = &'a E;
+    type IntoIter = slice::Iter<'a, E>;
+
+    fn into_iter(self) -> Self::IntoIter { self.0.iter() }
+}
 
 #[derive(Clone)]
 pub struct NamedField {
@@ -183,7 +202,12 @@ impl From<syn::VisRestricted> for Scope {
 }
 
 impl DataType {
-    pub fn derive<D: Derive>(&self, trait_name: Path, attr: &D) -> syn::Result<TokenStream2> {
+    pub fn derive<D: Derive>(
+        &self,
+        trait_crate: Path,
+        trait_name: Ident,
+        attr: &D,
+    ) -> syn::Result<TokenStream2> {
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
 
         let ident_name = &self.name;
@@ -209,11 +233,15 @@ impl DataType {
             )),
         }?;
 
-        Ok(quote! {
-            impl #impl_generics #trait_name for #ident_name #ty_generics #where_clause {
+        let tokens = quote! {
+            impl #impl_generics ::#trait_crate::#trait_name for #ident_name #ty_generics #where_clause {
                 #inner
             }
-        })
+        };
+
+        eprintln!("{}", tokens.to_string());
+
+        Ok(tokens)
     }
 }
 

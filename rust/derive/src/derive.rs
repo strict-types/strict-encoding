@@ -23,7 +23,7 @@ use std::collections::HashMap;
 
 use amplify_syn::{ArgValueReq, AttrReq, ParametrizedAttr, TypeClass, ValueClass};
 use proc_macro2::{Span, TokenStream as TokenStream2};
-use quote::ToTokens;
+use quote::{ToTokens, TokenStreamExt};
 use syn::{Attribute, DeriveInput, Error, Expr, LitInt, LitStr, Path, Result};
 
 use crate::types::{DataType, Derive, Field, Items, NamedField, Variant};
@@ -150,18 +150,40 @@ impl TryFrom<DeriveInput> for StrictDerive {
     }
 }
 
+struct DeriveDumb<'a>(&'a StrictDerive);
+
 impl StrictDerive {
-    pub fn derive(&self) -> Result<TokenStream2> {
-        self.data.derive(self.conf.strict_crate.clone(), self)
+    pub fn derive_dumb(&self) -> Result<TokenStream2> {
+        self.data.derive(self.conf.strict_crate.clone(), ident!(StrictDumb), &DeriveDumb(self))
     }
+    pub fn derive_type(&self) -> Result<TokenStream2> { Ok(quote! {}) }
+    pub fn derive_encode(&self) -> Result<TokenStream2> { Ok(quote! {}) }
+    pub fn derive_decode(&self) -> Result<TokenStream2> { Ok(quote! {}) }
 }
 
-impl Derive for StrictDerive {
-    fn derive_unit(&self) -> Result<TokenStream2> { todo!() }
+impl Derive for DeriveDumb<'_> {
+    fn derive_unit(&self) -> Result<TokenStream2> {
+        Ok(quote! {
+            fn strict_dumb() -> Self {
+                Self()
+            }
+        })
+    }
 
     fn derive_named_fields(&self, fields: &Items<NamedField>) -> Result<TokenStream2> { todo!() }
 
-    fn derive_fields(&self, fields: &Items<Field>) -> Result<TokenStream2> { todo!() }
+    fn derive_fields(&self, fields: &Items<Field>) -> Result<TokenStream2> {
+        let crate_name = &self.0.conf.strict_crate;
+        let trait_name = quote!(::#crate_name::StrictDumb);
+        let items = fields.iter().map(|_| quote! { StrictDumb::strict_dumb() });
+
+        Ok(quote! {
+            fn strict_dumb() -> Self {
+                use #trait_name;
+                Self(#( #items ),*)
+            }
+        })
+    }
 
     fn derive_variants(&self, fields: &Items<Variant>) -> Result<TokenStream2> { todo!() }
 }
