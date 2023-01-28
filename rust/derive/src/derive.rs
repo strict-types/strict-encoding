@@ -21,10 +21,10 @@
 
 use std::collections::HashMap;
 
-use amplify_syn::{ArgValueReq, AttrReq, ParametrizedAttr, TypeClass, ValueClass};
+use amplify_syn::{ArgValueReq, AttrReq, ListReq, ParametrizedAttr, TypeClass, ValueClass};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::ToTokens;
-use syn::{Attribute, DeriveInput, Error, Expr, LitInt, LitStr, Path, Result};
+use syn::{DeriveInput, Error, Expr, LitInt, LitStr, Path, Result};
 
 use crate::types::{DataType, Derive, Field, Items, NamedField, Variant};
 
@@ -40,6 +40,7 @@ const ATTR_TAGS: &str = "tags";
 const ATTR_TAGS_ORDER: &str = "order";
 const ATTR_TAGS_REPR: &str = "repr";
 const ATTR_TAGS_CUSTOM: &str = "custom";
+const ATTR_TAG: &str = "tag";
 
 struct ContainerAttr {
     pub strict_crate: Path,
@@ -79,7 +80,7 @@ impl TryFrom<ParametrizedAttr> for ContainerAttr {
             (ATTR_CRATE, ArgValueReq::optional(TypeClass::Path)),
             (ATTR_LIB, ArgValueReq::required(ValueClass::Expr)),
             (ATTR_RENAME, ArgValueReq::optional(ValueClass::str())),
-            (ATTR_DUMB, ArgValueReq::required(ValueClass::Expr)),
+            (ATTR_DUMB, ArgValueReq::optional(ValueClass::Expr)),
             (ATTR_ENCODE_WITH, ArgValueReq::optional(TypeClass::Path)),
             (ATTR_DECODE_WITH, ArgValueReq::optional(TypeClass::Path)),
         ]);
@@ -101,12 +102,6 @@ impl TryFrom<ParametrizedAttr> for ContainerAttr {
                 .ok(),
         })
     }
-}
-
-impl TryFrom<ParametrizedAttr> for FieldAttr {
-    type Error = Error;
-
-    fn try_from(params: ParametrizedAttr) -> Result<Self> { todo!() }
 }
 
 impl TryFrom<ParametrizedAttr> for EnumAttr {
@@ -138,6 +133,45 @@ impl TryFrom<ParametrizedAttr> for EnumAttr {
         };
 
         Ok(EnumAttr { tags })
+    }
+}
+
+impl TryFrom<ParametrizedAttr> for FieldAttr {
+    type Error = Error;
+
+    fn try_from(mut params: ParametrizedAttr) -> Result<Self> {
+        let map = HashMap::from_iter(vec![
+            (ATTR_RENAME, ArgValueReq::optional(ValueClass::str())),
+            (ATTR_DUMB, ArgValueReq::optional(ValueClass::Expr)),
+        ]);
+
+        params.check(AttrReq::with(map))?;
+
+        Ok(FieldAttr {
+            rename: params.arg_value(ATTR_RENAME).ok(),
+            dumb: params.arg_value(ATTR_DUMB).ok(),
+        })
+    }
+}
+
+impl TryFrom<ParametrizedAttr> for VariantAttr {
+    type Error = Error;
+
+    fn try_from(mut params: ParametrizedAttr) -> Result<Self> {
+        let map = HashMap::from_iter(vec![
+            (ATTR_RENAME, ArgValueReq::optional(ValueClass::str())),
+            (ATTR_TAG, ArgValueReq::optional(ValueClass::int())),
+        ]);
+
+        let mut req = AttrReq::with(map);
+        req.path_req = ListReq::maybe_one(path!(dumb));
+        params.check(req)?;
+
+        Ok(VariantAttr {
+            rename: params.arg_value(ATTR_RENAME).ok(),
+            value: params.arg_value(ATTR_TAG).ok(),
+            dumb: params.has_verbatim("dumb"),
+        })
     }
 }
 
@@ -177,7 +211,35 @@ impl Derive for DeriveDumb<'_> {
         })
     }
 
-    fn derive_named_fields(&self, fields: &Items<NamedField>) -> Result<TokenStream2> { todo!() }
+    fn derive_named_fields(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
+        if let Some(ref dumb_expr) = self.0.conf.dumb {
+            return Ok(quote! {
+                fn strict_dumb() -> Self {
+                    #dumb_expr
+                }
+            });
+        }
+
+        let crate_name = &self.0.conf.strict_crate;
+        let trait_name = quote!(::#crate_name::StrictDumb);
+        let items = fields.iter().map(|named| {
+            let attr = FieldAttr::try_from(named.field.attr.clone()).expect("invalid attribute");
+            let name = &named.name;
+            match attr.dumb {
+                None => quote! { #name: StrictDumb::strict_dumb() },
+                Some(dumb_value) => quote! { #name: #dumb_value },
+            }
+        });
+
+        Ok(quote! {
+            fn strict_dumb() -> Self {
+                use #trait_name;
+                Self {
+                    #( #items ),*
+                }
+            }
+        })
+    }
 
     fn derive_fields(&self, fields: &Items<Field>) -> Result<TokenStream2> {
         if let Some(ref dumb_expr) = self.0.conf.dumb {
@@ -194,7 +256,7 @@ impl Derive for DeriveDumb<'_> {
             let attr = FieldAttr::try_from(field.attr.clone()).expect("invalid attribute");
             match attr.dumb {
                 None => quote! { StrictDumb::strict_dumb() },
-                Some(dumb) => quote! { dumb },
+                Some(dumb_value) => quote! { #dumb_value },
             }
         });
 
@@ -206,5 +268,37 @@ impl Derive for DeriveDumb<'_> {
         })
     }
 
-    fn derive_variants(&self, fields: &Items<Variant>) -> Result<TokenStream2> { todo!() }
+    fn derive_variants(&self, variants: &Items<Variant>) -> Result<TokenStream2> {
+        if let Some(ref dumb_expr) = self.0.conf.dumb {
+            return Ok(quote! {
+                fn strict_dumb() -> Self {
+                    #dumb_expr
+                }
+            });
+        }
+
+        let dumb_variant = variants
+            .iter()
+            .find_map(|variant| {
+                let attr = VariantAttr::try_from(variant.attr.clone()).expect("invalid attribute");
+                let name = &variant.name;
+                match attr.dumb {
+                    false => Some(quote! { Self::#name }),
+                    true => None,
+                }
+            })
+            .ok_or_else(|| {
+                Error::new(
+                    Span::call_site(),
+                    "enum must mark one of its variants with `#[strict_type(dumb)]` attribute, or \
+                     provide a dumb value in eponym attribute at container level",
+                )
+            })?;
+
+        Ok(quote! {
+            fn strict_dumb() -> Self {
+                #dumb_variant
+            }
+        })
+    }
 }

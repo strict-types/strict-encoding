@@ -27,15 +27,101 @@ extern crate strict_encoding_derive;
 mod common;
 
 use common::Result;
+use strict_encoding::{StrictDumb, StrictType};
 
 const TEST_LIB: &str = "TestLib";
 
 #[test]
-fn wrapper_struct() -> Result {
+fn wrapper_base() -> Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(lib = TEST_LIB, dumb = Strict(u16::MAX), rename = "ShortLen")]
-    struct Strict(#[strict_type(dumb = 1)] u16);
+    #[strict_type(lib = TEST_LIB)]
+    struct ShortLen(u16);
+
+    Ok(())
+}
+
+#[test]
+fn tuple_base() -> Result {
+    #[derive(Clone, PartialEq, Eq, Debug)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
+    struct TaggedInfo(u16, u64);
+
+    Ok(())
+}
+
+#[test]
+fn struct_base() -> Result {
+    #[derive(Clone, PartialEq, Eq, Debug, Default)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
+    struct Field<V: StrictType>
+    where V: Default
+    {
+        name: u8,
+        value: V,
+    };
+
+    Ok(())
+}
+
+#[test]
+fn enum_base() -> Result {
+    #[derive(Clone, PartialEq, Eq, Debug)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
+    enum Variants {
+        One,
+        Two,
+        Three,
+    };
+
+    Ok(())
+}
+
+#[test]
+fn dumb_wrapper_container() -> Result {
+    #[derive(Clone, PartialEq, Eq, Debug)]
+    #[derive(StrictDumb)]
+    #[strict_type(lib = TEST_LIB, dumb = ShortLen(u16::MAX))]
+    struct ShortLen(u16);
+
+    assert_eq!(ShortLen::strict_dumb(), ShortLen(u16::MAX));
+    Ok(())
+}
+
+#[test]
+fn dumb_wrapper_field() -> Result {
+    #[derive(Clone, PartialEq, Eq, Debug)]
+    #[derive(StrictDumb)]
+    #[strict_type(lib = TEST_LIB)]
+    struct ShortLen(#[strict_type(dumb = 1)] u16);
+
+    assert_eq!(ShortLen::strict_dumb(), ShortLen(1));
+    Ok(())
+}
+
+#[test]
+fn dumb_wrapper_precedence() -> Result {
+    #[derive(Clone, PartialEq, Eq, Debug)]
+    #[derive(StrictDumb)]
+    #[strict_type(lib = TEST_LIB, dumb = ShortLen(u16::MAX))]
+    struct ShortLen(#[strict_type(dumb = 1)] u16);
+
+    assert_eq!(ShortLen::strict_dumb(), ShortLen(u16::MAX));
+    Ok(())
+}
+
+#[cfg(feature = "unstable")]
+#[test]
+fn rename() -> Result {
+    #[derive(Clone, PartialEq, Eq, Debug)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB, rename = "ShortLen")]
+    struct OtherName(u16);
+
+    assert_eq!(OtherName::NAME, "ShortLen");
 
     Ok(())
 }
