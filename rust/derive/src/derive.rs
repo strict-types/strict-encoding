@@ -24,10 +24,9 @@ use std::collections::HashMap;
 use amplify_syn::{ArgValueReq, AttrReq, ParametrizedAttr, TypeClass, ValueClass};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::ToTokens;
-use syn::spanned::Spanned;
-use syn::{
-    Attribute, Data, DataEnum, DataStruct, DeriveInput, Error, Expr, LitInt, LitStr, Path, Result,
-};
+use syn::{Attribute, DeriveInput, Error, Expr, LitInt, LitStr, Path, Result};
+
+use crate::types::{DataType, Derive, Field, Items, NamedField, Variant};
 
 const ATTR: &str = "strict_type";
 const ATTR_CRATE: &str = "crate";
@@ -137,7 +136,7 @@ impl TryFrom<&[Attribute]> for EnumAttr {
 }
 
 pub struct StrictDerive {
-    input: DeriveInput,
+    data: DataType,
     conf: ContainerAttr,
 }
 
@@ -146,47 +145,23 @@ impl TryFrom<DeriveInput> for StrictDerive {
 
     fn try_from(input: DeriveInput) -> Result<Self> {
         let conf = ContainerAttr::try_from(input.attrs.as_ref())?;
-        Ok(Self { input, conf })
+        let data = DataType::with(input, ident!(strict_type))?;
+        Ok(Self { data, conf })
     }
 }
 
 impl StrictDerive {
-    pub fn strict_dumb(&self) -> Result<TokenStream2> {
-        match &self.input.data {
-            Data::Struct(data) => self.strict_dumb_struct(data),
-            Data::Enum(data) => self.strict_dumb_enum(data),
-            Data::Union(_) => Err(Error::new_spanned(
-                &self.input,
-                "deriving strict type traits is not supported in unions".to_owned(),
-            )),
-        }
+    pub fn derive(&self) -> Result<TokenStream2> {
+        self.data.derive(self.conf.strict_crate.clone(), self)
     }
 }
 
-impl StrictDerive {
-    fn strict_dumb_struct(&self, data: &DataStruct) -> Result<TokenStream2> {
-        let (impl_generics, ty_generics, where_clause) = self.input.generics.split_for_impl();
+impl Derive for StrictDerive {
+    fn derive_unit(&self) -> Result<TokenStream2> { todo!() }
 
-        let import = &self.conf.strict_crate;
-        let ident_name = &self.input.ident;
+    fn derive_named_fields(&self, fields: &Items<NamedField>) -> Result<TokenStream2> { todo!() }
 
-        Ok(quote_spanned! { self.input.span() =>
-            impl #impl_generics #import::StrictDumb for #ident_name #ty_generics #where_clause {
+    fn derive_fields(&self, fields: &Items<Field>) -> Result<TokenStream2> { todo!() }
 
-            }
-        })
-    }
-
-    fn strict_dumb_enum(&self, data: &DataEnum) -> Result<TokenStream2> {
-        let (impl_generics, ty_generics, where_clause) = self.input.generics.split_for_impl();
-
-        let import = &self.conf.strict_crate;
-        let ident_name = &self.input.ident;
-
-        Ok(quote_spanned! { self.input.span() =>
-            impl #impl_generics #import::StrictDumb for #ident_name #ty_generics #where_clause {
-
-            }
-        })
-    }
+    fn derive_variants(&self, fields: &Items<Variant>) -> Result<TokenStream2> { todo!() }
 }

@@ -1,5 +1,6 @@
 use amplify_syn::ParametrizedAttr;
-use proc_macro2::Ident;
+use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
+use quote::ToTokens;
 use syn::{DeriveInput, Generics, Path};
 
 #[derive(Clone)]
@@ -179,4 +180,46 @@ impl From<syn::VisRestricted> for Scope {
             Scope::Path(*scope.path)
         }
     }
+}
+
+impl DataType {
+    pub fn derive<D: Derive>(&self, trait_name: Path, attr: &D) -> syn::Result<TokenStream2> {
+        let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
+
+        let ident_name = &self.name;
+
+        let inner = match &self.inner {
+            DataInner::Struct(Fields::Unit) => attr.derive_unit(),
+            DataInner::Struct(Fields::Unnamed(fields)) => attr.derive_fields(fields),
+            DataInner::Struct(Fields::Named(fields)) => attr.derive_named_fields(fields),
+            DataInner::Enum(variants) => attr.derive_variants(variants),
+            DataInner::Union(_) => Err(syn::Error::new(
+                Span::call_site(),
+                format!(
+                    "deriving `{}` is not supported in unions",
+                    trait_name.to_token_stream().to_string()
+                ),
+            )),
+            DataInner::Uninhabited => Err(syn::Error::new(
+                Span::call_site(),
+                format!(
+                    "deriving `{}` is not supported for uninhabited enums",
+                    trait_name.to_token_stream().to_string()
+                ),
+            )),
+        }?;
+
+        Ok(quote! {
+            impl #impl_generics #trait_name for #ident_name #ty_generics #where_clause {
+                #inner
+            }
+        })
+    }
+}
+
+pub trait Derive {
+    fn derive_unit(&self) -> syn::Result<TokenStream2>;
+    fn derive_named_fields(&self, fields: &Items<NamedField>) -> syn::Result<TokenStream2>;
+    fn derive_fields(&self, fields: &Items<Field>) -> syn::Result<TokenStream2>;
+    fn derive_variants(&self, fields: &Items<Variant>) -> syn::Result<TokenStream2>;
 }

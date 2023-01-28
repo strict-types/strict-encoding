@@ -66,7 +66,7 @@ use crate::derive::StrictDerive;
 pub fn derive_strict_dumb(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     StrictDerive::try_from(derive_input)
-        .and_then(|engine| engine.strict_dumb())
+        .and_then(|engine| engine.derive())
         .unwrap_or_else(|e| e.to_compile_error())
         .into()
 }
@@ -76,7 +76,7 @@ pub fn derive_strict_dumb(input: TokenStream) -> TokenStream {
 pub fn derive_strict_type(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     StrictDerive::try_from(derive_input)
-        .and_then(|engine| engine.strict_dumb())
+        .and_then(|engine| engine.derive())
         .unwrap_or_else(|e| e.to_compile_error())
         .into()
 }
@@ -86,7 +86,7 @@ pub fn derive_strict_type(input: TokenStream) -> TokenStream {
 pub fn derive_strict_encode(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     StrictDerive::try_from(derive_input)
-        .and_then(|engine| engine.strict_dumb())
+        .and_then(|engine| engine.derive())
         .unwrap_or_else(|e| e.to_compile_error())
         .into()
 }
@@ -96,7 +96,7 @@ pub fn derive_strict_encode(input: TokenStream) -> TokenStream {
 pub fn derive_strict_decode(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     StrictDerive::try_from(derive_input)
-        .and_then(|engine| engine.strict_dumb())
+        .and_then(|engine| engine.derive())
         .unwrap_or_else(|e| e.to_compile_error())
         .into()
 }
