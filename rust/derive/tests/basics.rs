@@ -53,8 +53,21 @@ fn tuple_base() -> Result {
 
 #[test]
 fn struct_base() -> Result {
-    #[derive(Clone, PartialEq, Eq, Debug, Default)]
+    #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
+    struct Field<V: StrictType + StrictDumb> {
+        name: u8,
+        value: V,
+    }
+
+    Ok(())
+}
+
+#[test]
+fn struct_base_default() -> Result {
+    #[derive(Clone, PartialEq, Eq, Debug, Default)]
+    #[derive(StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = TEST_LIB)]
     struct Field<V: StrictType>
     where V: Default

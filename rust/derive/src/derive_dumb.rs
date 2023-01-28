@@ -31,7 +31,7 @@ impl StrictDerive {
     pub fn derive_dumb(&self) -> Result<TokenStream2> {
         self.data.derive(self.conf.strict_crate.clone(), ident!(StrictDumb), &DeriveDumb(self))
     }
-    pub fn derive_type(&self) -> Result<TokenStream2> { Ok(quote! {}) }
+    // TODO: Remove
     pub fn derive_encode(&self) -> Result<TokenStream2> { Ok(quote! {}) }
     pub fn derive_decode(&self) -> Result<TokenStream2> { Ok(quote! {}) }
 }
