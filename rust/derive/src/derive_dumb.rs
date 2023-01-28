@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use amplify_syn::{Derive, Field, Items, NamedField, Variant};
+use amplify_syn::{DeriveInner, Field, Items, NamedField, Variant};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use syn::{Error, Result};
 
@@ -36,8 +36,8 @@ impl StrictDerive {
     pub fn derive_decode(&self) -> Result<TokenStream2> { Ok(quote! {}) }
 }
 
-impl Derive for DeriveDumb<'_> {
-    fn derive_unit(&self) -> Result<TokenStream2> {
+impl DeriveInner for DeriveDumb<'_> {
+    fn derive_unit_inner(&self) -> Result<TokenStream2> {
         Ok(quote! {
             fn strict_dumb() -> Self {
                 Self()
@@ -45,7 +45,7 @@ impl Derive for DeriveDumb<'_> {
         })
     }
 
-    fn derive_named_fields(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
+    fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
         if let Some(ref dumb_expr) = self.0.conf.dumb {
             return Ok(quote! {
                 fn strict_dumb() -> Self {
@@ -75,7 +75,7 @@ impl Derive for DeriveDumb<'_> {
         })
     }
 
-    fn derive_fields(&self, fields: &Items<Field>) -> Result<TokenStream2> {
+    fn derive_tuple_inner(&self, fields: &Items<Field>) -> Result<TokenStream2> {
         if let Some(ref dumb_expr) = self.0.conf.dumb {
             return Ok(quote! {
                 fn strict_dumb() -> Self {
@@ -102,7 +102,7 @@ impl Derive for DeriveDumb<'_> {
         })
     }
 
-    fn derive_variants(&self, variants: &Items<Variant>) -> Result<TokenStream2> {
+    fn derive_enum_inner(&self, variants: &Items<Variant>) -> Result<TokenStream2> {
         if let Some(ref dumb_expr) = self.0.conf.dumb {
             return Ok(quote! {
                 fn strict_dumb() -> Self {

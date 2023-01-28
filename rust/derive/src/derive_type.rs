@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use amplify_syn::{Derive, Field, Items, NamedField, Variant};
+use amplify_syn::{DeriveInner, Field, Items, NamedField, Variant};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use syn::{Error, Result};
 
@@ -42,16 +42,18 @@ impl DeriveType<'_> {
     }
 }
 
-impl Derive for DeriveType<'_> {
-    fn derive_unit(&self) -> Result<TokenStream2> { self.derive_type() }
+impl DeriveInner for DeriveType<'_> {
+    fn derive_unit_inner(&self) -> Result<TokenStream2> { self.derive_type() }
 
-    fn derive_named_fields(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
+    fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
         self.derive_type()
     }
 
-    fn derive_fields(&self, fields: &Items<Field>) -> Result<TokenStream2> { self.derive_type() }
+    fn derive_tuple_inner(&self, fields: &Items<Field>) -> Result<TokenStream2> {
+        self.derive_type()
+    }
 
-    fn derive_variants(&self, variants: &Items<Variant>) -> Result<TokenStream2> {
+    fn derive_enum_inner(&self, variants: &Items<Variant>) -> Result<TokenStream2> {
         self.derive_type()
     }
 }
