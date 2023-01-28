@@ -21,12 +21,13 @@
 
 use std::collections::HashMap;
 
-use amplify_syn::{ArgValueReq, AttrReq, ListReq, ParametrizedAttr, TypeClass, ValueClass};
+use amplify_syn::{
+    ArgValueReq, AttrReq, DataType, Derive, Field, Items, ListReq, NamedField, ParametrizedAttr,
+    TypeClass, ValueClass, Variant,
+};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::ToTokens;
 use syn::{DeriveInput, Error, Expr, LitInt, LitStr, Path, Result};
-
-use crate::types::{DataType, Derive, Field, Items, NamedField, Variant};
 
 const ATTR: &str = "strict_type";
 const ATTR_CRATE: &str = "crate";
