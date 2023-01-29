@@ -55,8 +55,11 @@ fn enum_default() -> common::Result {
     enum Variants {
         One,
         Two,
+        #[strict_type(dumb)]
         Three,
     }
+
+    assert_eq!(Variants::strict_dumb(), Variants::Three);
 
     Ok(())
 }

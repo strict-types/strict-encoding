@@ -128,7 +128,7 @@ impl DeriveInner for DeriveEncode<'_> {
                         write_fields.push(quote! {
                             Self::#var_name( #( #field_idx ),* ) => writer.write_tuple(fname!(#name), |w| {
                                 Ok(w #( .write_field(#field_idx)? )* .complete())
-                            })?
+                            })?,
                         });
                     }
                     Fields::Named(fields) => {
@@ -144,27 +144,30 @@ impl DeriveInner for DeriveEncode<'_> {
                                 None => named_field.name.clone(),
                                 Some(name) => name,
                             };
+                            let rename = LitStr::new(&rename.to_string(), Span::call_site());
+
                             field_ty.push(quote! { #ty });
                             field_name.push(quote! { #name });
-                            field_rename.push(quote! { #rename });
+                            field_rename.push(quote! { fname!(#rename) });
                         }
 
                         define_fields.push(quote! {
                             .define_struct(fname!(#name), |d| {
-                                d #( .define_field::<#field_ty>() )* .complete()
+                                d #( .define_field::<#field_ty>(#field_rename) )* .complete()
                             })
                         });
                         write_fields.push(quote! {
                             Self::#var_name { #( #field_name ),* } => writer.write_struct(fname!(#name), |w| {
-                                Ok(w #( .write_field(fname!(stringify!(#field_rename)), #field_name)? )* .complete())
-                            })?
+                                Ok(w #( .write_field(#field_rename, #field_name)? )* .complete())
+                            })?,
                         });
                     }
                 }
             }
 
             quote! {
-                use ::#crate_name::{DefineUnion, WriteUnion, DefineTuple, DefineStruct};
+                #[allow(unused_imports)]
+                use ::#crate_name::{DefineUnion, WriteUnion, DefineTuple, DefineStruct, WriteTuple, WriteStruct, fname};
                 writer.write_union::<Self>(|definer| {
                     let writer = definer
                         #( #define_fields )*
@@ -172,7 +175,7 @@ impl DeriveInner for DeriveEncode<'_> {
 
                     Ok(match self {
                         #( #write_fields )*
-                    }.complete());
+                    }.complete())
                 })
             }
         };

@@ -54,11 +54,11 @@ impl StrictDerive {
 
                     quote! {
                         impl TryFrom<u8> for #type_name {
-                            type Error = #trait_crate::VariantError<u8>;
+                            type Error = ::#trait_crate::VariantError<u8>;
                             fn try_from(value: u8) -> Result<Self, Self::Error> {
                                 match value {
                                     #( x if x == Self::#variant_name as u8 => Ok(Self::#variant_name), )*
-                                    wrong => Err(#trait_crate::VariantError(#trait_crate::tn!(#type_name_str), wrong)),
+                                    wrong => Err(::#trait_crate::VariantError(#trait_crate::tn!(#type_name_str), wrong)),
                                 }
                             }
                         }
@@ -85,6 +85,10 @@ impl StrictDerive {
                     &ident!(StrictSum),
                     &DeriveSum(variants, &self.conf, enum_attr),
                 )?;
+
+                eprintln!("{impl_into_u8}");
+                eprintln!("{impl_try_from_u8}");
+                // eprintln!("{impl_struct_enum}");
 
                 quote! {
                     #impl_into_u8
@@ -163,35 +167,44 @@ impl DeriveInner for DeriveSum<'_> {
     fn derive_tuple_inner(&self, _fields: &Items<Field>) -> Result<TokenStream2> { unreachable!() }
 
     fn derive_enum_inner(&self, variants: &Items<Variant>) -> Result<TokenStream2> {
-        let items = variants.iter().enumerate().map(|(index, variant)| {
+        let mut orders = Vec::with_capacity(variants.len());
+        let mut idents = Vec::with_capacity(variants.len());
+        let mut renames = Vec::with_capacity(variants.len());
+
+        for (index, variant) in variants.iter().enumerate() {
             let attr = VariantAttr::try_from(variant.attr.clone()).expect("invalid attribute");
-            let orig_name = &variant.name;
-            let name = match attr.rename.as_ref() {
-                None => orig_name,
+            let name = &variant.name;
+            let rename = match attr.rename.as_ref() {
+                None => name,
                 Some(name) => name,
             };
-            let name = LitStr::new(&name.to_string(), Span::call_site());
+            let rename = LitStr::new(&rename.to_string(), Span::call_site());
             let ord = match (&self.2.tags, &attr.tag) {
                 (_, Some(ord)) => ord.to_token_stream(),
-                (VariantTags::Repr, None) => quote! { Self::#orig_name },
+                (VariantTags::Repr, None) => quote! { Self::#name },
                 (VariantTags::Order, None) => quote! { #index },
                 (VariantTags::Custom, None) => {
                     panic!("tag is required for variant `{}`", variant.name)
                 }
             };
-            quote! { (#ord as u8, stringify!(#name)) }
-        });
-
-        let trait_crate = &self.1.strict_crate;
+            orders.push(quote!(#ord));
+            renames.push(quote!(#rename));
+            idents.push(match variant.fields {
+                Fields::Unit => quote!(#name),
+                Fields::Named(_) => quote!(#name { .. }),
+                Fields::Unnamed(_) => quote!(#name(..)),
+            });
+        }
 
         Ok(quote! {
             const ALL_VARIANTS: &'static [(u8, &'static str)] = &[
-                #( #items ),*
+                #( (#orders as u8, #renames) ),*
             ];
 
             fn variant_name(&self) -> &'static str {
-                use #trait_crate::StrictSum;
-                Self::ALL_VARIANTS[self.variant_ord() as usize].1
+                match self {
+                    #( Self::#idents => #renames, )*
+                }
             }
         })
     }

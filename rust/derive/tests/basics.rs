@@ -107,6 +107,7 @@ fn enum_ord() -> common::Result {
     #[strict_type(lib = TEST_LIB, tags = order, into_u8, try_from_u8)]
     #[repr(u8)]
     enum Variants {
+        #[strict_type(dumb)]
         One = 5,
         Two = 6,
         Three = 7,
@@ -128,6 +129,7 @@ fn enum_repr() -> common::Result {
     #[repr(u16)]
     enum Cls {
         One = 1,
+        #[strict_type(dumb)]
         Two,
         Three,
     }
@@ -144,12 +146,17 @@ fn enum_associated() -> common::Result {
     #[allow(dead_code)]
     #[derive(Copy, Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(lib = TEST_LIB, tags = order, into_u8, try_from_u8)]
-    #[repr(u8)]
-    enum Variants {
-        One,
-        Two,
+    #[strict_type(lib = TEST_LIB, tags = order)]
+    enum Assoc {
+        One {
+            hash: [u8; 32],
+            ord: u8,
+        },
+        Two(u8, u16, u32),
+        #[strict_type(dumb)]
         Three,
+        Four(),
+        Five {},
     }
 
     Ok(())

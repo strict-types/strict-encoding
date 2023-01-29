@@ -114,8 +114,8 @@ impl DeriveInner for DeriveDumb<'_> {
                 let attr = VariantAttr::try_from(variant.attr.clone()).expect("invalid attribute");
                 let name = &variant.name;
                 match attr.dumb {
-                    false => Some(quote! { Self::#name }),
-                    true => None,
+                    true => Some(quote! { Self::#name }),
+                    false => None,
                 }
             })
             .ok_or_else(|| {
