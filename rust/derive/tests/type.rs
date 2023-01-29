@@ -26,7 +26,7 @@ extern crate strict_encoding_derive;
 
 mod common;
 
-use strict_encoding::{tn, StrictType};
+use strict_encoding::{tn, StrictStruct, StrictType};
 
 const TEST_LIB: &str = "TestLib";
 
@@ -43,7 +43,7 @@ fn lib_name() -> common::Result {
 }
 
 #[test]
-fn rename_tuple() -> common::Result {
+fn rename_type() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug, Default)]
     #[derive(StrictType)]
     #[strict_type(lib = TEST_LIB, rename = "ShortLen")]
@@ -51,6 +51,23 @@ fn rename_tuple() -> common::Result {
 
     assert_eq!(OtherName::STRICT_LIB_NAME, TEST_LIB);
     assert_eq!(OtherName::strict_name().unwrap(), tn!("ShortLen"));
+
+    Ok(())
+}
+
+#[test]
+fn rename_field() -> common::Result {
+    #[derive(Clone, PartialEq, Eq, Debug, Default)]
+    #[derive(StrictType)]
+    #[strict_type(lib = TEST_LIB)]
+    struct Struct {
+        must_camelize: u8,
+
+        #[strict_type(rename = "correctName")]
+        wrong_name: u8,
+    }
+
+    assert_eq!(Struct::ALL_FIELDS, &["mustCamelize", "correctName"]);
 
     Ok(())
 }
