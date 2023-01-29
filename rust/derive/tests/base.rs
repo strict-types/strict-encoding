@@ -101,10 +101,9 @@ fn struct_generics() -> common::Result {
 
 #[test]
 fn enum_ord() -> common::Result {
-    // TODO: `tags = order` must use into_u8 and try_from_u8 always
     #[derive(Copy, Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(lib = TEST_LIB, tags = order, into_u8, try_from_u8)]
+    #[strict_type(lib = TEST_LIB, tags = repr, into_u8, try_from_u8)]
     #[repr(u8)]
     enum Variants {
         #[strict_type(dumb)]
@@ -114,8 +113,8 @@ fn enum_ord() -> common::Result {
     }
 
     assert_eq!(Variants::Three as u8, 7);
-    assert_eq!(u8::from(Variants::Three), 2);
-    assert_eq!(Variants::try_from(1), Ok(Variants::Two));
+    assert_eq!(u8::from(Variants::Three), 7);
+    assert_eq!(Variants::try_from(6), Ok(Variants::Two));
     assert_eq!(Variants::try_from(3), Err(VariantError(Some(tn!("Variants")), 3)));
 
     Ok(())

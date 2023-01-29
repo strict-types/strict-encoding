@@ -158,10 +158,20 @@ impl EnumAttr {
             }
         };
 
+        let try_from_u8 = params.has_verbatim(ATTR_TRY_FROM_U8);
+        let into_u8 = params.has_verbatim(ATTR_INTO_U8);
+
+        if tags != VariantTags::Repr && kind == EnumKind::Primitive {
+            return Err(Error::new(
+                Span::call_site(),
+                "primitive enum types must always use `tags = repr`",
+            ));
+        }
+
         Ok(EnumAttr {
             tags,
-            try_from_u8: params.has_verbatim(ATTR_TRY_FROM_U8),
-            into_u8: params.has_verbatim(ATTR_INTO_U8),
+            try_from_u8,
+            into_u8,
         })
     }
 }

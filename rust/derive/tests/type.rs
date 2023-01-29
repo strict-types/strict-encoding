@@ -73,7 +73,7 @@ fn fields() -> common::Result {
 fn variants() -> common::Result {
     #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
     #[derive(StrictType)]
-    #[strict_type(lib = TEST_LIB, tags = order, into_u8, try_from_u8)]
+    #[strict_type(lib = TEST_LIB, tags = repr, into_u8, try_from_u8)]
     enum Enum {
         #[default]
         MustCamelize,
@@ -114,7 +114,7 @@ fn rename_field() -> common::Result {
 fn rename_variant() -> common::Result {
     #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
     #[derive(StrictType)]
-    #[strict_type(lib = TEST_LIB, tags = order, into_u8, try_from_u8)]
+    #[strict_type(lib = TEST_LIB, tags = repr, into_u8, try_from_u8)]
     enum Enum {
         #[default]
         MustCamelize,
