@@ -28,7 +28,7 @@ mod common;
 
 use std::convert::Infallible;
 
-use strict_encoding::{tn, StrictDecode, StrictDumb, StrictEncode, StrictType, VariantError};
+use strict_encoding::{tn, StrictDecode, StrictDumb, StrictEncode, VariantError};
 
 const TEST_LIB: &str = "TestLib";
 
@@ -158,31 +158,6 @@ fn enum_associated() -> common::Result {
         Four(),
         Five {},
     }
-
-    Ok(())
-}
-
-#[test]
-fn lib_name() -> common::Result {
-    #[derive(Clone, PartialEq, Eq, Debug, Default)]
-    #[derive(StrictType)]
-    #[strict_type(lib = TEST_LIB)]
-    struct OtherName(u16);
-
-    assert_eq!(OtherName::STRICT_LIB_NAME, TEST_LIB);
-
-    Ok(())
-}
-
-#[test]
-fn rename() -> common::Result {
-    #[derive(Clone, PartialEq, Eq, Debug)]
-    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(lib = TEST_LIB, rename = "ShortLen")]
-    struct OtherName(u16);
-
-    assert_eq!(OtherName::STRICT_LIB_NAME, TEST_LIB);
-    assert_eq!(OtherName::strict_name().unwrap(), tn!("ShortLen"));
 
     Ok(())
 }

@@ -125,9 +125,22 @@ impl StrictDerive {
 
 impl DeriveType<'_> {
     pub fn derive_type(&self) -> Result<TokenStream2> {
+        let crate_name = &self.0.conf.strict_crate;
         let lib_name = &self.0.conf.lib;
+
+        let strict_name = match self.0.conf.rename {
+            Some(ref rename) => quote! {
+                fn strict_name() -> Option<::#crate_name::TypeName> {
+                    Some(tn!(#rename))
+                }
+            },
+            None => TokenStream2::new(),
+        };
+
         Ok(quote! {
             const STRICT_LIB_NAME: &'static str = #lib_name;
+
+            #strict_name
         })
     }
 }
