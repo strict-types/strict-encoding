@@ -143,7 +143,7 @@ pub trait StrictSum: StrictType {
         );
     }
 
-    fn variant_name_by_ord(ord: u8) -> Option<FieldName> {
+    fn variant_name_by_tag(ord: u8) -> Option<FieldName> {
         Self::ALL_VARIANTS
             .iter()
             .find(|(n, _)| *n == ord)

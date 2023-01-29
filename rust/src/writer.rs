@@ -360,7 +360,7 @@ impl<W: io::Write> UnionWriter<W> {
             .unwrap_or_else(|| panic!("unknown variant `{name}` for the enum `{}`", self.name()))
     }
 
-    fn _define_variant(mut self, name: FieldName, variant_type: VariantType) -> Self {
+    fn _define_variant(mut self, name: VariantName, variant_type: VariantType) -> Self {
         let tag = self.tag_by_name(&name);
         let variant = Variant::named(tag, name);
         assert!(
@@ -372,7 +372,7 @@ impl<W: io::Write> UnionWriter<W> {
         self
     }
 
-    fn _write_variant(mut self, name: FieldName, variant_type: VariantType) -> io::Result<Self> {
+    fn _write_variant(mut self, name: VariantName, variant_type: VariantType) -> io::Result<Self> {
         let (variant, t) =
             self.defined_variant.iter().find(|(f, _)| f.name == name).unwrap_or_else(|| {
                 panic!("variant '{:#}' was not defined in '{}'", &name, self.name())
@@ -413,10 +413,12 @@ impl<W: io::Write> DefineUnion for UnionWriter<W> {
     type StructDefiner = StructWriter<W, Self>;
     type UnionWriter = UnionWriter<W>;
 
-    fn define_unit(self, name: FieldName) -> Self { self._define_variant(name, VariantType::Unit) }
+    fn define_unit(self, name: VariantName) -> Self {
+        self._define_variant(name, VariantType::Unit)
+    }
     fn define_tuple(
         mut self,
-        name: FieldName,
+        name: VariantName,
         inner: impl FnOnce(Self::TupleDefiner) -> Self,
     ) -> Self {
         self = self._define_variant(name, VariantType::Tuple);
@@ -425,7 +427,7 @@ impl<W: io::Write> DefineUnion for UnionWriter<W> {
     }
     fn define_struct(
         mut self,
-        name: FieldName,
+        name: VariantName,
         inner: impl FnOnce(Self::StructDefiner) -> Self,
     ) -> Self {
         self = self._define_variant(name, VariantType::Struct);
@@ -440,12 +442,12 @@ impl<W: io::Write> WriteUnion for UnionWriter<W> {
     type TupleWriter = StructWriter<W, Self>;
     type StructWriter = StructWriter<W, Self>;
 
-    fn write_unit(self, name: FieldName) -> io::Result<Self> {
+    fn write_unit(self, name: VariantName) -> io::Result<Self> {
         self._write_variant(name, VariantType::Unit)
     }
     fn write_tuple(
         mut self,
-        name: FieldName,
+        name: VariantName,
         inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
     ) -> io::Result<Self> {
         self = self._write_variant(name, VariantType::Tuple)?;
@@ -454,7 +456,7 @@ impl<W: io::Write> WriteUnion for UnionWriter<W> {
     }
     fn write_struct(
         mut self,
-        name: FieldName,
+        name: VariantName,
         inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
     ) -> io::Result<Self> {
         self = self._write_variant(name, VariantType::Struct)?;
@@ -467,7 +469,7 @@ impl<W: io::Write> WriteUnion for UnionWriter<W> {
 impl<W: io::Write> DefineEnum for UnionWriter<W> {
     type Parent = StrictWriter<W>;
     type EnumWriter = UnionWriter<W>;
-    fn define_variant(self, name: FieldName) -> Self {
+    fn define_variant(self, name: VariantName) -> Self {
         self._define_variant(name, VariantType::Unit)
     }
     fn complete(self) -> Self::EnumWriter { self._complete_definition() }
@@ -475,7 +477,7 @@ impl<W: io::Write> DefineEnum for UnionWriter<W> {
 
 impl<W: io::Write> WriteEnum for UnionWriter<W> {
     type Parent = StrictWriter<W>;
-    fn write_variant(self, name: FieldName) -> io::Result<Self> {
+    fn write_variant(self, name: VariantName) -> io::Result<Self> {
         self._write_variant(name, VariantType::Unit)
     }
     fn complete(self) -> Self::Parent { self._complete_write() }

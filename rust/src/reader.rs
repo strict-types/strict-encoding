@@ -23,7 +23,7 @@ use std::io;
 
 use crate::{
     DecodeError, FieldName, ReadStruct, ReadTuple, ReadUnion, StrictDecode, StrictEnum,
-    StrictStruct, StrictSum, StrictTuple, StrictUnion, TypedRead,
+    StrictStruct, StrictSum, StrictTuple, StrictUnion, TypedRead, VariantName,
 };
 
 trait TypedParent: Sized {}
@@ -114,20 +114,20 @@ impl<R: io::Read> TypedRead for StrictReader<R> {
 
     fn read_union<T: StrictUnion>(
         &mut self,
-        inner: impl FnOnce(FieldName, &mut Self::UnionReader) -> Result<T, DecodeError>,
+        inner: impl FnOnce(VariantName, &mut Self::UnionReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError> {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
-        let ord = u8::strict_decode(self)?;
-        let variant_name = T::variant_name_by_ord(ord)
-            .ok_or(DecodeError::UnionValueNotKnown(name.to_string(), ord))?;
+        let tag = u8::strict_decode(self)?;
+        let variant_name = T::variant_name_by_tag(tag)
+            .ok_or(DecodeError::UnionTagNotKnown(name.to_string(), tag))?;
         inner(variant_name, self)
     }
 
     fn read_enum<T: StrictEnum>(&mut self) -> Result<T, DecodeError>
     where u8: From<T> {
         let name = T::strict_name().unwrap_or_else(|| tn!("__unnamed"));
-        let ord = u8::strict_decode(self)?;
-        T::try_from(ord).map_err(|_| DecodeError::EnumValueNotKnown(name.to_string(), ord))
+        let tag = u8::strict_decode(self)?;
+        T::try_from(tag).map_err(|_| DecodeError::EnumTagNotKnown(name.to_string(), tag))
     }
 
     fn read_tuple<'parent, 'me, T: StrictTuple>(
