@@ -33,7 +33,7 @@ const TEST_LIB: &str = "TestLib";
 #[test]
 fn struct_default() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug, Default)]
-    #[derive(StrictType, StrictEncode, StrictDecode)]
+    #[derive(StrictType)]
     #[strict_type(lib = TEST_LIB)]
     struct Field<V: StrictEncode + StrictDecode>
     where V: Default
@@ -42,15 +42,36 @@ fn struct_default() -> common::Result {
         value: V,
     }
 
+    assert_eq!(Field::<u8>::strict_dumb(), Field::<u8>::default());
+
     Ok(())
 }
 
 #[test]
 fn enum_default() -> common::Result {
     #[allow(dead_code)]
-    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
-    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+    #[derive(StrictType)]
     #[strict_type(lib = TEST_LIB, tags = order, into_u8, try_from_u8)]
+    #[repr(u8)]
+    enum Variants {
+        One,
+        Two,
+        #[default]
+        Three,
+    }
+
+    assert_eq!(Variants::strict_dumb(), Variants::Three);
+
+    Ok(())
+}
+
+#[test]
+fn enum_explicit() -> common::Result {
+    #[allow(dead_code)]
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    #[derive(StrictDumb)]
+    #[strict_type(lib = TEST_LIB)]
     #[repr(u8)]
     enum Variants {
         One,
