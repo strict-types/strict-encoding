@@ -1,3 +1,6 @@
 [workspace]
-members = ["rust"]
-default-members = ["rust"]
+members = ["rust", "rust/derive", "rust/test_helpers"]
+default-members = ["rust", "rust/derive", "rust/test_helpers"]
+
+[patch.crates-io]
+amplify_syn = { version = "1.2.0", git = "https://github.com/rust-amplify/amplify-derive" }

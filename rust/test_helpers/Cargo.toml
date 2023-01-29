@@ -2,7 +2,7 @@
 name = "strict_encoding_test"
 version = "2.0.0-alpha.1"
 license = "Apache-2.0"
-authors = ["Dr. Maxim Orlovsky <orlovsky@lnp-bp.org>"]
+authors = ["Dr. Maxim Orlovsky <orlovsky@ubideco.org>"]
 description = "Helper functions for testing strict encodings"
 repository = "https://github.com/LNP-BP/client_side_validation"
 homepage = "https://github.com/LNP-BP"
