@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use amplify_syn::{DeriveInner, Field, Items, NamedField, Variant};
+use amplify_syn::{DeriveInner, Field, FieldKind, Items, NamedField, Variant};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use syn::{Error, Result};
 
@@ -53,14 +53,16 @@ impl DeriveInner for DeriveDumb<'_> {
 
         let crate_name = &self.0.conf.strict_crate;
         let trait_name = quote!(::#crate_name::StrictDumb);
-        let items = fields.iter().map(|named| {
-            let attr = FieldAttr::try_from(named.field.attr.clone()).expect("invalid attribute");
+
+        let mut items = Vec::with_capacity(fields.len());
+        for named in fields {
+            let attr = FieldAttr::with(named.field.attr.clone(), FieldKind::Named)?;
             let name = &named.name;
-            match attr.dumb {
+            items.push(match attr.dumb {
                 None => quote! { #name: StrictDumb::strict_dumb() },
                 Some(dumb_value) => quote! { #name: #dumb_value },
-            }
-        });
+            });
+        }
 
         Ok(quote! {
             fn strict_dumb() -> Self {
@@ -83,13 +85,15 @@ impl DeriveInner for DeriveDumb<'_> {
 
         let crate_name = &self.0.conf.strict_crate;
         let trait_name = quote!(::#crate_name::StrictDumb);
-        let items = fields.iter().map(|field| {
-            let attr = FieldAttr::try_from(field.attr.clone()).expect("invalid attribute");
-            match attr.dumb {
+
+        let mut items = Vec::with_capacity(fields.len());
+        for field in fields {
+            let attr = FieldAttr::with(field.attr.clone(), FieldKind::Unnamed)?;
+            items.push(match attr.dumb {
                 None => quote! { StrictDumb::strict_dumb() },
                 Some(dumb_value) => quote! { #dumb_value },
-            }
-        });
+            });
+        }
 
         Ok(quote! {
             fn strict_dumb() -> Self {
@@ -108,23 +112,21 @@ impl DeriveInner for DeriveDumb<'_> {
             });
         }
 
-        let dumb_variant = variants
-            .iter()
-            .find_map(|variant| {
-                let attr = VariantAttr::try_from(variant.attr.clone()).expect("invalid attribute");
-                let name = &variant.name;
-                match attr.dumb {
-                    true => Some(quote! { Self::#name }),
-                    false => None,
-                }
-            })
-            .ok_or_else(|| {
-                Error::new(
-                    Span::call_site(),
-                    "enum must mark one of its variants with `#[strict_type(dumb)]` attribute, or \
-                     provide a dumb value in eponym attribute at container level",
-                )
-            })?;
+        let mut dumb_variant = None;
+        for variant in variants {
+            let attr = VariantAttr::try_from(variant.attr.clone())?;
+            let name = &variant.name;
+            if attr.dumb {
+                dumb_variant = Some(quote! { Self::#name });
+            }
+        }
+        let dumb_variant = dumb_variant.ok_or_else(|| {
+            Error::new(
+                Span::call_site(),
+                "enum must mark one of its variants with `#[strict_type(dumb)]` attribute, or \
+                 provide a dumb value in eponym attribute at container level",
+            )
+        })?;
 
         Ok(quote! {
             fn strict_dumb() -> Self {

@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use amplify_syn::{DataInner, DeriveInner, Field, Fields, Items, NamedField, Variant};
+use amplify_syn::{DataInner, DeriveInner, Field, FieldKind, Fields, Items, NamedField, Variant};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::ToTokens;
 use syn::{LitStr, Result};
@@ -172,7 +172,7 @@ impl DeriveInner for DeriveSum<'_> {
         let mut renames = Vec::with_capacity(variants.len());
 
         for (index, variant) in variants.iter().enumerate() {
-            let attr = VariantAttr::try_from(variant.attr.clone()).expect("invalid attribute");
+            let attr = VariantAttr::try_from(variant.attr.clone())?;
             let name = &variant.name;
             let rename = match attr.rename.as_ref() {
                 None => name,
@@ -235,14 +235,14 @@ impl DeriveInner for DeriveStruct<'_> {
     fn derive_tuple_inner(&self, _fields: &Items<Field>) -> Result<TokenStream2> { unreachable!() }
 
     fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
-        let items = fields.iter().map(|named_field| {
-            let attr =
-                FieldAttr::try_from(named_field.field.attr.clone()).expect("invalid attribute");
-            match attr.rename {
+        let mut items = Vec::with_capacity(fields.len());
+        for named_field in fields {
+            let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
+            items.push(match attr.rename {
                 None => named_field.name.clone(),
                 Some(name) => name,
-            }
-        });
+            });
+        }
 
         Ok(quote! {
             const ALL_FIELDS: &'static [&'static str] = &[

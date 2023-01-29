@@ -22,7 +22,7 @@
 use std::collections::HashMap;
 
 use amplify_syn::{
-    ArgValueReq, AttrReq, DataType, ListReq, ParametrizedAttr, TypeClass, ValueClass,
+    ArgValueReq, AttrReq, DataType, FieldKind, ListReq, ParametrizedAttr, TypeClass, ValueClass,
 };
 use proc_macro2::{Ident, Span};
 use quote::ToTokens;
@@ -163,14 +163,14 @@ impl TryFrom<ParametrizedAttr> for EnumAttr {
     }
 }
 
-impl TryFrom<ParametrizedAttr> for FieldAttr {
-    type Error = Error;
+impl FieldAttr {
+    pub fn with(mut params: ParametrizedAttr, kind: FieldKind) -> Result<Self> {
+        let mut map =
+            HashMap::from_iter(vec![(ATTR_DUMB, ArgValueReq::optional(ValueClass::Expr))]);
 
-    fn try_from(mut params: ParametrizedAttr) -> Result<Self> {
-        let map = HashMap::from_iter(vec![
-            (ATTR_RENAME, ArgValueReq::optional(ValueClass::str())),
-            (ATTR_DUMB, ArgValueReq::optional(ValueClass::Expr)),
-        ]);
+        if kind == FieldKind::Named {
+            map.insert(ATTR_RENAME, ArgValueReq::optional(ValueClass::str()));
+        }
 
         params.check(AttrReq::with(map))?;
 

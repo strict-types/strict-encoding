@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use amplify_syn::{DeriveInner, Field, Fields, Items, NamedField, Variant};
+use amplify_syn::{DeriveInner, Field, FieldKind, Fields, Items, NamedField, Variant};
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use syn::{Error, Index, LitStr, Result};
 
@@ -46,14 +46,14 @@ impl DeriveInner for DeriveEncode<'_> {
     fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
 
-        let name = fields.iter().map(|named_field| {
-            let attr =
-                FieldAttr::try_from(named_field.field.attr.clone()).expect("invalid attribute");
-            match attr.rename {
+        let mut name = Vec::with_capacity(fields.len());
+        for named_field in fields {
+            let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
+            name.push(match attr.rename {
                 None => named_field.name.clone(),
                 Some(name) => name,
-            }
-        });
+            });
+        }
 
         Ok(quote! {
             fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
@@ -95,7 +95,7 @@ impl DeriveInner for DeriveEncode<'_> {
             let mut define_fields = Vec::with_capacity(variants.len());
             let mut write_fields = Vec::with_capacity(variants.len());
             for var in variants {
-                let attr = VariantAttr::try_from(var.attr.clone()).expect("invalid attribute");
+                let attr = VariantAttr::try_from(var.attr.clone())?;
                 let var_name = &var.name;
                 let name = match attr.rename.as_ref() {
                     None => var_name, // TODO: Lowercase the first letter
@@ -136,7 +136,8 @@ impl DeriveInner for DeriveEncode<'_> {
                         let mut field_name = Vec::with_capacity(fields.len());
                         let mut field_rename = Vec::with_capacity(fields.len());
                         for named_field in fields {
-                            let attr = FieldAttr::try_from(named_field.field.attr.clone())?;
+                            let attr =
+                                FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
 
                             let ty = &named_field.field.ty;
                             let name = &named_field.name;
