@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io;
 use std::io::Sink;
 use std::marker::PhantomData;
@@ -393,9 +393,18 @@ impl<W: io::Write> UnionWriter<W> {
     }
 
     fn _complete_definition(self) -> Self {
+        let declared = self.declared_variants.values().map(|v| v.as_str()).collect::<BTreeSet<_>>();
+        let defined = self.defined_variant.keys().map(|v| v.name.as_str()).collect::<BTreeSet<_>>();
+        assert_eq!(
+            declared,
+            defined,
+            "unit or enum '{}' hasn't defined all of its declared variants. Elements skipped: {:?}",
+            self.name(),
+            declared.difference(&defined)
+        );
         assert!(
             !self.defined_variant.is_empty(),
-            "unit or enum '{}' does not have fields defined",
+            "unit or enum '{}' does not have any fields defined",
             self.name()
         );
         self
