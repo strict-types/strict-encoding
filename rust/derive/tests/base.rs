@@ -28,7 +28,7 @@ mod common;
 
 use std::convert::Infallible;
 
-use strict_encoding::{tn, StrictDecode, StrictDumb, StrictEncode, VariantError};
+use strict_encoding::{tn, StrictDecode, StrictDumb, StrictEncode, StrictSum, VariantError};
 
 const TEST_LIB: &str = "TestLib";
 
@@ -157,6 +157,46 @@ fn enum_associated() -> common::Result {
         Four(),
         Five {},
     }
+
+    assert_eq!(Assoc::ALL_VARIANTS, &[
+        (0, "one"),
+        (1, "two"),
+        (2, "three"),
+        (3, "four"),
+        (4, "five")
+    ]);
+
+    Ok(())
+}
+
+#[test]
+fn enum_custom_tags() -> common::Result {
+    #[allow(dead_code)]
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB, tags = order)]
+    enum Assoc {
+        One {
+            hash: [u8; 32],
+            ord: u8,
+        },
+        #[strict_type(tag = 2)]
+        Two(u8, u16, u32),
+        #[strict_type(dumb, tag = 3)]
+        Three,
+        #[strict_type(tag = 4)]
+        Four(),
+        #[strict_type(tag = 5)]
+        Five {},
+    }
+
+    assert_eq!(Assoc::ALL_VARIANTS, &[
+        (0, "one"),
+        (2, "two"),
+        (3, "three"),
+        (4, "four"),
+        (5, "five")
+    ]);
 
     Ok(())
 }
