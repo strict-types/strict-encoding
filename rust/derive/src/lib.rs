@@ -58,7 +58,6 @@ mod derive_dumb;
 mod derive_type;
 mod derive_encode;
 mod derive_decode;
-mod util;
 
 use proc_macro::TokenStream;
 use syn::DeriveInput;

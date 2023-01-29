@@ -19,13 +19,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use amplify_syn::{DataInner, DeriveInner, EnumKind, Field, Fields, Items, NamedField, Variant};
+use amplify_syn::{
+    DataInner, DeriveInner, EnumKind, Field, FieldKind, Fields, Items, NamedField, Variant,
+};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::ToTokens;
 use syn::{LitStr, Result};
 
-use crate::params::{ContainerAttr, EnumAttr, StrictDerive, VariantAttr, VariantTags};
-use crate::util::NamedFieldsExt;
+use crate::params::{ContainerAttr, EnumAttr, FieldAttr, StrictDerive, VariantAttr, VariantTags};
 
 struct DeriveType<'a>(&'a StrictDerive);
 struct DeriveProduct<'a>(&'a Fields);
@@ -186,11 +187,7 @@ impl DeriveInner for DeriveSum<'_> {
         for (index, variant) in variants.iter().enumerate() {
             let attr = VariantAttr::try_from(variant.attr.clone())?;
             let name = &variant.name;
-            let rename = match attr.rename.as_ref() {
-                None => name,
-                Some(name) => name,
-            };
-            let rename = LitStr::new(&rename.to_string(), Span::call_site());
+            let rename = attr.variant_name(name);
             let ord = match (&self.2.tags, &attr.tag) {
                 (_, Some(ord)) => ord.to_token_stream(),
                 (VariantTags::Repr, None) => quote! { Self::#name },
@@ -247,11 +244,15 @@ impl DeriveInner for DeriveStruct<'_> {
     fn derive_tuple_inner(&self, _fields: &Items<Field>) -> Result<TokenStream2> { unreachable!() }
 
     fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
-        let name = fields.field_names()?;
+        let mut name = Vec::with_capacity(fields.len());
+        for named_field in fields {
+            let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
+            name.push(attr.field_name(&named_field.name));
+        }
 
         Ok(quote! {
             const ALL_FIELDS: &'static [&'static str] = &[
-                #( stringify!(#name) ),*
+                #( #name ),*
             ];
         })
     }

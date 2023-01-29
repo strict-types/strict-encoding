@@ -20,12 +20,10 @@
 // limitations under the License.
 
 use amplify_syn::{DeriveInner, EnumKind, Field, FieldKind, Fields, Items, NamedField, Variant};
-use heck::ToLowerCamelCase;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
-use syn::{Error, Index, LitStr, Result};
+use syn::{Error, Index, Result};
 
 use crate::params::{FieldAttr, StrictDerive, VariantAttr};
-use crate::util::NamedFieldsExt;
 
 struct DeriveEncode<'a>(&'a StrictDerive);
 
@@ -47,14 +45,20 @@ impl DeriveInner for DeriveEncode<'_> {
     fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
 
-        let name = fields.field_names()?;
+        let mut orig_name = Vec::with_capacity(fields.len());
+        let mut field_name = Vec::with_capacity(fields.len());
+        for named_field in fields {
+            let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
+            orig_name.push(&named_field.name);
+            field_name.push(attr.field_name(&named_field.name));
+        }
 
         Ok(quote! {
             fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
-                use ::#crate_name::{TypedWrite, WriteStruct};
+                use ::#crate_name::{TypedWrite, WriteStruct, fname};
                 writer.write_struct::<Self>(|w| {
                     Ok(w
-                        #( .write_field(::#crate_name::fname!(stringify!(#name)), &self.#name)? )*
+                        #( .write_field(fname!(#field_name), &self.#orig_name)? )*
                         .complete())
                 })
             }
@@ -91,14 +95,7 @@ impl DeriveInner for DeriveEncode<'_> {
             for var in variants {
                 let attr = VariantAttr::try_from(var.attr.clone())?;
                 let var_name = &var.name;
-                let name = match attr.rename.as_ref() {
-                    None => {
-                        let s = var_name.to_string().to_lower_camel_case();
-                        Ident::new(&s, Span::call_site())
-                    }
-                    Some(name) => name.clone(),
-                };
-                let name = LitStr::new(&name.to_string(), Span::call_site());
+                let name = attr.variant_name(var_name);
                 match &var.fields {
                     Fields::Unit => {
                         define_variants.push(quote! {
@@ -138,11 +135,7 @@ impl DeriveInner for DeriveEncode<'_> {
 
                             let ty = &named_field.field.ty;
                             let name = &named_field.name;
-                            let rename = match attr.rename {
-                                None => named_field.name.clone(),
-                                Some(name) => name,
-                            };
-                            let rename = LitStr::new(&rename.to_string(), Span::call_site());
+                            let rename = attr.field_name(name);
 
                             field_ty.push(quote! { #ty });
                             field_name.push(quote! { #name });

@@ -20,12 +20,10 @@
 // limitations under the License.
 
 use amplify_syn::{DeriveInner, EnumKind, Field, FieldKind, Fields, Items, NamedField, Variant};
-use heck::ToLowerCamelCase;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
-use syn::{Error, LitStr, Result};
+use syn::{Error, Result};
 
 use crate::params::{FieldAttr, StrictDerive, VariantAttr};
-use crate::util::NamedFieldsExt;
 
 struct DeriveDecode<'a>(&'a StrictDerive);
 
@@ -52,15 +50,20 @@ impl DeriveInner for DeriveDecode<'_> {
     fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
 
-        let name = fields.field_names()?;
-        let name_ref = &name;
+        let mut orig_name = Vec::with_capacity(fields.len());
+        let mut field_name = Vec::with_capacity(fields.len());
+        for named_field in fields {
+            let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
+            orig_name.push(&named_field.name);
+            field_name.push(attr.field_name(&named_field.name));
+        }
 
         Ok(quote! {
             fn strict_decode(reader: &mut impl ::#crate_name::TypedRead) -> Result<Self, ::#crate_name::DecodeError> {
                 use ::#crate_name::{TypedRead, ReadStruct, fname};
                 reader.read_struct(|r| {
-                    #( let #name_ref = r.read_field(fname!(stringify!(#name_ref)))?; )*
-                    Ok(Self { #( #name ),* })
+                    #( let #orig_name = r.read_field(fname!(#field_name))?; )*
+                    Ok(Self { #( #orig_name ),* })
                 })
             }
         })
@@ -99,14 +102,7 @@ impl DeriveInner for DeriveDecode<'_> {
             for var in variants {
                 let attr = VariantAttr::try_from(var.attr.clone())?;
                 let var_name = &var.name;
-                let name = match attr.rename.as_ref() {
-                    None => {
-                        let s = var_name.to_string().to_lower_camel_case();
-                        Ident::new(&s, Span::call_site())
-                    }
-                    Some(name) => name.clone(),
-                };
-                let name = LitStr::new(&name.to_string(), Span::call_site());
+                let name = attr.variant_name(var_name);
                 match &var.fields {
                     Fields::Unit => {
                         read_variants.push(quote! {
@@ -134,11 +130,7 @@ impl DeriveInner for DeriveDecode<'_> {
                                 FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
 
                             let name = &named_field.name;
-                            let rename = match attr.rename {
-                                None => named_field.name.clone(),
-                                Some(name) => name,
-                            };
-                            let rename = LitStr::new(&rename.to_string(), Span::call_site());
+                            let rename = attr.field_name(name);
 
                             field_name.push(quote! { #name });
                             field_rename.push(quote! { #rename });

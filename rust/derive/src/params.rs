@@ -25,6 +25,7 @@ use amplify_syn::{
     ArgValueReq, AttrReq, DataType, EnumKind, FieldKind, ListReq, ParametrizedAttr, TypeClass,
     ValueClass,
 };
+use heck::ToLowerCamelCase;
 use proc_macro2::{Ident, Span};
 use quote::ToTokens;
 use syn::{DeriveInput, Error, Expr, LitInt, LitStr, Path, Result};
@@ -62,15 +63,16 @@ pub struct EnumAttr {
 
 pub struct FieldAttr {
     pub dumb: Option<Expr>,
-    pub rename: Option<Ident>,
+    pub rename: Option<LitStr>,
 }
 
 pub struct VariantAttr {
     pub dumb: bool,
-    pub rename: Option<Ident>,
+    pub rename: Option<LitStr>,
     pub tag: Option<LitInt>,
 }
 
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum VariantTags {
     Repr,
     Order,
@@ -180,6 +182,13 @@ impl FieldAttr {
             dumb: params.arg_value(ATTR_DUMB).ok(),
         })
     }
+
+    pub fn field_name(&self, name: &Ident) -> LitStr {
+        match self.rename {
+            None => LitStr::new(&name.to_string().to_lower_camel_case(), name.span()),
+            Some(ref name) => name.clone(),
+        }
+    }
 }
 
 impl TryFrom<ParametrizedAttr> for VariantAttr {
@@ -200,6 +209,15 @@ impl TryFrom<ParametrizedAttr> for VariantAttr {
             tag: params.arg_value(ATTR_TAG).ok(),
             dumb: params.has_verbatim("dumb"),
         })
+    }
+}
+
+impl VariantAttr {
+    pub fn variant_name(&self, name: &Ident) -> LitStr {
+        match self.rename {
+            None => LitStr::new(&name.to_string().to_lower_camel_case(), name.span()),
+            Some(ref name) => name.clone(),
+        }
     }
 }
 
