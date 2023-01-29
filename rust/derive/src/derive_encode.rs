@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use amplify_syn::{DeriveInner, Field, FieldKind, Fields, Items, NamedField, Variant};
+use amplify_syn::{DeriveInner, EnumKind, Field, FieldKind, Fields, Items, NamedField, Variant};
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use syn::{Error, Index, LitStr, Result};
 
@@ -87,7 +87,7 @@ impl DeriveInner for DeriveEncode<'_> {
     fn derive_enum_inner(&self, variants: &Items<Variant>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
 
-        let inner = if variants.iter().all(|var| var.fields.is_unit()) {
+        let inner = if variants.enum_kind() == EnumKind::Primitive {
             quote! {
                 writer.write_enum(*self)
             }

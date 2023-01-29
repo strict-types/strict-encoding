@@ -19,7 +19,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use amplify_syn::{DataInner, DeriveInner, Field, FieldKind, Fields, Items, NamedField, Variant};
+use amplify_syn::{
+    DataInner, DeriveInner, EnumKind, Field, FieldKind, Fields, Items, NamedField, Variant,
+};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::ToTokens;
 use syn::{LitStr, Result};
@@ -105,7 +107,7 @@ impl StrictDerive {
             DataInner::Struct(Fields::Unnamed(fields)) => {
                 self.data.derive(trait_crate, &ident!(StrictTuple), &DeriveTuple(fields))?
             }
-            DataInner::Enum(variants) if variants.iter().all(|var| var.fields.is_unit()) => {
+            DataInner::Enum(variants) if variants.enum_kind() == EnumKind::Primitive => {
                 self.data.derive(trait_crate, &ident!(StrictEnum), &DeriveEnum(variants))?
             }
             DataInner::Enum(variants) => {
