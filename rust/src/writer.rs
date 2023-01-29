@@ -388,7 +388,7 @@ impl<W: io::Write> UnionWriter<W> {
         );
         assert!(!self.written, "multiple attempts to write variants of '{}'", self.name());
         self.written = true;
-        self.parent = variant.ord.strict_encode(self.parent)?;
+        self.parent = variant.tag.strict_encode(self.parent)?;
         Ok(self)
     }
 

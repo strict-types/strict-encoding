@@ -143,18 +143,18 @@ pub trait StrictSum: StrictType {
         );
     }
 
-    fn variant_name_by_tag(ord: u8) -> Option<FieldName> {
+    fn variant_name_by_tag(tag: u8) -> Option<FieldName> {
         Self::ALL_VARIANTS
             .iter()
-            .find(|(n, _)| *n == ord)
+            .find(|(n, _)| *n == tag)
             .map(|(_, variant_name)| vname!(*variant_name))
     }
 
     fn variant_ord(&self) -> u8 {
         let variant = self.variant_name();
-        for (ord, name) in Self::ALL_VARIANTS {
+        for (tag, name) in Self::ALL_VARIANTS {
             if *name == variant {
-                return *ord;
+                return *tag;
             }
         }
         unreachable!(
@@ -184,9 +184,9 @@ where
     u8: From<Self>,
 {
     fn from_variant_name(name: &FieldName) -> Result<Self, VariantError<&FieldName>> {
-        for (ord, n) in Self::ALL_VARIANTS {
+        for (tag, n) in Self::ALL_VARIANTS {
             if *n == name.as_str() {
-                return Self::try_from(*ord).map_err(|_| VariantError(Self::strict_name(), name));
+                return Self::try_from(*tag).map_err(|_| VariantError(Self::strict_name(), name));
             }
         }
         Err(VariantError(Self::strict_name(), name))

@@ -76,23 +76,23 @@ impl Display for Sizing {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Variant {
     pub name: VariantName,
-    pub ord: u8,
+    pub tag: u8,
 }
-impl_strict_struct!(Variant, STEN_LIB; name, ord);
+impl_strict_struct!(Variant, STEN_LIB; name, tag);
 
 impl Variant {
-    pub fn named(ord: u8, name: VariantName) -> Variant { Variant { name, ord } }
+    pub fn named(tag: u8, name: VariantName) -> Variant { Variant { name, tag } }
 
     pub fn none() -> Variant {
         Variant {
             name: vname!("none"),
-            ord: 0,
+            tag: 0,
         }
     }
     pub fn some() -> Variant {
         Variant {
             name: vname!("some"),
-            ord: 1,
+            tag: 1,
         }
     }
 }
@@ -106,7 +106,7 @@ impl Ord for Variant {
         if self == other {
             return Ordering::Equal;
         }
-        self.ord.cmp(&other.ord)
+        self.tag.cmp(&other.tag)
     }
 }
 
@@ -115,7 +115,7 @@ impl Display for Variant {
         write!(f, "{}", self.name)?;
         if f.alternate() {
             f.write_str(" = ")?;
-            Display::fmt(&self.ord, f)?;
+            Display::fmt(&self.tag, f)?;
         }
         Ok(())
     }

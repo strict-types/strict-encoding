@@ -186,15 +186,15 @@ impl DeriveInner for DeriveSum<'_> {
             let attr = VariantAttr::try_from(variant.attr.clone())?;
             let name = &variant.name;
             let rename = attr.variant_name(name);
-            let ord = match (&self.2.tags, &attr.tag) {
-                (_, Some(ord)) => ord.to_token_stream(),
+            let tag = match (&self.2.tags, &attr.tag) {
+                (_, Some(tag)) => tag.to_token_stream(),
                 (VariantTags::Repr, None) => quote! { Self::#name },
                 (VariantTags::Order, None) => quote! { #index },
                 (VariantTags::Custom, None) => {
                     panic!("tag is required for variant `{}`", variant.name)
                 }
             };
-            orders.push(quote!(#ord));
+            orders.push(quote!(#tag));
             renames.push(quote!(#rename));
             idents.push(match variant.fields {
                 Fields::Unit => quote!(#name),
