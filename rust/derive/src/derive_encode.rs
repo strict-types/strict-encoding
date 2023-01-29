@@ -99,10 +99,10 @@ impl DeriveInner for DeriveEncode<'_> {
                 match &var.fields {
                     Fields::Unit => {
                         define_variants.push(quote! {
-                            .define_unit(fname!(#name))
+                            .define_unit(vname!(#name))
                         });
                         write_variants.push(quote! {
-                            Self::#var_name => writer.write_unit(fname!(#name))?,
+                            Self::#var_name => writer.write_unit(vname!(#name))?,
                         });
                     }
                     Fields::Unnamed(fields) => {
@@ -115,12 +115,12 @@ impl DeriveInner for DeriveEncode<'_> {
                             field_idx.push(quote! { #index });
                         }
                         define_variants.push(quote! {
-                            .define_tuple(fname!(#name), |d| {
+                            .define_tuple(vname!(#name), |d| {
                                 d #( .define_field::<#field_ty>() )* .complete()
                             })
                         });
                         write_variants.push(quote! {
-                            Self::#var_name( #( #field_idx ),* ) => writer.write_tuple(fname!(#name), |w| {
+                            Self::#var_name( #( #field_idx ),* ) => writer.write_tuple(vname!(#name), |w| {
                                 Ok(w #( .write_field(#field_idx)? )* .complete())
                             })?,
                         });
@@ -143,12 +143,12 @@ impl DeriveInner for DeriveEncode<'_> {
                         }
 
                         define_variants.push(quote! {
-                            .define_struct(fname!(#name), |d| {
+                            .define_struct(vname!(#name), |d| {
                                 d #( .define_field::<#field_ty>(#field_rename) )* .complete()
                             })
                         });
                         write_variants.push(quote! {
-                            Self::#var_name { #( #field_name ),* } => writer.write_struct(fname!(#name), |w| {
+                            Self::#var_name { #( #field_name ),* } => writer.write_struct(vname!(#name), |w| {
                                 Ok(w #( .write_field(#field_rename, #field_name)? )* .complete())
                             })?,
                         });
@@ -158,7 +158,7 @@ impl DeriveInner for DeriveEncode<'_> {
 
             quote! {
                 #[allow(unused_imports)]
-                use ::#crate_name::{DefineUnion, WriteUnion, DefineTuple, DefineStruct, WriteTuple, WriteStruct, fname};
+                use ::#crate_name::{DefineUnion, WriteUnion, DefineTuple, DefineStruct, WriteTuple, WriteStruct, fname, vname};
                 writer.write_union::<Self>(|definer| {
                     let writer = definer
                         #( #define_variants )*

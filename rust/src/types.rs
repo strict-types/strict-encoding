@@ -147,7 +147,7 @@ pub trait StrictSum: StrictType {
         Self::ALL_VARIANTS
             .iter()
             .find(|(n, _)| *n == ord)
-            .map(|(_, variant_name)| fname!(*variant_name))
+            .map(|(_, variant_name)| vname!(*variant_name))
     }
 
     fn variant_ord(&self) -> u8 {
