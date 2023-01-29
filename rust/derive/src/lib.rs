@@ -57,6 +57,7 @@ pub(crate) mod params;
 mod derive_dumb;
 mod derive_type;
 mod derive_encode;
+mod derive_decode;
 
 use proc_macro::TokenStream;
 use syn::DeriveInput;

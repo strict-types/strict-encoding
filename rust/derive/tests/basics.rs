@@ -85,9 +85,9 @@ fn struct_generics() -> common::Result {
     }
 
     #[derive(Clone, PartialEq, Eq, Debug)]
-    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[derive(StrictDumb, StrictType, StrictEncode)]
     #[strict_type(lib = TEST_LIB)]
-    struct ComplexField<'a, V: StrictEncode + StrictDecode + StrictDumb>
+    struct ComplexField<'a, V: StrictEncode + StrictDumb>
     where
         for<'b> V: From<&'b str>,
         &'a V: Default,

@@ -21,23 +21,28 @@
 
 use amplify_syn::{DeriveInner, EnumKind, Field, FieldKind, Fields, Items, NamedField, Variant};
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
-use syn::{Error, Index, LitStr, Result};
+use syn::{Error, LitStr, Result};
 
 use crate::params::{FieldAttr, StrictDerive, VariantAttr};
 
-struct DeriveEncode<'a>(&'a StrictDerive);
+struct DeriveDecode<'a>(&'a StrictDerive);
 
 impl StrictDerive {
-    pub fn derive_encode(&self) -> Result<TokenStream2> {
-        self.data.derive(&self.conf.strict_crate, &ident!(StrictEncode), &DeriveEncode(self))
+    pub fn derive_decode(&self) -> Result<TokenStream2> {
+        let res = self.data.derive(
+            &self.conf.strict_crate,
+            &ident!(StrictDecode),
+            &DeriveDecode(self),
+        )?;
+        Ok(res)
     }
 }
 
-impl DeriveInner for DeriveEncode<'_> {
+impl DeriveInner for DeriveDecode<'_> {
     fn derive_unit_inner(&self) -> Result<TokenStream2> {
         Err(Error::new(
             Span::call_site(),
-            "StrictEncode must not be derived on a unit types. Use just a unit type instead when \
+            "StrictDecode must not be derived on a unit types. Use just a unit type instead when \
              encoding parent structure.",
         ))
     }
@@ -45,22 +50,15 @@ impl DeriveInner for DeriveEncode<'_> {
     fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
 
-        let mut name = Vec::with_capacity(fields.len());
-        for named_field in fields {
-            let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
-            name.push(match attr.rename {
-                None => named_field.name.clone(),
-                Some(name) => name,
-            });
-        }
+        let name = fields.iter().map(|f| &f.name);
+        let name2 = fields.iter().map(|f| &f.name);
 
         Ok(quote! {
-            fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
-                use ::#crate_name::{TypedWrite, WriteStruct};
-                writer.write_struct::<Self>(|w| {
-                    Ok(w
-                        #( .write_field(::#crate_name::fname!(stringify!(#name)), &self.#name)? )*
-                        .complete())
+            fn strict_decode(reader: &mut impl ::#crate_name::TypedRead) -> Result<Self, ::#crate_name::DecodeError> {
+                use ::#crate_name::{TypedRead, ReadStruct, fname};
+                reader.read_struct(|r| {
+                    #( let #name = r.read_field(fname!(stringify!(#name)))?; )*
+                    Ok(Self { #( #name2 ),* })
                 })
             }
         })
@@ -69,15 +67,19 @@ impl DeriveInner for DeriveEncode<'_> {
     fn derive_tuple_inner(&self, fields: &Items<Field>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
 
-        let no = fields.iter().enumerate().map(|(index, _)| Index::from(index));
+        let no = fields
+            .iter()
+            .enumerate()
+            .map(|(index, _)| Ident::new(&format!("_{index}"), Span::call_site()))
+            .collect::<Vec<_>>();
+        let no2 = no.clone();
 
         Ok(quote! {
-            fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
-                use ::#crate_name::{TypedWrite, WriteTuple};
-                writer.write_tuple::<Self>(|w| {
-                    Ok(w
-                        #( .write_field(&self.#no)? )*
-                        .complete())
+            fn strict_decode(reader: &mut impl ::#crate_name::TypedRead) -> Result<Self, ::#crate_name::DecodeError> {
+                use ::#crate_name::{TypedRead, ReadTuple};
+                reader.read_tuple(|r| {
+                    #( let #no = r.read_field()?; )*
+                    Ok(Self( #( #no2 ),* ))
                 })
             }
         })
@@ -88,11 +90,10 @@ impl DeriveInner for DeriveEncode<'_> {
 
         let inner = if variants.enum_kind() == EnumKind::Primitive {
             quote! {
-                writer.write_enum(*self)
+                reader.read_enum()
             }
         } else {
-            let mut define_variants = Vec::with_capacity(variants.len());
-            let mut write_variants = Vec::with_capacity(variants.len());
+            let mut read_variants = Vec::with_capacity(variants.len());
             for var in variants {
                 let attr = VariantAttr::try_from(var.attr.clone())?;
                 let var_name = &var.name;
@@ -111,42 +112,30 @@ impl DeriveInner for DeriveEncode<'_> {
                 let name = LitStr::new(&name.to_string(), Span::call_site());
                 match &var.fields {
                     Fields::Unit => {
-                        define_variants.push(quote! {
-                            .define_unit(fname!(#name))
-                        });
-                        write_variants.push(quote! {
-                            Self::#var_name => writer.write_unit(fname!(#name))?,
+                        read_variants.push(quote! {
+                            #name => Ok(Self::#var_name),
                         });
                     }
                     Fields::Unnamed(fields) => {
-                        let mut field_ty = Vec::with_capacity(fields.len());
                         let mut field_idx = Vec::with_capacity(fields.len());
-                        for (index, field) in fields.iter().enumerate() {
-                            let ty = &field.ty;
+                        for index in 0..fields.len() {
                             let index = Ident::new(&format!("_{index}"), Span::call_site());
-                            field_ty.push(quote! { #ty });
                             field_idx.push(quote! { #index });
                         }
-                        define_variants.push(quote! {
-                            .define_tuple(fname!(#name), |d| {
-                                d #( .define_field::<#field_ty>() )* .complete()
-                            })
-                        });
-                        write_variants.push(quote! {
-                            Self::#var_name( #( #field_idx ),* ) => writer.write_tuple(fname!(#name), |w| {
-                                Ok(w #( .write_field(#field_idx)? )* .complete())
-                            })?,
+                        read_variants.push(quote! {
+                            #name => r.read_tuple(|t| {
+                                #( let #field_idx = t.read_field()?; )*
+                                Ok(Self::#var_name( #(#field_idx),* ))
+                            }),
                         });
                     }
                     Fields::Named(fields) => {
-                        let mut field_ty = Vec::with_capacity(fields.len());
                         let mut field_name = Vec::with_capacity(fields.len());
                         let mut field_rename = Vec::with_capacity(fields.len());
                         for named_field in fields {
                             let attr =
                                 FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
 
-                            let ty = &named_field.field.ty;
                             let name = &named_field.name;
                             let rename = match attr.rename {
                                 None => named_field.name.clone(),
@@ -154,20 +143,15 @@ impl DeriveInner for DeriveEncode<'_> {
                             };
                             let rename = LitStr::new(&rename.to_string(), Span::call_site());
 
-                            field_ty.push(quote! { #ty });
                             field_name.push(quote! { #name });
-                            field_rename.push(quote! { fname!(#rename) });
+                            field_rename.push(quote! { #rename });
                         }
 
-                        define_variants.push(quote! {
-                            .define_struct(fname!(#name), |d| {
-                                d #( .define_field::<#field_ty>(#field_rename) )* .complete()
-                            })
-                        });
-                        write_variants.push(quote! {
-                            Self::#var_name { #( #field_name ),* } => writer.write_struct(fname!(#name), |w| {
-                                Ok(w #( .write_field(#field_rename, #field_name)? )* .complete())
-                            })?,
+                        read_variants.push(quote! {
+                            #name => r.read_struct(|s| {
+                                #( let #field_name = s.read_field(fname!(#field_rename))?; )*
+                                Ok(Self::#var_name { #(#field_name),* })
+                            }),
                         });
                     }
                 }
@@ -175,22 +159,19 @@ impl DeriveInner for DeriveEncode<'_> {
 
             quote! {
                 #[allow(unused_imports)]
-                use ::#crate_name::{DefineUnion, WriteUnion, DefineTuple, DefineStruct, WriteTuple, WriteStruct, fname};
-                writer.write_union::<Self>(|definer| {
-                    let writer = definer
-                        #( #define_variants )*
-                        .complete();
-
-                    Ok(match self {
-                        #( #write_variants )*
-                    }.complete())
+                use ::#crate_name::{ReadUnion, ReadTuple, ReadStruct, fname};
+                reader.read_union(|field_name, r| {
+                    match field_name.as_str() {
+                        #( #read_variants )*
+                        _ => unreachable!(),
+                    }
                 })
             }
         };
 
         Ok(quote! {
-            fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
-                use ::#crate_name::TypedWrite;
+            fn strict_decode(reader: &mut impl ::#crate_name::TypedRead) -> Result<Self, ::#crate_name::DecodeError> {
+                use ::#crate_name::TypedRead;
                 #inner
             }
         })
