@@ -26,7 +26,7 @@ extern crate strict_encoding_derive;
 
 mod common;
 
-use strict_encoding::{StrictDumb, StrictType};
+use strict_encoding::{StrictDecode, StrictDumb, StrictEncode, StrictType};
 
 const TEST_LIB: &str = "TestLib";
 
@@ -55,7 +55,7 @@ fn struct_base() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = TEST_LIB)]
-    struct Field<V: StrictType + StrictDumb> {
+    struct Field<V: StrictEncode + StrictDecode + StrictDumb> {
         name: u8,
         value: V,
     }
@@ -68,7 +68,7 @@ fn struct_base_default() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug, Default)]
     #[derive(StrictType, StrictEncode, StrictDecode)]
     #[strict_type(lib = TEST_LIB)]
-    struct Field<V: StrictType>
+    struct Field<V: StrictEncode + StrictDecode>
     where V: Default
     {
         name: u8,

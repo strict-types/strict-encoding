@@ -56,6 +56,7 @@ extern crate amplify_syn;
 pub(crate) mod params;
 mod derive_dumb;
 mod derive_type;
+mod derive_encode;
 
 use proc_macro::TokenStream;
 use syn::DeriveInput;

@@ -31,9 +31,6 @@ impl StrictDerive {
     pub fn derive_dumb(&self) -> Result<TokenStream2> {
         self.data.derive(&self.conf.strict_crate, &ident!(StrictDumb), &DeriveDumb(self))
     }
-    // TODO: Remove
-    pub fn derive_encode(&self) -> Result<TokenStream2> { Ok(quote! {}) }
-    pub fn derive_decode(&self) -> Result<TokenStream2> { Ok(quote! {}) }
 }
 
 impl DeriveInner for DeriveDumb<'_> {
