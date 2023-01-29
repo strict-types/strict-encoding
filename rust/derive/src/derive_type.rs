@@ -38,7 +38,6 @@ struct DeriveUnion<'a>(&'a Items<Variant>);
 
 impl StrictDerive {
     pub fn derive_type(&self) -> Result<TokenStream2> {
-        // TODO: Prohibit _u8 conversions for associated enum types
         // TODO: Fix `by_ord` for enums having repr value (or prohibit)
 
         let trait_crate = &self.conf.strict_crate;
@@ -51,7 +50,7 @@ impl StrictDerive {
                 self.data.derive(trait_crate, &ident!(StrictProduct), &DeriveProduct(fields))?
             }
             DataInner::Enum(variants) => {
-                let enum_attr = EnumAttr::try_from(self.data.attr.clone())?;
+                let enum_attr = EnumAttr::with(self.data.attr.clone(), variants.enum_kind())?;
 
                 let impl_try_from_u8 = if enum_attr.try_from_u8 {
                     let type_name_str = LitStr::new(&type_name.to_string(), Span::call_site());

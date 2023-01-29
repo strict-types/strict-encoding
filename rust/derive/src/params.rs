@@ -22,7 +22,8 @@
 use std::collections::HashMap;
 
 use amplify_syn::{
-    ArgValueReq, AttrReq, DataType, FieldKind, ListReq, ParametrizedAttr, TypeClass, ValueClass,
+    ArgValueReq, AttrReq, DataType, EnumKind, FieldKind, ListReq, ParametrizedAttr, TypeClass,
+    ValueClass,
 };
 use proc_macro2::{Ident, Span};
 use quote::ToTokens;
@@ -90,9 +91,11 @@ impl ContainerAttr {
 }
 
 impl EnumAttr {
-    fn attr_req(map: HashMap<&str, ArgValueReq>) -> AttrReq {
+    fn attr_req(map: HashMap<&str, ArgValueReq>, kind: EnumKind) -> AttrReq {
         let mut req = AttrReq::with(map);
-        req.path_req = ListReq::any_of(vec![path!(try_from_u8), path!(into_u8)], false);
+        if kind == EnumKind::Primitive {
+            req.path_req = ListReq::any_of(vec![path!(try_from_u8), path!(into_u8)], false);
+        }
         req
     }
 }
@@ -105,7 +108,7 @@ impl TryFrom<ParametrizedAttr> for ContainerAttr {
         attrs.extend([(ATTR_TAGS, ArgValueReq::optional(TypeClass::Path))]);
         let map = HashMap::from_iter(attrs);
 
-        params.check(EnumAttr::attr_req(map))?;
+        params.check(EnumAttr::attr_req(map, EnumKind::Primitive))?;
 
         Ok(ContainerAttr {
             strict_crate: params.arg_value(ATTR_CRATE).unwrap_or_else(|_| path!(strict_encoding)),
@@ -124,15 +127,13 @@ impl TryFrom<ParametrizedAttr> for ContainerAttr {
     }
 }
 
-impl TryFrom<ParametrizedAttr> for EnumAttr {
-    type Error = Error;
-
-    fn try_from(mut params: ParametrizedAttr) -> Result<Self> {
+impl EnumAttr {
+    pub fn with(mut params: ParametrizedAttr, kind: EnumKind) -> Result<Self> {
         let mut attrs = ContainerAttr::shared_attrs();
         attrs.extend([(ATTR_TAGS, ArgValueReq::required(TypeClass::Path))]);
         let map = HashMap::from_iter(attrs);
 
-        params.check(EnumAttr::attr_req(map))?;
+        params.check(EnumAttr::attr_req(map, kind))?;
 
         let tags = match params
             .arg_value(ATTR_TAGS)
