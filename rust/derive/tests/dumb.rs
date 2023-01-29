@@ -26,7 +26,8 @@ extern crate strict_encoding_derive;
 
 mod common;
 
-use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
+use amplify::confinement::Confined;
+use strict_encoding::{StrictDecode, StrictDumb, StrictEncode, StrictType};
 
 const TEST_LIB: &str = "TestLib";
 
@@ -115,5 +116,60 @@ fn dumb_wrapper_precedence() -> common::Result {
     struct ShortLen(#[strict_type(dumb = 1)] u16);
 
     assert_eq!(ShortLen::strict_dumb(), ShortLen(u16::MAX));
+    Ok(())
+}
+
+#[test]
+fn dumb_struct() -> common::Result {
+    #[allow(unused_braces)]
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    #[derive(StrictDumb, StrictType)]
+    #[strict_type(lib = TEST_LIB, tags = order, dumb = Dumb::new())]
+    struct Dumb {
+        field1: u8,
+        field2: u16,
+    }
+
+    impl Dumb {
+        pub fn new() -> Self {
+            Dumb {
+                field1: 1,
+                field2: 2,
+            }
+        }
+    }
+
+    assert_eq!(Dumb::strict_dumb(), Dumb {
+        field1: 1,
+        field2: 2
+    });
+
+    Ok(())
+}
+
+#[test]
+fn dumb_enum_associated() -> common::Result {
+    #[allow(unused_braces)]
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    #[derive(StrictDumb, StrictType)]
+    #[strict_type(lib = TEST_LIB, tags = order, dumb = { Assoc::Variant { field: 0 } })]
+    enum Assoc {
+        Variant { field: u8 },
+    }
+
+    assert_eq!(Assoc::strict_dumb(), Assoc::Variant { field: 0 });
+
+    Ok(())
+}
+
+#[test]
+fn dumb_ultra_complex() -> common::Result {
+    #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, From)]
+    #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB, dumb = NamedFields(confined_vec!(T::strict_dumb())))]
+    pub struct NamedFields<T: StrictDumb + StrictEncode + StrictDecode>(
+        Confined<Vec<T>, 1, { u8::MAX as usize }>,
+    );
+
     Ok(())
 }
