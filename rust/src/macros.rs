@@ -114,6 +114,16 @@ macro_rules! tn {
 }
 
 #[macro_export]
+macro_rules! vname {
+    ($name:literal) => {
+        $crate::VariantName::from($name).into()
+    };
+    ($name:expr) => {
+        $crate::VariantName::from($name).into()
+    };
+}
+
+#[macro_export]
 macro_rules! fname {
     ($name:literal) => {
         $crate::FieldName::from($name).into()

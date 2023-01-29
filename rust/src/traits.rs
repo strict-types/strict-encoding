@@ -214,7 +214,7 @@ pub trait ReadStruct {
 pub trait DefineEnum: Sized {
     type Parent: TypedWrite;
     type EnumWriter: WriteEnum<Parent = Self::Parent>;
-    fn define_variant(self, name: FieldName, value: u8) -> Self;
+    fn define_variant(self, name: FieldName) -> Self;
     fn complete(self) -> Self::EnumWriter;
 }
 

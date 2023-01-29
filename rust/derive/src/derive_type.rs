@@ -38,8 +38,6 @@ struct DeriveUnion<'a>(&'a Items<Variant>);
 
 impl StrictDerive {
     pub fn derive_type(&self) -> Result<TokenStream2> {
-        // TODO: Fix `by_ord` for enums having repr value (or prohibit)
-
         let trait_crate = &self.conf.strict_crate;
         let type_name = &self.data.name;
 

@@ -152,6 +152,8 @@ impl TryFrom<String> for FieldName {
 
 impl_strict_newtype!(FieldName, STEN_LIB);
 
+pub type VariantName = FieldName;
+
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, Display, FromStr)]
 #[wrapper_mut(DerefMut)]

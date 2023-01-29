@@ -23,7 +23,7 @@ use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::io;
 
-use crate::{FieldName, ReadStruct, WriteStruct, STEN_LIB};
+use crate::{ReadStruct, VariantName, WriteStruct, STEN_LIB};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
@@ -75,23 +75,23 @@ impl Display for Sizing {
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Variant {
-    pub name: FieldName,
+    pub name: VariantName,
     pub ord: u8,
 }
 impl_strict_struct!(Variant, STEN_LIB; name, ord);
 
 impl Variant {
-    pub fn named(name: FieldName, value: u8) -> Variant { Variant { name, ord: value } }
+    pub fn named(ord: u8, name: VariantName) -> Variant { Variant { name, ord } }
 
     pub fn none() -> Variant {
         Variant {
-            name: fname!("none"),
+            name: vname!("none"),
             ord: 0,
         }
     }
     pub fn some() -> Variant {
         Variant {
-            name: fname!("some"),
+            name: vname!("some"),
             ord: 1,
         }
     }
