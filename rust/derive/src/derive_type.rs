@@ -165,14 +165,15 @@ impl DeriveInner for DeriveSum<'_> {
     fn derive_enum_inner(&self, variants: &Items<Variant>) -> Result<TokenStream2> {
         let items = variants.iter().enumerate().map(|(index, variant)| {
             let attr = VariantAttr::try_from(variant.attr.clone()).expect("invalid attribute");
+            let orig_name = &variant.name;
             let name = match attr.rename.as_ref() {
-                None => &variant.name,
+                None => orig_name,
                 Some(name) => name,
             };
             let name = LitStr::new(&name.to_string(), Span::call_site());
             let ord = match (&self.2.tags, &attr.tag) {
                 (_, Some(ord)) => ord.to_token_stream(),
-                (VariantTags::Repr, None) => quote! { self as u8 },
+                (VariantTags::Repr, None) => quote! { Self::#orig_name },
                 (VariantTags::Order, None) => quote! { #index },
                 (VariantTags::Custom, None) => {
                     panic!("tag is required for variant `{}`", variant.name)
