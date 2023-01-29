@@ -26,7 +26,7 @@ extern crate strict_encoding_derive;
 
 mod common;
 
-use strict_encoding::{tn, StrictStruct, StrictType};
+use strict_encoding::{tn, StrictStruct, StrictSum, StrictType};
 
 const TEST_LIB: &str = "TestLib";
 
@@ -68,6 +68,24 @@ fn rename_field() -> common::Result {
     }
 
     assert_eq!(Struct::ALL_FIELDS, &["mustCamelize", "correctName"]);
+
+    Ok(())
+}
+
+#[test]
+fn rename_variant() -> common::Result {
+    #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+    #[derive(StrictType)]
+    #[strict_type(lib = TEST_LIB, tags = order, into_u8, try_from_u8)]
+    enum Enum {
+        #[default]
+        MustCamelize,
+
+        #[strict_type(rename = "correctName")]
+        WrongName,
+    }
+
+    assert_eq!(Enum::ALL_VARIANTS, &[(0, "mustCamelize"), (1, "correctName")]);
 
     Ok(())
 }
