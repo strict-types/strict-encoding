@@ -19,14 +19,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use amplify_syn::{
-    DataInner, DeriveInner, EnumKind, Field, FieldKind, Fields, Items, NamedField, Variant,
-};
+use amplify_syn::{DataInner, DeriveInner, EnumKind, Field, Fields, Items, NamedField, Variant};
 use proc_macro2::{Span, TokenStream as TokenStream2};
 use quote::ToTokens;
 use syn::{LitStr, Result};
 
-use crate::params::{ContainerAttr, EnumAttr, FieldAttr, StrictDerive, VariantAttr, VariantTags};
+use crate::params::{ContainerAttr, EnumAttr, StrictDerive, VariantAttr, VariantTags};
+use crate::util::NamedFieldsExt;
 
 struct DeriveType<'a>(&'a StrictDerive);
 struct DeriveProduct<'a>(&'a Fields);
@@ -248,18 +247,11 @@ impl DeriveInner for DeriveStruct<'_> {
     fn derive_tuple_inner(&self, _fields: &Items<Field>) -> Result<TokenStream2> { unreachable!() }
 
     fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
-        let mut items = Vec::with_capacity(fields.len());
-        for named_field in fields {
-            let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
-            items.push(match attr.rename {
-                None => named_field.name.clone(),
-                Some(name) => name,
-            });
-        }
+        let name = fields.field_names()?;
 
         Ok(quote! {
             const ALL_FIELDS: &'static [&'static str] = &[
-                #( stringify!(#items) ),*
+                #( stringify!(#name) ),*
             ];
         })
     }

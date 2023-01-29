@@ -20,10 +20,12 @@
 // limitations under the License.
 
 use amplify_syn::{DeriveInner, EnumKind, Field, FieldKind, Fields, Items, NamedField, Variant};
+use heck::ToLowerCamelCase;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use syn::{Error, Index, LitStr, Result};
 
 use crate::params::{FieldAttr, StrictDerive, VariantAttr};
+use crate::util::NamedFieldsExt;
 
 struct DeriveEncode<'a>(&'a StrictDerive);
 
@@ -45,14 +47,7 @@ impl DeriveInner for DeriveEncode<'_> {
     fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
 
-        let mut name = Vec::with_capacity(fields.len());
-        for named_field in fields {
-            let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
-            name.push(match attr.rename {
-                None => named_field.name.clone(),
-                Some(name) => name,
-            });
-        }
+        let name = fields.field_names()?;
 
         Ok(quote! {
             fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
@@ -98,12 +93,7 @@ impl DeriveInner for DeriveEncode<'_> {
                 let var_name = &var.name;
                 let name = match attr.rename.as_ref() {
                     None => {
-                        let s = var_name.to_string();
-                        let mut c = s.chars();
-                        let s = match c.next() {
-                            None => String::new(),
-                            Some(f) => f.to_lowercase().collect::<String>() + c.as_str(),
-                        };
+                        let s = var_name.to_string().to_lower_camel_case();
                         Ident::new(&s, Span::call_site())
                     }
                     Some(name) => name.clone(),

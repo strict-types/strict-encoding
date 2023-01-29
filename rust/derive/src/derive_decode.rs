@@ -20,10 +20,12 @@
 // limitations under the License.
 
 use amplify_syn::{DeriveInner, EnumKind, Field, FieldKind, Fields, Items, NamedField, Variant};
+use heck::ToLowerCamelCase;
 use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use syn::{Error, LitStr, Result};
 
 use crate::params::{FieldAttr, StrictDerive, VariantAttr};
+use crate::util::NamedFieldsExt;
 
 struct DeriveDecode<'a>(&'a StrictDerive);
 
@@ -50,15 +52,15 @@ impl DeriveInner for DeriveDecode<'_> {
     fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
 
-        let name = fields.iter().map(|f| &f.name);
-        let name2 = fields.iter().map(|f| &f.name);
+        let name = fields.field_names()?;
+        let name_ref = &name;
 
         Ok(quote! {
             fn strict_decode(reader: &mut impl ::#crate_name::TypedRead) -> Result<Self, ::#crate_name::DecodeError> {
                 use ::#crate_name::{TypedRead, ReadStruct, fname};
                 reader.read_struct(|r| {
-                    #( let #name = r.read_field(fname!(stringify!(#name)))?; )*
-                    Ok(Self { #( #name2 ),* })
+                    #( let #name_ref = r.read_field(fname!(stringify!(#name_ref)))?; )*
+                    Ok(Self { #( #name ),* })
                 })
             }
         })
@@ -99,12 +101,7 @@ impl DeriveInner for DeriveDecode<'_> {
                 let var_name = &var.name;
                 let name = match attr.rename.as_ref() {
                     None => {
-                        let s = var_name.to_string();
-                        let mut c = s.chars();
-                        let s = match c.next() {
-                            None => String::new(),
-                            Some(f) => f.to_lowercase().collect::<String>() + c.as_str(),
-                        };
+                        let s = var_name.to_string().to_lower_camel_case();
                         Ident::new(&s, Span::call_site())
                     }
                     Some(name) => name.clone(),

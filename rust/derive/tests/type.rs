@@ -56,6 +56,44 @@ fn rename_type() -> common::Result {
 }
 
 #[test]
+fn fields() -> common::Result {
+    #[derive(Clone, PartialEq, Eq, Debug, Default)]
+    #[derive(StrictType)]
+    #[strict_type(lib = TEST_LIB)]
+    struct Struct {
+        must_camelize: u8,
+    }
+
+    assert_eq!(Struct::ALL_FIELDS, &["mustCamelize"]);
+
+    Ok(())
+}
+
+#[test]
+fn variants() -> common::Result {
+    #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+    #[derive(StrictType)]
+    #[strict_type(lib = TEST_LIB, tags = order, into_u8, try_from_u8)]
+    enum Enum {
+        #[default]
+        MustCamelize,
+    }
+
+    #[allow(unused_braces)]
+    #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+    #[derive(StrictDumb, StrictType)]
+    #[strict_type(lib = TEST_LIB, tags = order, dumb = { Assoc::MustCamelize { field: 0 } })]
+    enum Assoc {
+        MustCamelize { field: u8 },
+    }
+
+    assert_eq!(Enum::ALL_VARIANTS, &[(0, "mustCamelize")]);
+    assert_eq!(Assoc::ALL_VARIANTS, &[(0, "mustCamelize")]);
+
+    Ok(())
+}
+
+#[test]
 fn rename_field() -> common::Result {
     #[derive(Clone, PartialEq, Eq, Debug, Default)]
     #[derive(StrictType)]
