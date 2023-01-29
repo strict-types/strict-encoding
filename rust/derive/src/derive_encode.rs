@@ -98,8 +98,16 @@ impl DeriveInner for DeriveEncode<'_> {
                 let attr = VariantAttr::try_from(var.attr.clone())?;
                 let var_name = &var.name;
                 let name = match attr.rename.as_ref() {
-                    None => var_name, // TODO: Lowercase the first letter
-                    Some(name) => name,
+                    None => {
+                        let s = var_name.to_string();
+                        let mut c = s.chars();
+                        let s = match c.next() {
+                            None => String::new(),
+                            Some(f) => f.to_lowercase().collect::<String>() + c.as_str(),
+                        };
+                        Ident::new(&s, Span::call_site())
+                    }
+                    Some(name) => name.clone(),
                 };
                 let name = LitStr::new(&name.to_string(), Span::call_site());
                 match &var.fields {

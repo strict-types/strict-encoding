@@ -38,7 +38,6 @@ impl StrictDerive {
     pub fn derive_type(&self) -> Result<TokenStream2> {
         // TODO: Prohibit _u8 conversions for associated enum types
         // TODO: Fix `by_ord` for enums having repr value (or prohibit)
-        // TODO: Error on renames in tuple fields
 
         let trait_crate = &self.conf.strict_crate;
         let type_name = &self.data.name;
