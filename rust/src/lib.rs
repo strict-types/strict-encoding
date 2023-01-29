@@ -30,6 +30,11 @@
 )]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
+#[cfg(feature = "derive")]
+pub extern crate strict_encoding_derive as derive;
+#[cfg(feature = "derive")]
+pub use derive::{StrictDecode, StrictDumb, StrictEncode, StrictType};
+
 #[macro_use]
 extern crate amplify;
 #[cfg(feature = "serde")]

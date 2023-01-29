@@ -30,7 +30,7 @@ dependencies = [
  "amplify_apfloat",
  "amplify_derive 4.0.0-alpha.3",
  "amplify_num",
- "amplify_syn",
+ "amplify_syn 1.1.6",
  "ascii",
  "serde",
  "serde_json",
@@ -56,7 +56,7 @@ version = "2.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c3de270e75f27a4468a7c344070109046656e85cb522141f7d40ab4b83803ac"
 dependencies = [
- "amplify_syn",
+ "amplify_syn 1.1.6",
  "proc-macro2",
  "quote",
  "syn",
@@ -68,7 +68,7 @@ version = "4.0.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "633f53abfbce074d0334ba0d23e0f8f6d6ca9daf1c8a3219c58aead289bc405c"
 dependencies = [
- "amplify_syn",
+ "amplify_syn 1.1.6",
  "proc-macro2",
  "quote",
  "syn",
@@ -85,8 +85,20 @@ dependencies = [
 
 [[package]]
 name = "amplify_syn"
-version = "1.2.0"
-source = "git+https://github.com/rust-amplify/amplify-derive#b696044c5e2569d1dfa60fa2e8d08d804b8417a6"
+version = "1.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da24db1445cc7bc3842fa072c2d51fe5b25b812b6a572d65842a4c72e87221ac"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "amplify_syn"
+version = "2.0.0-beta.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5eba488aa4b78ca719aff57edfbe634efef62232110c35442cd9136c67cedf39"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -500,15 +512,16 @@ dependencies = [
  "half",
  "rand",
  "serde",
+ "strict_encoding_derive",
  "strict_encoding_test",
 ]
 
 [[package]]
 name = "strict_encoding_derive"
-version = "2.0.0-alpha.1"
+version = "2.0.0-beta.1"
 dependencies = [
  "amplify 4.0.0-beta.7",
- "amplify_syn",
+ "amplify_syn 2.0.0-beta.1",
  "compiletest_rs",
  "heck",
  "proc-macro2",
