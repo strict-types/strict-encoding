@@ -20,8 +20,8 @@
 // limitations under the License.
 
 use amplify_syn::{DeriveInner, Field, Items, NamedField, Variant};
-use proc_macro2::{Span, TokenStream as TokenStream2};
-use syn::{Error, Index, Result};
+use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
+use syn::{Error, Index, LitStr, Result};
 
 use crate::params::{FieldAttr, StrictDerive, VariantAttr};
 
@@ -58,8 +58,14 @@ impl DeriveInner for DeriveEncode<'_> {
     fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
 
-        let name = fields.iter().map(|f| &f.name);
-        // TODO: Process attributes
+        let name = fields.iter().map(|named_field| {
+            let attr =
+                FieldAttr::try_from(named_field.field.attr.clone()).expect("invalid attribute");
+            match attr.rename {
+                None => named_field.name.clone(),
+                Some(name) => name,
+            }
+        });
 
         Ok(quote! {
             fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
@@ -77,7 +83,6 @@ impl DeriveInner for DeriveEncode<'_> {
         let crate_name = &self.0.conf.strict_crate;
 
         let no = fields.iter().enumerate().map(|(index, _)| Index::from(index));
-        // TODO: Process attributes
 
         Ok(quote! {
             fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {

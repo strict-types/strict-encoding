@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use amplify_syn::{
     ArgValueReq, AttrReq, DataType, ListReq, ParametrizedAttr, TypeClass, ValueClass,
 };
-use proc_macro2::Span;
+use proc_macro2::{Ident, Span};
 use quote::ToTokens;
 use syn::{DeriveInput, Error, Expr, LitInt, LitStr, Path, Result};
 
@@ -61,12 +61,12 @@ pub struct EnumAttr {
 
 pub struct FieldAttr {
     pub dumb: Option<Expr>,
-    pub rename: Option<LitStr>,
+    pub rename: Option<Ident>,
 }
 
 pub struct VariantAttr {
     pub dumb: bool,
-    pub rename: Option<LitStr>,
+    pub rename: Option<Ident>,
     pub tag: Option<LitInt>,
 }
 

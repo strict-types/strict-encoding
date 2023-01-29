@@ -165,10 +165,11 @@ impl DeriveInner for DeriveSum<'_> {
     fn derive_enum_inner(&self, variants: &Items<Variant>) -> Result<TokenStream2> {
         let items = variants.iter().enumerate().map(|(index, variant)| {
             let attr = VariantAttr::try_from(variant.attr.clone()).expect("invalid attribute");
-            let name = match attr.rename {
-                None => LitStr::new(&variant.name.to_string(), Span::call_site()),
+            let name = match attr.rename.as_ref() {
+                None => &variant.name,
                 Some(name) => name,
             };
+            let name = LitStr::new(&name.to_string(), Span::call_site());
             let ord = match (&self.2.tags, &attr.tag) {
                 (_, Some(ord)) => ord.to_token_stream(),
                 (VariantTags::Repr, None) => quote! { self as u8 },
@@ -177,7 +178,7 @@ impl DeriveInner for DeriveSum<'_> {
                     panic!("tag is required for variant `{}`", variant.name)
                 }
             };
-            quote! { (#ord as u8, #name) }
+            quote! { (#ord as u8, stringify!(#name)) }
         });
 
         let trait_crate = &self.1.strict_crate;
@@ -224,14 +225,14 @@ impl DeriveInner for DeriveStruct<'_> {
             let attr =
                 FieldAttr::try_from(named_field.field.attr.clone()).expect("invalid attribute");
             match attr.rename {
-                None => LitStr::new(&named_field.name.to_string(), Span::call_site()),
+                None => named_field.name.clone(),
                 Some(name) => name,
             }
         });
 
         Ok(quote! {
             const ALL_FIELDS: &'static [&'static str] = &[
-                #( #items ),*
+                #( stringify!(#items) ),*
             ];
         })
     }

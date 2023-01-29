@@ -26,7 +26,7 @@ extern crate strict_encoding_derive;
 
 mod common;
 
-use strict_encoding::{StrictDecode, StrictDumb, StrictEncode, StrictType};
+use strict_encoding::{StrictDecode, StrictDumb, StrictEncode};
 
 const TEST_LIB: &str = "TestLib";
 
