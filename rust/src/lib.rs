@@ -65,4 +65,4 @@ pub use writer::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWri
 
 pub const NO_LIB: &str = "No";
 pub const STD_LIB: &str = "StdLib";
-pub const STEN_LIB: &str = "StEn";
+pub const STRICT_TYPES_LIB: &str = "StrictTypes";

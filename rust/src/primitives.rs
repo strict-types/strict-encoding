@@ -33,7 +33,7 @@ use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
 use crate::{
     DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
     StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, TypeName,
-    TypedRead, TypedWrite, WriteUnion, STD_LIB, STEN_LIB,
+    TypedRead, TypedWrite, WriteUnion, STD_LIB, STRICT_TYPES_LIB,
 };
 
 pub mod constants {
@@ -216,7 +216,7 @@ impl Display for Primitive {
     }
 }
 
-impl_strict_newtype!(Primitive, STEN_LIB);
+impl_strict_newtype!(Primitive, STRICT_TYPES_LIB);
 
 /// Information about numeric type
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]

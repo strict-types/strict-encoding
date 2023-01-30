@@ -25,7 +25,7 @@ use amplify::ascii::{AsAsciiStrError, AsciiChar, AsciiString, FromAsciiError};
 use amplify::confinement::Confined;
 use amplify::{confinement, Wrapper};
 
-use crate::{impl_strict_newtype, STEN_LIB};
+use crate::{impl_strict_newtype, STRICT_TYPES_LIB};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
@@ -106,7 +106,7 @@ impl TryFrom<AsciiString> for Ident {
     }
 }
 
-impl_strict_newtype!(Ident, STEN_LIB, "Dumb");
+impl_strict_newtype!(Ident, STRICT_TYPES_LIB, "Dumb");
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, Display, FromStr)]
@@ -128,7 +128,7 @@ impl TryFrom<String> for TypeName {
     fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
 }
 
-impl_strict_newtype!(TypeName, STEN_LIB);
+impl_strict_newtype!(TypeName, STRICT_TYPES_LIB);
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
 #[wrapper(Deref, Display, FromStr)]
@@ -150,7 +150,7 @@ impl TryFrom<String> for FieldName {
     fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
 }
 
-impl_strict_newtype!(FieldName, STEN_LIB);
+impl_strict_newtype!(FieldName, STRICT_TYPES_LIB);
 
 pub type VariantName = FieldName;
 
@@ -174,4 +174,4 @@ impl TryFrom<String> for LibName {
     fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
 }
 
-impl_strict_newtype!(LibName, STEN_LIB);
+impl_strict_newtype!(LibName, STRICT_TYPES_LIB);

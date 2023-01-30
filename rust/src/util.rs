@@ -23,7 +23,7 @@ use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
 use std::io;
 
-use crate::{ReadStruct, VariantName, WriteStruct, STEN_LIB};
+use crate::{ReadStruct, VariantName, WriteStruct, STRICT_TYPES_LIB};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
@@ -31,7 +31,7 @@ pub struct Sizing {
     pub min: u16,
     pub max: u16,
 }
-impl_strict_struct!(Sizing, STEN_LIB; min, max);
+impl_strict_struct!(Sizing, STRICT_TYPES_LIB; min, max);
 
 impl Sizing {
     pub const ONE: Sizing = Sizing { min: 1, max: 1 };
@@ -78,7 +78,7 @@ pub struct Variant {
     pub name: VariantName,
     pub tag: u8,
 }
-impl_strict_struct!(Variant, STEN_LIB; name, tag);
+impl_strict_struct!(Variant, STRICT_TYPES_LIB; name, tag);
 
 impl Variant {
     pub fn named(tag: u8, name: VariantName) -> Variant { Variant { name, tag } }
