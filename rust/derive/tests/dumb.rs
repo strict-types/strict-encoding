@@ -19,6 +19,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Caused by an imperfection of rust compiler in parsing proc macro args
+#![allow(unused_braces)]
+
 #[macro_use]
 extern crate amplify;
 
