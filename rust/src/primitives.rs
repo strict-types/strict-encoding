@@ -32,8 +32,8 @@ use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
 
 use crate::{
     DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
-    StrictSum, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteUnion, STD_LIB,
-    STEN_LIB,
+    StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, TypeName,
+    TypedRead, TypedWrite, WriteUnion, STD_LIB, STEN_LIB,
 };
 
 pub mod constants {
@@ -385,6 +385,44 @@ encode_float!(ieee::Double, 8, F64);
 encode_float!(ieee::X87DoubleExtended, 10, F80);
 encode_float!(ieee::Quad, 16, F128);
 encode_float!(ieee::Oct, 32, F256);
+
+impl<T> StrictType for Box<T>
+where T: StrictType
+{
+    const STRICT_LIB_NAME: &'static str = T::STRICT_LIB_NAME;
+}
+impl<T> StrictSum for Box<T>
+where T: StrictSum
+{
+    const ALL_VARIANTS: &'static [(u8, &'static str)] = T::ALL_VARIANTS;
+    fn variant_name(&self) -> &'static str { self.as_ref().variant_name() }
+}
+impl<T> StrictProduct for Box<T> where T: Default + StrictProduct {}
+impl<T> StrictUnion for Box<T> where T: Default + StrictUnion {}
+impl<T> StrictTuple for Box<T>
+where T: Default + StrictTuple
+{
+    const FIELD_COUNT: u8 = T::FIELD_COUNT;
+}
+impl<T> StrictStruct for Box<T>
+where T: Default + StrictStruct
+{
+    const ALL_FIELDS: &'static [&'static str] = T::ALL_FIELDS;
+}
+impl<T> StrictEncode for Box<T>
+where T: StrictEncode
+{
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        self.as_ref().strict_encode(writer)
+    }
+}
+impl<T> StrictDecode for Box<T>
+where T: StrictDecode
+{
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        T::strict_decode(reader).map(Box::new)
+    }
+}
 
 impl<T> StrictType for Option<T>
 where T: StrictType
