@@ -83,18 +83,11 @@ pub trait TypedWrite: Sized {
     #[doc(hidden)]
     unsafe fn _write_raw<const MAX_LEN: usize>(self, bytes: impl AsRef<[u8]>) -> io::Result<Self>;
     #[doc(hidden)]
-    unsafe fn write_raw_array<const LEN: usize>(self, raw: [u8; LEN]) -> io::Result<Self> {
+    unsafe fn _write_raw_array<const LEN: usize>(self, raw: [u8; LEN]) -> io::Result<Self> {
         self._write_raw::<LEN>(raw)
     }
     #[doc(hidden)]
-    unsafe fn write_raw_bytes<const MAX_LEN: usize>(
-        self,
-        bytes: impl AsRef<[u8]>,
-    ) -> io::Result<Self> {
-        self.write_raw_len::<MAX_LEN>(bytes.as_ref().len())?._write_raw::<MAX_LEN>(bytes)
-    }
-    #[doc(hidden)]
-    unsafe fn write_raw_len<const MAX_LEN: usize>(self, len: usize) -> io::Result<Self> {
+    unsafe fn _write_raw_len<const MAX_LEN: usize>(self, len: usize) -> io::Result<Self> {
         match MAX_LEN {
             tiny if tiny <= u8::MAX as usize => u8::strict_encode(&(len as u8), self),
             small if small < u16::MAX as usize => u16::strict_encode(&(len as u16), self),
@@ -105,8 +98,20 @@ pub trait TypedWrite: Sized {
             _ => unreachable!("confined collections larger than u32::MAX must not exist"),
         }
     }
+
+    /// Used by unicode strings, ASCII strings (excluding byte strings).
     #[doc(hidden)]
-    unsafe fn write_raw_collection<C: Collection, const MIN_LEN: usize, const MAX_LEN: usize>(
+    unsafe fn write_string<const MAX_LEN: usize>(
+        self,
+        bytes: impl AsRef<[u8]>,
+    ) -> io::Result<Self> {
+        self._write_raw_len::<MAX_LEN>(bytes.as_ref().len())?._write_raw::<MAX_LEN>(bytes)
+    }
+
+    /// Vec and sets - excluding strings, written by [`Self::write_string`], but including byte
+    /// strings.
+    #[doc(hidden)]
+    unsafe fn write_collection<C: Collection, const MIN_LEN: usize, const MAX_LEN: usize>(
         mut self,
         col: &Confined<C, MIN_LEN, MAX_LEN>,
     ) -> io::Result<Self>
@@ -114,12 +119,14 @@ pub trait TypedWrite: Sized {
         for<'a> &'a C: IntoIterator,
         for<'a> <&'a C as IntoIterator>::Item: StrictEncode,
     {
-        self = self.write_raw_len::<MAX_LEN>(col.len())?;
+        self = self._write_raw_len::<MAX_LEN>(col.len())?;
         for item in col {
             self = item.strict_encode(self)?;
         }
         Ok(self)
     }
+
+    // TODO: Do `write_keyed_collection`
 }
 
 pub trait TypedRead: Sized {
@@ -160,15 +167,12 @@ pub trait TypedRead: Sized {
 
     #[doc(hidden)]
     unsafe fn _read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>>;
+
     #[doc(hidden)]
-    unsafe fn read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]>;
+    unsafe fn _read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]>;
+
     #[doc(hidden)]
-    unsafe fn read_raw_bytes<const MAX_LEN: usize>(&mut self) -> Result<Vec<u8>, DecodeError> {
-        let len = self.read_raw_len::<MAX_LEN>()?;
-        self._read_raw::<MAX_LEN>(len).map_err(DecodeError::from)
-    }
-    #[doc(hidden)]
-    unsafe fn read_raw_len<const MAX_LEN: usize>(&mut self) -> Result<usize, DecodeError> {
+    unsafe fn _read_raw_len<const MAX_LEN: usize>(&mut self) -> Result<usize, DecodeError> {
         Ok(match MAX_LEN {
             tiny if tiny <= u8::MAX as usize => u8::strict_decode(self)? as usize,
             small if small < u16::MAX as usize => u16::strict_decode(self)? as usize,
@@ -176,6 +180,12 @@ pub trait TypedRead: Sized {
             large if large < u32::MAX as usize => u32::strict_decode(self)? as usize,
             _ => unreachable!("confined collections larger than u32::MAX must not exist"),
         })
+    }
+
+    #[doc(hidden)]
+    unsafe fn read_string<const MAX_LEN: usize>(&mut self) -> Result<Vec<u8>, DecodeError> {
+        let len = self._read_raw_len::<MAX_LEN>()?;
+        self._read_raw::<MAX_LEN>(len).map_err(DecodeError::from)
     }
 }
 

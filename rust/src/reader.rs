@@ -189,7 +189,7 @@ impl<R: io::Read> TypedRead for StrictReader<R> {
         Ok(buf)
     }
 
-    unsafe fn read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]> {
+    unsafe fn _read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]> {
         use io::Read;
         let mut buf = [0u8; LEN];
         self.0.read_exact(&mut buf)?;
