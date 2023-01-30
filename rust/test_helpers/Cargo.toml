@@ -1,19 +1,19 @@
 [package]
 name = "strict_encoding_test"
 version = "2.0.0-alpha.1"
-license = "Apache-2.0"
-authors = ["Dr. Maxim Orlovsky <orlovsky@ubideco.org>"]
 description = "Helper functions for testing strict encodings"
-repository = "https://github.com/LNP-BP/client_side_validation"
-homepage = "https://github.com/LNP-BP"
-keywords = ["lnp-bp", "strict-encoding", "networking"]
-categories = ["encoding", "parsing"]
+keywords = ["strict-encoding", "test-helpers"]
+categories = ["encoding", "parsing", "development-tools"]
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
 readme = "../README.md"
-edition = "2021"
-rust-version = "1.59.0"
 
 [lib]
 
 [dependencies]
 amplify = "3.13.0"
-strict_encoding = { version = "2.0.0-alpha.1", path = ".." }
+strict_encoding = { version = "2.0.0-beta.1", path = ".." }
