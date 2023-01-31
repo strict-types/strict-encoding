@@ -27,7 +27,7 @@ Strict Types are:
   low-performant embedded systems,
 * __confined__, i.e. provides guarantees and static analysis on a maximum size
   of the typed data,
-* __formally verifiabile__.
+* __formally verifiable__.
 
 **Strict Encoding** is set of libraries for serializing / deserializing data
 types in binary formats.
