@@ -28,13 +28,13 @@ use amplify::ascii::AsciiString;
 use amplify::confinement::Confined;
 #[cfg(feature = "float")]
 use amplify::num::apfloat::{ieee, Float};
-use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
+use amplify::num::{i1024, i256, i512, u1024, u24, u256, u4, u512};
 use amplify::{Array, Wrapper};
 
 use crate::{
     DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
-    StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, TypeName,
-    TypedRead, TypedWrite, WriteUnion, STD_LIB, STRICT_TYPES_LIB,
+    StrictEnum, StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion,
+    TypeName, TypedRead, TypedWrite, VariantError, WriteUnion, STD_LIB, STRICT_TYPES_LIB,
 };
 
 pub mod constants {
@@ -312,6 +312,111 @@ impl NumCls {
     }
 
     pub const fn into_code(self) -> u8 { self as u8 }
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[repr(u8)]
+enum U4 {
+    #[default]
+    V0 = 0,
+    V1,
+    V2,
+    V3,
+    V4,
+    V5,
+    V6,
+    V7,
+    V8,
+    V9,
+    V10,
+    V11,
+    V12,
+    V13,
+    V14,
+    V15,
+}
+impl From<U4> for u8 {
+    fn from(value: U4) -> Self { value as u8 }
+}
+impl TryFrom<u8> for U4 {
+    type Error = VariantError<u8>;
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        for v in [
+            U4::V0,
+            U4::V1,
+            U4::V2,
+            U4::V3,
+            U4::V4,
+            U4::V5,
+            U4::V6,
+            U4::V7,
+            U4::V8,
+            U4::V9,
+            U4::V10,
+            U4::V11,
+            U4::V12,
+            U4::V13,
+            U4::V14,
+            U4::V15,
+        ] {
+            if v as u8 == value {
+                return Ok(v);
+            }
+        }
+        Err(VariantError(Some(tn!("U4")), value))
+    }
+}
+
+impl StrictType for U4 {
+    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { Some(tn!("U4")) }
+}
+impl StrictSum for U4 {
+    const ALL_VARIANTS: &'static [(u8, &'static str)] = &[
+        (0, "v0"),
+        (1, "v1"),
+        (2, "v2"),
+        (3, "v3"),
+        (4, "v4"),
+        (5, "v5"),
+        (6, "v6"),
+        (7, "v7"),
+        (8, "v8"),
+        (9, "v9"),
+        (10, "v10"),
+        (11, "v11"),
+        (12, "v12"),
+        (13, "v13"),
+        (14, "v14"),
+        (15, "v15"),
+    ];
+    fn variant_name(&self) -> &'static str { Self::ALL_VARIANTS[*self as u8 as usize].1 }
+}
+impl StrictEnum for U4 {}
+impl StrictEncode for U4 {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        writer.write_enum::<Self>(*self)
+    }
+}
+impl StrictDecode for U4 {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_enum()
+    }
+}
+
+impl StrictType for u4 {
+    const STRICT_LIB_NAME: &'static str = STD_LIB;
+}
+impl StrictEncode for u4 {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        writer.write_enum::<U4>(U4::try_from(self.to_u8()).expect("broken u4 types guarantees"))
+    }
+}
+impl StrictDecode for u4 {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let v: U4 = reader.read_enum()?;
+        Ok(u4::with(v as u8))
+    }
 }
 
 macro_rules! encode_num {
