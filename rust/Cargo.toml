@@ -1,6 +1,6 @@
 [package]
 name = "strict_encoding"
-version = "2.0.0-beta.3"
+version = "2.0.0-beta.4"
 description = "Strict encoding: deterministic & confined binary serialization for strict types"
 keywords = ["strict-types", "gadt", "serialization", "serde", "protobuf"]
 categories = ["encoding", "parsing"]
@@ -21,7 +21,7 @@ serde_crate = { package = "serde", version = "1", features = ["derive"], optiona
 
 [dev-dependencies]
 rand = "0.8.5"
-amplify = { version = "4.0.0-beta.7", features = ["proc_attr", "hex"] }
+amplify = { version = "4.0.0-beta.10", features = ["proc_attr", "hex"] }
 strict_encoding_test = { version = "2.0.0-alpha.1", path = "./test_helpers" }
 
 [features]

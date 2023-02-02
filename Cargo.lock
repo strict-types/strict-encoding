@@ -23,9 +23,9 @@ dependencies = [
 
 [[package]]
 name = "amplify"
-version = "4.0.0-beta.9"
+version = "4.0.0-beta.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f695ed5b59ee111347c05a52c0989eb03ba283b27f4d1cfab846eebc19bb214"
+checksum = "25153a0cb47f8165fa879b7cacaac485f8c9f86a4461665dc9b3063f29051a94"
 dependencies = [
  "amplify_apfloat",
  "amplify_derive 4.0.0-alpha.3",
@@ -512,9 +512,9 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding"
-version = "2.0.0-beta.3"
+version = "2.0.0-beta.4"
 dependencies = [
- "amplify 4.0.0-beta.9",
+ "amplify 4.0.0-beta.10",
  "half",
  "rand",
  "serde",
@@ -526,7 +526,7 @@ dependencies = [
 name = "strict_encoding_derive"
 version = "2.0.0-beta.2"
 dependencies = [
- "amplify 4.0.0-beta.9",
+ "amplify 4.0.0-beta.10",
  "amplify_syn 2.0.0-beta.1",
  "compiletest_rs",
  "heck",
