@@ -29,6 +29,7 @@ use amplify::confinement::Confined;
 #[cfg(feature = "float")]
 use amplify::num::apfloat::{ieee, Float};
 use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
+use amplify::{Array, Wrapper};
 
 use crate::{
     DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
@@ -483,6 +484,21 @@ impl<T: StrictDecode + Copy + StrictDumb, const LEN: usize> StrictDecode for [T;
             *c = T::strict_decode(reader)?;
         }
         Ok(ar)
+    }
+}
+
+impl<T: StrictType + StrictDumb + Copy, const LEN: usize> StrictType for Array<T, LEN> {
+    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { None }
+}
+impl<T: StrictEncode + StrictDumb + Copy, const LEN: usize> StrictEncode for Array<T, LEN> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        self.as_inner().strict_encode(writer)
+    }
+}
+impl<T: StrictDecode + StrictDumb + Copy, const LEN: usize> StrictDecode for Array<T, LEN> {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        <[T; LEN]>::strict_decode(reader).map(Self::from_inner)
     }
 }
 
