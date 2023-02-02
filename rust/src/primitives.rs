@@ -593,6 +593,40 @@ impl<A: StrictDecode + Default, B: StrictDecode + Default> StrictDecode for (A, 
     }
 }
 
+impl<A: StrictType, B: StrictType, C: StrictType> StrictType for (A, B, C) {
+    const STRICT_LIB_NAME: &'static str = STD_LIB;
+}
+impl<A: StrictType + Default, B: StrictType + Default, C: StrictType + Default> StrictProduct
+    for (A, B, C)
+{
+}
+impl<A: StrictType + Default, B: StrictType + Default, C: StrictType + Default> StrictTuple
+    for (A, B, C)
+{
+    const FIELD_COUNT: u8 = 3;
+}
+impl<A: StrictEncode + Default, B: StrictEncode + Default, C: StrictEncode + Default> StrictEncode
+    for (A, B, C)
+{
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        writer.write_tuple::<Self>(|w| {
+            Ok(w.write_field(&self.0)?.write_field(&self.1)?.write_field(&self.2)?.complete())
+        })
+    }
+}
+impl<A: StrictDecode + Default, B: StrictDecode + Default, C: StrictDecode + Default> StrictDecode
+    for (A, B, C)
+{
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_tuple(|r| {
+            let a = r.read_field()?;
+            let b = r.read_field()?;
+            let c = r.read_field()?;
+            Ok((a, b, c))
+        })
+    }
+}
+
 impl<T: StrictType + Copy + StrictDumb, const LEN: usize> StrictType for [T; LEN] {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
     fn strict_name() -> Option<TypeName> { None }
