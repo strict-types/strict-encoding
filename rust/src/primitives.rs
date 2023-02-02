@@ -34,7 +34,8 @@ use amplify::{Array, Wrapper};
 use crate::{
     DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
     StrictEnum, StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion,
-    TypeName, TypedRead, TypedWrite, VariantError, WriteUnion, STD_LIB, STRICT_TYPES_LIB,
+    TypeName, TypedRead, TypedWrite, VariantError, WriteTuple, WriteUnion, STD_LIB,
+    STRICT_TYPES_LIB,
 };
 
 pub mod constants {
@@ -566,6 +567,28 @@ impl<T: StrictDecode> StrictDecode for Option<T> {
             "none" => Ok(None),
             "some" => u.read_tuple(|r| r.read_field().map(Some)),
             _ => unreachable!("unknown option field"),
+        })
+    }
+}
+
+impl<A: StrictType, B: StrictType> StrictType for (A, B) {
+    const STRICT_LIB_NAME: &'static str = STD_LIB;
+}
+impl<A: StrictType + Default, B: StrictType + Default> StrictProduct for (A, B) {}
+impl<A: StrictType + Default, B: StrictType + Default> StrictTuple for (A, B) {
+    const FIELD_COUNT: u8 = 2;
+}
+impl<A: StrictEncode + Default, B: StrictEncode + Default> StrictEncode for (A, B) {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        writer.write_tuple::<Self>(|w| Ok(w.write_field(&self.0)?.write_field(&self.1)?.complete()))
+    }
+}
+impl<A: StrictDecode + Default, B: StrictDecode + Default> StrictDecode for (A, B) {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_tuple(|r| {
+            let a = r.read_field()?;
+            let b = r.read_field()?;
+            Ok((a, b))
         })
     }
 }
