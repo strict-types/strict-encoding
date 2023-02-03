@@ -3,7 +3,7 @@ members = ["rust", "rust/derive", "rust/test_helpers"]
 default-members = ["rust", "rust/derive", "rust/test_helpers"]
 
 [workspace.package]
-authors = ["Dr. Maxim Orlovsky <orlovsky@ubideco.org>"]
+authors = ["Dr Maxim Orlovsky <orlovsky@ubideco.org>"]
 homepage = "https://strict-types.org"
 repository = "https://github.com/strict-types/strict-encoding"
 rust-version = "1.66" # Due to GAT & map_last feature
