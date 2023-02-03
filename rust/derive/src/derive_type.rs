@@ -41,11 +41,14 @@ impl StrictDerive {
         let trait_crate = &self.conf.strict_crate;
         let type_name = &self.data.name;
 
-        let impl_type = self.data.derive(trait_crate, &ident!(StrictType), &DeriveType(self))?;
+        let impl_type = self
+            .data
+            .derive(trait_crate, &ident!(StrictType), &DeriveType(self))?;
 
         let impl_outer = match &self.data.inner {
             DataInner::Struct(fields) => {
-                self.data.derive(trait_crate, &ident!(StrictProduct), &DeriveProduct(fields))?
+                self.data
+                    .derive(trait_crate, &ident!(StrictProduct), &DeriveProduct(fields))?
             }
             DataInner::Enum(variants) => {
                 let enum_attr = EnumAttr::with(self.data.attr.clone(), variants.enum_kind())?;
@@ -99,16 +102,20 @@ impl StrictDerive {
 
         let impl_inner = match &self.data.inner {
             DataInner::Struct(Fields::Named(fields)) => {
-                self.data.derive(trait_crate, &ident!(StrictStruct), &DeriveStruct(fields))?
+                self.data
+                    .derive(trait_crate, &ident!(StrictStruct), &DeriveStruct(fields))?
             }
             DataInner::Struct(Fields::Unnamed(fields)) => {
-                self.data.derive(trait_crate, &ident!(StrictTuple), &DeriveTuple(fields))?
+                self.data
+                    .derive(trait_crate, &ident!(StrictTuple), &DeriveTuple(fields))?
             }
             DataInner::Enum(variants) if variants.enum_kind() == EnumKind::Primitive => {
-                self.data.derive(trait_crate, &ident!(StrictEnum), &DeriveEnum(variants))?
+                self.data
+                    .derive(trait_crate, &ident!(StrictEnum), &DeriveEnum(variants))?
             }
             DataInner::Enum(variants) => {
-                self.data.derive(trait_crate, &ident!(StrictUnion), &DeriveUnion(variants))?
+                self.data
+                    .derive(trait_crate, &ident!(StrictUnion), &DeriveUnion(variants))?
             }
             _ => TokenStream2::new(),
         };

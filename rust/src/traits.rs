@@ -105,11 +105,12 @@ pub trait TypedWrite: Sized {
         self,
         bytes: impl AsRef<[u8]>,
     ) -> io::Result<Self> {
-        self._write_raw_len::<MAX_LEN>(bytes.as_ref().len())?._write_raw::<MAX_LEN>(bytes)
+        self._write_raw_len::<MAX_LEN>(bytes.as_ref().len())?
+            ._write_raw::<MAX_LEN>(bytes)
     }
 
-    /// Vec and sets - excluding strings, written by [`Self::write_string`], but including byte
-    /// strings.
+    /// Vec and sets - excluding strings, written by [`Self::write_string`], but
+    /// including byte strings.
     #[doc(hidden)]
     unsafe fn write_collection<C: Collection, const MIN_LEN: usize, const MAX_LEN: usize>(
         mut self,

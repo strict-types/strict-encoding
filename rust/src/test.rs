@@ -32,7 +32,9 @@ pub fn encode<T: StrictEncode + Debug + Eq>(val: &T) -> Vec<u8> {
 
     let ast_data = StrictWriter::in_memory(MAX);
     let data = val.strict_encode(ast_data).unwrap().unbox();
-    Confined::<Vec<u8>, 0, MAX>::try_from(data).unwrap().into_inner()
+    Confined::<Vec<u8>, 0, MAX>::try_from(data)
+        .unwrap()
+        .into_inner()
 }
 
 pub fn decode<T: StrictDecode + Debug + Eq>(data: impl AsRef<[u8]>) -> T {

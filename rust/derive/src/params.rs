@@ -113,7 +113,9 @@ impl TryFrom<ParametrizedAttr> for ContainerAttr {
         params.check(EnumAttr::attr_req(map, EnumKind::Primitive))?;
 
         Ok(ContainerAttr {
-            strict_crate: params.arg_value(ATTR_CRATE).unwrap_or_else(|_| path!(strict_encoding)),
+            strict_crate: params
+                .arg_value(ATTR_CRATE)
+                .unwrap_or_else(|_| path!(strict_encoding)),
             lib: params.unwrap_arg_value(ATTR_LIB),
             rename: params.arg_value(ATTR_RENAME).ok(),
             dumb: params.arg_value(ATTR_DUMB).ok(),
@@ -154,7 +156,7 @@ impl EnumAttr {
                         "invalid enum strict encoding value for `tags` attribute `{unknown}`; \
                          only `repr`, `order` or `custom` are allowed"
                     ),
-                ))
+                ));
             }
         };
 

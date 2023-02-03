@@ -96,8 +96,11 @@ impl TryFrom<AsciiString> for Ident {
         if !first.is_alphabetic() && first != '_' {
             return Err(InvalidIdent::NonAlphabetic(first));
         }
-        if let Some(ch) =
-            ascii.as_slice().iter().copied().find(|ch| !ch.is_ascii_alphanumeric() && *ch != b'_')
+        if let Some(ch) = ascii
+            .as_slice()
+            .iter()
+            .copied()
+            .find(|ch| !ch.is_ascii_alphanumeric() && *ch != b'_')
         {
             return Err(InvalidIdent::InvalidChar(ch));
         }

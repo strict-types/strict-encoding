@@ -427,7 +427,11 @@ macro_rules! encode_num {
         }
         impl $crate::StrictEncode for $ty {
             fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-                unsafe { writer.register_primitive($id)._write_raw_array(self.to_le_bytes()) }
+                unsafe {
+                    writer
+                        .register_primitive($id)
+                        ._write_raw_array(self.to_le_bytes())
+                }
             }
         }
         impl $crate::StrictDecode for $ty {
@@ -551,7 +555,10 @@ impl<T> StrictUnion for Option<T> where T: StrictType {}
 impl<T: StrictEncode + StrictDumb> StrictEncode for Option<T> {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_union::<Self>(|u| {
-            let u = u.define_unit(vname!("none")).define_newtype::<T>(vname!("some")).complete();
+            let u = u
+                .define_unit(vname!("none"))
+                .define_newtype::<T>(vname!("some"))
+                .complete();
 
             Ok(match self {
                 None => u.write_unit(vname!("none")),
@@ -610,7 +617,10 @@ impl<A: StrictEncode + Default, B: StrictEncode + Default, C: StrictEncode + Def
 {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_tuple::<Self>(|w| {
-            Ok(w.write_field(&self.0)?.write_field(&self.1)?.write_field(&self.2)?.complete())
+            Ok(w.write_field(&self.0)?
+                .write_field(&self.1)?
+                .write_field(&self.2)?
+                .complete())
         })
     }
 }
@@ -791,11 +801,11 @@ impl<K: StrictType + Ord + Hash, V: StrictType, const MIN_LEN: usize, const MAX_
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<
-        K: StrictEncode + Ord + Hash + StrictDumb,
-        V: StrictEncode + StrictDumb,
-        const MIN_LEN: usize,
-        const MAX_LEN: usize,
-    > StrictEncode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
+    K: StrictEncode + Ord + Hash + StrictDumb,
+    V: StrictEncode + StrictDumb,
+    const MIN_LEN: usize,
+    const MAX_LEN: usize,
+> StrictEncode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
 {
     fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
         unsafe {
@@ -815,11 +825,11 @@ impl<
     }
 }
 impl<
-        K: StrictDecode + Ord + Hash + StrictDumb,
-        V: StrictDecode + StrictDumb,
-        const MIN_LEN: usize,
-        const MAX_LEN: usize,
-    > StrictDecode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
+    K: StrictDecode + Ord + Hash + StrictDumb,
+    V: StrictDecode + StrictDumb,
+    const MIN_LEN: usize,
+    const MAX_LEN: usize,
+> StrictDecode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         let len = unsafe { reader._read_raw_len::<MAX_LEN>()? };

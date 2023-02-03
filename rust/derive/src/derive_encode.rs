@@ -29,7 +29,8 @@ struct DeriveEncode<'a>(&'a StrictDerive);
 
 impl StrictDerive {
     pub fn derive_encode(&self) -> Result<TokenStream2> {
-        self.data.derive(&self.conf.strict_crate, &ident!(StrictEncode), &DeriveEncode(self))
+        self.data
+            .derive(&self.conf.strict_crate, &ident!(StrictEncode), &DeriveEncode(self))
     }
 }
 
@@ -68,7 +69,10 @@ impl DeriveInner for DeriveEncode<'_> {
     fn derive_tuple_inner(&self, fields: &Items<Field>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
 
-        let no = fields.iter().enumerate().map(|(index, _)| Index::from(index));
+        let no = fields
+            .iter()
+            .enumerate()
+            .map(|(index, _)| Index::from(index));
 
         Ok(quote! {
             fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {

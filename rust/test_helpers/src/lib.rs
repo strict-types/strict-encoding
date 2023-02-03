@@ -226,7 +226,8 @@ where T: Clone + PartialEq + Debug
 /// # Covered test case
 ///
 /// - Strict encoding must match little-endian encoding of the value
-/// - Roundtrip encoding-decoding of the enum variant must result in the original value
+/// - Roundtrip encoding-decoding of the enum variant must result in the
+///   original value
 ///
 /// # Example
 ///
@@ -304,10 +305,12 @@ macro_rules! test_encoding_enum {
 /// # Covered test cases
 ///
 /// - Each enum variant must have a primitive value
-/// - Primitive value representing enum variant must be equal to strict encoding of the same
-///   variant. If a primitive enum value occupies of several bytes (`u16`, `u32` and other large
-///   integer types), strict encoding must match little-endian encoding of the value
-/// - Roundtrip encoding-decoding of the enum variant must result in the original value
+/// - Primitive value representing enum variant must be equal to strict encoding
+///   of the same variant. If a primitive enum value occupies of several bytes
+///   (`u16`, `u32` and other large integer types), strict encoding must match
+///   little-endian encoding of the value
+/// - Roundtrip encoding-decoding of the enum variant must result in the
+///   original value
 /// - Each enum variant must be equal to itself
 /// - Each enum variant must not be equal to any other enum variant
 /// - Enum variants must be ordered according to their primitive values
@@ -388,15 +391,18 @@ macro_rules! test_encoding_enum_by_values {
 /// # Covered test cases
 ///
 /// - Each enum variant must have a primitive value
-/// - Primitive value representing enum variant must be equal to strict encoding of the same
-///   variant. If a primitive enum value occupies of several bytes (`u16`, `u32` and other large
-///   integer types), strict encoding must match little-endian encoding of the value
-/// - Roundtrip encoding-decoding of the enum variant must result in the original value
+/// - Primitive value representing enum variant must be equal to strict encoding
+///   of the same variant. If a primitive enum value occupies of several bytes
+///   (`u16`, `u32` and other large integer types), strict encoding must match
+///   little-endian encoding of the value
+/// - Roundtrip encoding-decoding of the enum variant must result in the
+///   original value
 /// - Each enum variant must be equal to itself
 /// - Each enum variant must not be equal to any other enum variant
 /// - Enum variants must be ordered according to their primitive values
-/// - All 8-bit integers which do not match any of enum variants must not be decoded with strict
-///   decoder into a valid enum and their decoding must result in an error.
+/// - All 8-bit integers which do not match any of enum variants must not be
+///   decoded with strict decoder into a valid enum and their decoding must
+///   result in an error.
 ///
 /// # Example
 ///
@@ -520,7 +526,8 @@ where T: StrictEncode + StrictDecode + PartialEq + Debug + Clone
 /// Errors on:
 /// - encoding or decoding failures;
 /// - if the original object is not equivalent to its decoded version;
-/// - if encoder returns number of bytes that does not match the length of the encoded data.
+/// - if encoder returns number of bytes that does not match the length of the
+///   encoded data.
 ///
 /// # Panics
 ///
@@ -572,7 +579,8 @@ where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
 /// Errors on:
 /// - encoding or decoding failures;
 /// - if the original test vector is not equivalent to its transcoded version;
-/// - if encoder returns number of bytes that does not match the length of the test vector.
+/// - if encoder returns number of bytes that does not match the length of the
+///   test vector.
 ///
 /// # Panics
 ///
@@ -621,7 +629,8 @@ where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
 /// - encoding or decoding failures;
 /// - if the original object is not equivalent to its decoded version;
 /// - if the original test vector is not equivalent to its transcoded version;
-/// - if encoder returns number of bytes that does not match the length of the test vector.
+/// - if encoder returns number of bytes that does not match the length of the
+///   test vector.
 ///
 /// # Panics
 ///

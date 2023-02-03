@@ -204,7 +204,12 @@ impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
 
     pub fn fields_count(&self) -> u8 { self.tuple_fields.unwrap_or(self.named_fields.len() as u8) }
 
-    pub fn name(&self) -> &str { self.name.as_ref().map(|n| n.as_str()).unwrap_or("<unnamed>") }
+    pub fn name(&self) -> &str {
+        self.name
+            .as_ref()
+            .map(|n| n.as_str())
+            .unwrap_or("<unnamed>")
+    }
 
     pub fn into_parent(self) -> P { self.parent }
 
@@ -350,7 +355,12 @@ impl<W: io::Write> UnionWriter<W> {
 
     pub fn variants(&self) -> &BTreeMap<Variant, VariantType> { &self.defined_variant }
 
-    pub fn name(&self) -> &str { self.name.as_ref().map(|n| n.as_str()).unwrap_or("<unnamed>") }
+    pub fn name(&self) -> &str {
+        self.name
+            .as_ref()
+            .map(|n| n.as_str())
+            .unwrap_or("<unnamed>")
+    }
 
     pub fn tag_by_name(&self, name: &VariantName) -> u8 {
         self.declared_variants
@@ -364,7 +374,9 @@ impl<W: io::Write> UnionWriter<W> {
         let tag = self.tag_by_name(&name);
         let variant = Variant::named(tag, name);
         assert!(
-            self.defined_variant.insert(variant.clone(), variant_type).is_none(),
+            self.defined_variant
+                .insert(variant.clone(), variant_type)
+                .is_none(),
             "variant '{:#}' is already defined as a part of '{}'",
             &variant,
             self.name()
@@ -373,8 +385,11 @@ impl<W: io::Write> UnionWriter<W> {
     }
 
     fn _write_variant(mut self, name: VariantName, variant_type: VariantType) -> io::Result<Self> {
-        let (variant, t) =
-            self.defined_variant.iter().find(|(f, _)| f.name == name).unwrap_or_else(|| {
+        let (variant, t) = self
+            .defined_variant
+            .iter()
+            .find(|(f, _)| f.name == name)
+            .unwrap_or_else(|| {
                 panic!("variant '{:#}' was not defined in '{}'", &name, self.name())
             });
         assert_eq!(
@@ -393,8 +408,16 @@ impl<W: io::Write> UnionWriter<W> {
     }
 
     fn _complete_definition(self) -> Self {
-        let declared = self.declared_variants.values().map(|v| v.as_str()).collect::<BTreeSet<_>>();
-        let defined = self.defined_variant.keys().map(|v| v.name.as_str()).collect::<BTreeSet<_>>();
+        let declared = self
+            .declared_variants
+            .values()
+            .map(|v| v.as_str())
+            .collect::<BTreeSet<_>>();
+        let defined = self
+            .defined_variant
+            .keys()
+            .map(|v| v.name.as_str())
+            .collect::<BTreeSet<_>>();
         assert_eq!(
             declared,
             defined,
