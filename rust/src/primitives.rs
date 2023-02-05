@@ -188,12 +188,12 @@ impl Primitive {
         )
     }
 
-    pub fn from_code(code: u8) -> Self { Primitive(code) }
-    pub fn into_code(self) -> u8 { self.0 }
+    pub const fn from_code(code: u8) -> Self { Primitive(code) }
+    pub const fn into_code(self) -> u8 { self.0 }
 
-    pub fn info(self) -> NumInfo { NumInfo::from_code(self.0) }
+    pub const fn info(self) -> NumInfo { NumInfo::from_code(self.0) }
 
-    pub fn byte_size(self) -> u16 { self.info().byte_size() }
+    pub const fn byte_size(self) -> u16 { self.info().byte_size() }
 }
 
 impl Display for Primitive {
