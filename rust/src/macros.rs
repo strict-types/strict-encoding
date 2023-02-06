@@ -104,9 +104,12 @@ macro_rules! tn {
         $crate::TypeName::from($name).into()
     };
     ($name:ident) => {
-        $crate::TypeName::try_from($name)
-            .expect("invalid type name from formatter")
-            .into()
+        {
+            let name_copy = $name.clone();
+            $crate::TypeName::try_from($name)
+                .unwrap_or_else(|_| panic!("invalid type name `{name_copy}` from formatter"))
+                .into()
+        }
     };
     ($name:literal, $($arg:expr),+) => {
         tn!(format!($name, $($arg),+))
