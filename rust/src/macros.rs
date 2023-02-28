@@ -103,7 +103,7 @@ macro_rules! tn {
     ($name:literal) => {
         $crate::TypeName::from($name).into()
     };
-    ($name:ident) => {
+    ($name:expr) => {
         {
             let name_copy = $name.clone();
             $crate::TypeName::try_from($name)
