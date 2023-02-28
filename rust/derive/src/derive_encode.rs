@@ -109,6 +109,22 @@ impl DeriveInner for DeriveEncode<'_> {
                             Self::#var_name => writer.write_unit(vname!(#name))?,
                         });
                     }
+                    Fields::Unnamed(fields) if fields.is_empty() => {
+                        define_variants.push(quote! {
+                            .define_unit(vname!(#name))
+                        });
+                        write_variants.push(quote! {
+                            Self::#var_name() => writer.write_unit(vname!(#name))?,
+                        });
+                    }
+                    Fields::Named(fields) if fields.is_empty() => {
+                        define_variants.push(quote! {
+                            .define_unit(vname!(#name))
+                        });
+                        write_variants.push(quote! {
+                            Self::#var_name {} => writer.write_unit(vname!(#name))?,
+                        });
+                    }
                     Fields::Unnamed(fields) => {
                         let mut field_ty = Vec::with_capacity(fields.len());
                         let mut field_idx = Vec::with_capacity(fields.len());

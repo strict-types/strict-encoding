@@ -109,6 +109,16 @@ impl DeriveInner for DeriveDecode<'_> {
                             #name => Ok(Self::#var_name),
                         });
                     }
+                    Fields::Unnamed(fields) if fields.is_empty() => {
+                        read_variants.push(quote! {
+                            #name => Ok(Self::#var_name()),
+                        });
+                    }
+                    Fields::Named(fields) if fields.is_empty() => {
+                        read_variants.push(quote! {
+                            #name => Ok(Self::#var_name {}),
+                        });
+                    }
                     Fields::Unnamed(fields) => {
                         let mut field_idx = Vec::with_capacity(fields.len());
                         for index in 0..fields.len() {
