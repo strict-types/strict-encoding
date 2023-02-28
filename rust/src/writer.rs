@@ -247,6 +247,11 @@ impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
     type Parent = P;
     fn write_field(mut self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
         debug_assert!(self.tuple_fields.is_none(), "using struct method on tuple");
+        debug_assert!(
+            !self.named_fields.is_empty(),
+            "struct without fields {} asks to write value for field '{field}'",
+            self.name()
+        );
         assert_eq!(
             &self.named_fields[self.cursor],
             &field,
