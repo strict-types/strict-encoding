@@ -42,20 +42,22 @@ where T: StrictType + Default
 pub trait StrictType: Sized {
     const STRICT_LIB_NAME: &'static str;
     fn strict_name() -> Option<TypeName> {
-        fn get_ident(path: &str) -> &str { path.rsplit_once("::").map(|(_, n)| n).unwrap_or(path) }
+        fn get_ident(path: &str) -> &str {
+            path.rsplit_once("::")
+                .map(|(_, n)| n.trim())
+                .unwrap_or(path)
+        }
 
         let name = any::type_name::<Self>();
-        let (base, generics) = name.split_once('<').unwrap_or((name, ""));
-        let generics = generics.trim_end_matches('>');
-        let mut ident = get_ident(base).to_owned();
-        for arg in generics.split(',') {
+        let mut ident = vec![];
+        for mut arg in name.split([',', '<', '>']) {
+            arg = arg.trim();
             if arg.is_empty() {
                 continue;
             }
-            ident.push('_');
-            ident.push_str(get_ident(arg));
+            ident.push(get_ident(arg));
         }
-        Some(tn!(ident))
+        Some(tn!(ident.join("_")))
     }
 }
 
@@ -217,4 +219,19 @@ pub struct TypeInfo<T: StrictType> {
     pub name: Option<TypeName>,
     pub cls: TypeClass,
     pub dumb: T,
+}
+
+#[cfg(test)]
+mod test {
+    use amplify::confinement::TinyVec;
+
+    use super::*;
+
+    #[test]
+    fn name_derivation() {
+        assert_eq!(
+            Option::<TinyVec<u8>>::strict_name().unwrap().as_str(),
+            "Option_Confined_Vec_u8_0_255"
+        )
+    }
 }
