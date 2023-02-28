@@ -28,7 +28,9 @@ mod common;
 
 use std::convert::Infallible;
 
-use strict_encoding::{tn, StrictDecode, StrictDumb, StrictEncode, StrictSum, VariantError};
+use strict_encoding::{
+    tn, StrictDecode, StrictDumb, StrictEncode, StrictSerialize, StrictSum, VariantError,
+};
 
 const TEST_LIB: &str = "TestLib";
 
@@ -190,6 +192,8 @@ fn enum_custom_tags() -> common::Result {
         Five {},
     }
 
+    impl StrictSerialize for Assoc {}
+
     assert_eq!(Assoc::ALL_VARIANTS, &[
         (0, "one"),
         (2, "two"),
@@ -197,6 +201,15 @@ fn enum_custom_tags() -> common::Result {
         (4, "four"),
         (5, "five")
     ]);
+
+    let assoc = Assoc::Two(0, 1, 2);
+    assert_eq!(assoc.to_strict_serialized::<256>().unwrap().as_slice(), &[2, 0, 1, 0, 2, 0, 0, 0]);
+
+    let assoc = Assoc::One {
+        hash: [0u8; 32],
+        ord: 0,
+    };
+    assert_eq!(assoc.to_strict_serialized::<256>().unwrap().as_slice(), &[0u8; 34]);
 
     Ok(())
 }

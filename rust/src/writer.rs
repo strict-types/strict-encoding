@@ -245,8 +245,9 @@ impl<W: io::Write, P: StrictParent<W>> DefineStruct for StructWriter<W, P> {
 
 impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
     type Parent = P;
-    fn write_field(mut self, field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
+    fn write_field(mut self, _field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
         debug_assert!(self.tuple_fields.is_none(), "using struct method on tuple");
+        /* TODO: Propagate information about the fields at the parent
         debug_assert!(
             !self.named_fields.is_empty(),
             "struct without fields {} asks to write value for field '{field}'",
@@ -259,16 +260,19 @@ impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
             field,
             self.name()
         );
+         */
         self.cursor += 1;
         self.write_value(value)
     }
     fn complete(self) -> P {
+        /* TODO: Propagate information about the fields at the parent
         assert_eq!(
             self.cursor,
             self.named_fields.len(),
             "not all fields were written for '{}'",
             self.name()
         );
+         */
         self.parent
     }
 }
@@ -297,11 +301,26 @@ impl<W: io::Write, P: StrictParent<W>> DefineTuple for StructWriter<W, P> {
 impl<W: io::Write, P: StrictParent<W>> WriteTuple for StructWriter<W, P> {
     type Parent = P;
     fn write_field(mut self, value: &impl StrictEncode) -> io::Result<Self> {
+        /* TODO: Propagate information about number of fields at the parent
+        assert!(
+            self.tuple_fields.expect("writing tuple field to structure") as usize > self.cursor,
+            "writing more unnamed fields to the tuple {} than was defined",
+            self.name()
+        );
+         */
         self.cursor += 1;
         self.write_value(value)
     }
     fn complete(self) -> P {
         assert_ne!(self.cursor, 0, "tuple '{}' does not have any fields written", self.name());
+        /* TODO: Propagate information about number of fields at the parent
+        assert_eq!(
+            Some(self.cursor as u8),
+            self.unnamed_fields,
+            "not all fields were written for '{}'",
+            self.name()
+        );
+         */
         debug_assert!(self.named_fields.is_empty(), "tuple '{}' written as struct", self.name());
         self.parent
     }
