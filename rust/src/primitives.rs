@@ -685,7 +685,7 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         unsafe {
             writer
-                .register_unicode(Sizing::new(MIN_LEN as u16, MAX_LEN as u16))
+                .register_unicode(Sizing::new(MIN_LEN as u64, MAX_LEN as u64))
                 .write_string::<MAX_LEN>(self.as_bytes())
         }
     }
@@ -712,7 +712,7 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         unsafe {
             writer
-                .register_ascii(Sizing::new(MIN_LEN as u16, MAX_LEN as u16))
+                .register_ascii(Sizing::new(MIN_LEN as u64, MAX_LEN as u64))
                 .write_string::<MAX_LEN>(self.as_bytes())
         }
     }
@@ -741,7 +741,7 @@ impl<T: StrictEncode + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> S
             writer = writer.write_collection::<Vec<T>, MIN_LEN, MAX_LEN>(self)?;
         }
         Ok(unsafe {
-            writer.register_list(&T::strict_dumb(), Sizing::new(MIN_LEN as u16, MAX_LEN as u16))
+            writer.register_list(&T::strict_dumb(), Sizing::new(MIN_LEN as u64, MAX_LEN as u64))
         })
     }
 }
@@ -772,7 +772,7 @@ impl<T: StrictEncode + Ord + StrictDumb, const MIN_LEN: usize, const MAX_LEN: us
             writer = writer.write_collection::<BTreeSet<T>, MIN_LEN, MAX_LEN>(self)?;
         }
         Ok(unsafe {
-            writer.register_set(&T::strict_dumb(), Sizing::new(MIN_LEN as u16, MAX_LEN as u16))
+            writer.register_set(&T::strict_dumb(), Sizing::new(MIN_LEN as u64, MAX_LEN as u64))
         })
     }
 }
@@ -820,7 +820,7 @@ impl<
             writer.register_map(
                 &K::strict_dumb(),
                 &V::strict_dumb(),
-                Sizing::new(MIN_LEN as u16, MAX_LEN as u16),
+                Sizing::new(MIN_LEN as u64, MAX_LEN as u64),
             )
         })
     }

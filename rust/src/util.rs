@@ -28,8 +28,8 @@ use crate::{ReadStruct, VariantName, WriteStruct, STRICT_TYPES_LIB};
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Sizing {
-    pub min: u16,
-    pub max: u16,
+    pub min: u64,
+    pub max: u64,
 }
 impl_strict_struct!(Sizing, STRICT_TYPES_LIB; min, max);
 
@@ -38,36 +38,36 @@ impl Sizing {
 
     pub const U8: Sizing = Sizing {
         min: 0,
-        max: u8::MAX as u16,
+        max: u8::MAX as u64,
     };
 
     pub const U16: Sizing = Sizing {
         min: 0,
-        max: u16::MAX,
+        max: u16::MAX as u64,
     };
 
     pub const U8_NONEMPTY: Sizing = Sizing {
         min: 1,
-        max: u8::MAX as u16,
+        max: u8::MAX as u64,
     };
 
     pub const U16_NONEMPTY: Sizing = Sizing {
         min: 1,
-        max: u16::MAX,
+        max: u16::MAX as u64,
     };
 
-    pub const fn new(min: u16, max: u16) -> Self { Sizing { min, max } }
+    pub const fn new(min: u64, max: u64) -> Self { Sizing { min, max } }
 
-    pub const fn fixed(len: u16) -> Self { Sizing { min: len, max: len } }
+    pub const fn fixed(len: u64) -> Self { Sizing { min: len, max: len } }
 }
 
 impl Display for Sizing {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match (self.min, self.max) {
-            (0, u16::MAX) => Ok(()),
+            (0, 0xFFFF) => Ok(()),
             (min, max) if min == max => write!(f, " ^ {min}"),
             (0, max) => write!(f, " ^ ..{max:#x}"),
-            (min, u16::MAX) => write!(f, " ^ {min}.."),
+            (min, 0xFFFF) => write!(f, " ^ {min}.."),
             (min, max) => write!(f, " ^ {min}..{max:#x}"),
         }
     }
