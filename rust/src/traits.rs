@@ -95,7 +95,8 @@ pub trait TypedWrite: Sized {
                 u24::strict_encode(&u24::with(len as u32), self)
             }
             large if large < u32::MAX as usize => u32::strict_encode(&(len as u32), self),
-            _ => unreachable!("confined collections larger than u32::MAX must not exist"),
+            huge if huge < u64::MAX as usize => u64::strict_encode(&(len as u64), self),
+            _ => unreachable!("confined collections larger than u64::MAX must not exist"),
         }
     }
 
@@ -179,7 +180,8 @@ pub trait TypedRead: Sized {
             small if small < u16::MAX as usize => u16::strict_decode(self)? as usize,
             medium if medium < u24::MAX.into_usize() => u24::strict_decode(self)?.into_usize(),
             large if large < u32::MAX as usize => u32::strict_decode(self)? as usize,
-            _ => unreachable!("confined collections larger than u32::MAX must not exist"),
+            huge if huge < u64::MAX as usize => u64::strict_decode(self)? as usize,
+            _ => unreachable!("confined collections larger than u64::MAX must not exist"),
         })
     }
 
