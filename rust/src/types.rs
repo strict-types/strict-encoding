@@ -57,7 +57,7 @@ pub trait StrictType: Sized {
             }
             ident.push(get_ident(arg));
         }
-        Some(tn!(ident.join("_")))
+        Some(tn!(ident.join("")))
     }
 }
 
