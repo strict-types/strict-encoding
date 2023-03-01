@@ -115,7 +115,7 @@ impl Display for Variant {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name)?;
         if f.alternate() {
-            f.write_str(" = ")?;
+            f.write_str(":")?;
             Display::fmt(&self.tag, f)?;
         }
         Ok(())
