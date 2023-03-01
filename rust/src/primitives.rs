@@ -579,6 +579,19 @@ impl<T: StrictDecode> StrictDecode for Option<T> {
     }
 }
 
+impl StrictType for () {
+    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { None }
+}
+impl StrictEncode for () {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        Ok(unsafe { writer.register_primitive(UNIT) })
+    }
+}
+impl StrictDecode for () {
+    fn strict_decode(_reader: &mut impl TypedRead) -> Result<Self, DecodeError> { Ok(()) }
+}
+
 impl<A: StrictType, B: StrictType> StrictType for (A, B) {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
     fn strict_name() -> Option<TypeName> { None }
