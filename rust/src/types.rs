@@ -228,10 +228,5 @@ mod test {
     use super::*;
 
     #[test]
-    fn name_derivation() {
-        assert_eq!(
-            Option::<TinyVec<u8>>::strict_name().unwrap().as_str(),
-            "Option_Confined_Vec_u8_0_255"
-        )
-    }
+    fn name_derivation() { assert_eq!(Option::<TinyVec<u8>>::strict_name(), None) }
 }

@@ -539,6 +539,7 @@ impl<T> StrictType for Option<T>
 where T: StrictType
 {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { None }
 }
 impl<T> StrictSum for Option<T>
 where T: StrictType
