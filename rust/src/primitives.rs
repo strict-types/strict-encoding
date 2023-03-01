@@ -581,6 +581,7 @@ impl<T: StrictDecode> StrictDecode for Option<T> {
 
 impl<A: StrictType, B: StrictType> StrictType for (A, B) {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { None }
 }
 impl<A: StrictType + Default, B: StrictType + Default> StrictProduct for (A, B) {}
 impl<A: StrictType + Default, B: StrictType + Default> StrictTuple for (A, B) {
@@ -603,6 +604,7 @@ impl<A: StrictDecode + Default, B: StrictDecode + Default> StrictDecode for (A, 
 
 impl<A: StrictType, B: StrictType, C: StrictType> StrictType for (A, B, C) {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { None }
 }
 impl<A: StrictType + Default, B: StrictType + Default, C: StrictType + Default> StrictProduct
     for (A, B, C)
