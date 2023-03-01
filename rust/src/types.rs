@@ -50,7 +50,7 @@ pub trait StrictType: Sized {
 
         let name = any::type_name::<Self>();
         let mut ident = vec![];
-        for mut arg in name.split([',', '<', '>']) {
+        for mut arg in name.split([',', '<', '>', '(', ')']) {
             arg = arg.trim();
             if arg.is_empty() {
                 continue;
