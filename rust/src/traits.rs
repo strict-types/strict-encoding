@@ -90,12 +90,12 @@ pub trait TypedWrite: Sized {
     unsafe fn _write_raw_len<const MAX_LEN: usize>(self, len: usize) -> io::Result<Self> {
         match MAX_LEN {
             tiny if tiny <= u8::MAX as usize => u8::strict_encode(&(len as u8), self),
-            small if small < u16::MAX as usize => u16::strict_encode(&(len as u16), self),
-            medium if medium < u24::MAX.into_usize() => {
+            small if small <= u16::MAX as usize => u16::strict_encode(&(len as u16), self),
+            medium if medium <= u24::MAX.into_usize() => {
                 u24::strict_encode(&u24::with(len as u32), self)
             }
-            large if large < u32::MAX as usize => u32::strict_encode(&(len as u32), self),
-            huge if huge < u64::MAX as usize => u64::strict_encode(&(len as u64), self),
+            large if large <= u32::MAX as usize => u32::strict_encode(&(len as u32), self),
+            huge if huge <= u64::MAX as usize => u64::strict_encode(&(len as u64), self),
             _ => unreachable!("confined collections larger than u64::MAX must not exist"),
         }
     }
@@ -177,10 +177,10 @@ pub trait TypedRead: Sized {
     unsafe fn _read_raw_len<const MAX_LEN: usize>(&mut self) -> Result<usize, DecodeError> {
         Ok(match MAX_LEN {
             tiny if tiny <= u8::MAX as usize => u8::strict_decode(self)? as usize,
-            small if small < u16::MAX as usize => u16::strict_decode(self)? as usize,
-            medium if medium < u24::MAX.into_usize() => u24::strict_decode(self)?.into_usize(),
-            large if large < u32::MAX as usize => u32::strict_decode(self)? as usize,
-            huge if huge < u64::MAX as usize => u64::strict_decode(self)? as usize,
+            small if small <= u16::MAX as usize => u16::strict_decode(self)? as usize,
+            medium if medium <= u24::MAX.into_usize() => u24::strict_decode(self)?.into_usize(),
+            large if large <= u32::MAX as usize => u32::strict_decode(self)? as usize,
+            huge if huge <= u64::MAX as usize => u64::strict_decode(self)? as usize,
             _ => unreachable!("confined collections larger than u64::MAX must not exist"),
         })
     }
