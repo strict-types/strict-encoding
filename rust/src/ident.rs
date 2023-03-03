@@ -19,6 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt::{self, Debug, Formatter};
 use std::str::FromStr;
 
 use amplify::ascii::{AsAsciiStrError, AsciiChar, AsciiString, FromAsciiError};
@@ -53,7 +54,7 @@ impl<O> From<FromAsciiError<O>> for InvalidIdent {
 }
 
 /// Identifier (field or type name).
-#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display)]
 #[wrapper_mut(DerefMut)]
 #[cfg_attr(
@@ -109,9 +110,15 @@ impl TryFrom<AsciiString> for Ident {
     }
 }
 
+impl Debug for Ident {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("Ident").field(&self.as_str()).finish()
+    }
+}
+
 impl_strict_newtype!(Ident, STRICT_TYPES_LIB, "Dumb");
 
-#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
 #[cfg_attr(
@@ -131,9 +138,15 @@ impl TryFrom<String> for TypeName {
     fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
 }
 
+impl Debug for TypeName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("TypeName").field(&self.as_str()).finish()
+    }
+}
+
 impl_strict_newtype!(TypeName, STRICT_TYPES_LIB);
 
-#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
 #[cfg_attr(
@@ -153,11 +166,17 @@ impl TryFrom<String> for FieldName {
     fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
 }
 
+impl Debug for FieldName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("FieldName").field(&self.as_str()).finish()
+    }
+}
+
 impl_strict_newtype!(FieldName, STRICT_TYPES_LIB);
 
 pub type VariantName = FieldName;
 
-#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, FromStr)]
 #[wrapper_mut(DerefMut)]
 #[cfg_attr(
@@ -175,6 +194,12 @@ impl TryFrom<String> for LibName {
     type Error = InvalidIdent;
 
     fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
+}
+
+impl Debug for LibName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("LibName").field(&self.as_str()).finish()
+    }
 }
 
 impl_strict_newtype!(LibName, STRICT_TYPES_LIB);
