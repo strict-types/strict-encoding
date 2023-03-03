@@ -60,6 +60,8 @@ impl Sizing {
 
     pub const fn fixed(len: u64) -> Self { Sizing { min: len, max: len } }
 
+    pub const fn is_fixed(&self) -> bool { self.min == self.max }
+
     pub const fn check(&self, len: usize) -> bool {
         let len = len as u64;
         len >= self.min && len <= self.max
