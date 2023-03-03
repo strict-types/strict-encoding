@@ -89,13 +89,17 @@ pub trait TypedWrite: Sized {
     #[doc(hidden)]
     unsafe fn _write_raw_len<const MAX_LEN: usize>(self, len: usize) -> io::Result<Self> {
         match MAX_LEN {
-            tiny if tiny <= u8::MAX as usize => u8::strict_encode(&(len as u8), self),
-            small if small <= u16::MAX as usize => u16::strict_encode(&(len as u16), self),
-            medium if medium <= u24::MAX.into_usize() => {
-                u24::strict_encode(&u24::with(len as u32), self)
+            tiny if tiny <= u8::MAX as usize => self._write_raw_array((len as u8).to_le_bytes()),
+            small if small <= u16::MAX as usize => {
+                self._write_raw_array((len as u16).to_le_bytes())
             }
-            large if large <= u32::MAX as usize => u32::strict_encode(&(len as u32), self),
-            huge if huge <= u64::MAX as usize => u64::strict_encode(&(len as u64), self),
+            medium if medium <= u24::MAX.into_usize() => {
+                self._write_raw_array((u24::with(len as u32)).to_le_bytes())
+            }
+            large if large <= u32::MAX as usize => {
+                self._write_raw_array((len as u32).to_le_bytes())
+            }
+            huge if huge <= u64::MAX as usize => self._write_raw_array((len as u64).to_le_bytes()),
             _ => unreachable!("confined collections larger than u64::MAX must not exist"),
         }
     }
