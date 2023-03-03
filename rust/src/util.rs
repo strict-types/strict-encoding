@@ -59,6 +59,11 @@ impl Sizing {
     pub const fn new(min: u64, max: u64) -> Self { Sizing { min, max } }
 
     pub const fn fixed(len: u64) -> Self { Sizing { min: len, max: len } }
+
+    pub const fn check(&self, len: usize) -> bool {
+        let len = len as u64;
+        len >= self.min && len <= self.max
+    }
 }
 
 impl Display for Sizing {
