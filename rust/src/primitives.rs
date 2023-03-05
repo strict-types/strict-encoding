@@ -318,7 +318,7 @@ impl NumCls {
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
-enum Bool {
+pub enum Bool {
     #[default]
     False = 0,
     True = 1,
@@ -366,7 +366,7 @@ impl StrictDecode for bool {
 #[derive(StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
-enum U4 {
+pub enum U4 {
     #[default]
     V0 = 0,
     V1,

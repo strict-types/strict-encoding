@@ -57,7 +57,7 @@ pub(crate) mod test;
 
 pub use error::{DecodeError, DeserializeError, SerializeError};
 pub use ident::{FieldName, Ident, InvalidIdent, LibName, TypeName, VariantName};
-pub use primitives::{constants, NumCls, NumInfo, NumSize, Primitive};
+pub use primitives::{constants, Bool, NumCls, NumInfo, NumSize, Primitive, U4};
 pub use reader::StrictReader;
 pub use traits::*;
 pub use types::*;
