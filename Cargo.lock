@@ -525,7 +525,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_derive"
-version = "2.0.0-beta.2"
+version = "2.0.0-beta.3"
 dependencies = [
  "amplify 4.0.0-beta.18",
  "amplify_syn 2.0.0-beta.3",
