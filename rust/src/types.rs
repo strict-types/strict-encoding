@@ -29,6 +29,11 @@ use crate::{FieldName, LibName, TypeName};
 #[display("unexpected variant {1} for enum or union {0:?}")]
 pub struct VariantError<V: Debug + Display>(pub Option<TypeName>, pub V);
 
+impl<V: Debug + Display> VariantError<V> {
+    pub fn typed(name: impl Into<TypeName>, val: V) -> Self { VariantError(Some(name.into()), val) }
+    pub fn untyped(val: V) -> Self { VariantError(None, val) }
+}
+
 pub trait StrictDumb: Sized {
     fn strict_dumb() -> Self;
 }
