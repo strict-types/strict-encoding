@@ -59,8 +59,8 @@ impl DeriveInner for DeriveDecode<'_> {
         }
 
         Ok(quote! {
-            fn strict_decode(reader: &mut impl ::#crate_name::TypedRead) -> Result<Self, ::#crate_name::DecodeError> {
-                use ::#crate_name::{TypedRead, ReadStruct, fname};
+            fn strict_decode(reader: &mut impl #crate_name::TypedRead) -> Result<Self, #crate_name::DecodeError> {
+                use #crate_name::{TypedRead, ReadStruct, fname};
                 reader.read_struct(|r| {
                     #( let #orig_name = r.read_field(fname!(#field_name))?; )*
                     Ok(Self { #( #orig_name ),* })
@@ -80,8 +80,8 @@ impl DeriveInner for DeriveDecode<'_> {
         let no2 = no.clone();
 
         Ok(quote! {
-            fn strict_decode(reader: &mut impl ::#crate_name::TypedRead) -> Result<Self, ::#crate_name::DecodeError> {
-                use ::#crate_name::{TypedRead, ReadTuple};
+            fn strict_decode(reader: &mut impl #crate_name::TypedRead) -> Result<Self, #crate_name::DecodeError> {
+                use #crate_name::{TypedRead, ReadTuple};
                 reader.read_tuple(|r| {
                     #( let #no = r.read_field()?; )*
                     Ok(Self( #( #no2 ),* ))
@@ -158,7 +158,7 @@ impl DeriveInner for DeriveDecode<'_> {
 
             quote! {
                 #[allow(unused_imports)]
-                use ::#crate_name::{ReadUnion, ReadTuple, ReadStruct, fname};
+                use #crate_name::{ReadUnion, ReadTuple, ReadStruct, fname};
                 reader.read_union(|field_name, r| {
                     match field_name.as_str() {
                         #( #read_variants )*
@@ -169,8 +169,8 @@ impl DeriveInner for DeriveDecode<'_> {
         };
 
         Ok(quote! {
-            fn strict_decode(reader: &mut impl ::#crate_name::TypedRead) -> Result<Self, ::#crate_name::DecodeError> {
-                use ::#crate_name::TypedRead;
+            fn strict_decode(reader: &mut impl #crate_name::TypedRead) -> Result<Self, #crate_name::DecodeError> {
+                use #crate_name::TypedRead;
                 #inner
             }
         })

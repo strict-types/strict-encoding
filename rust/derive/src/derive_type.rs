@@ -59,11 +59,11 @@ impl StrictDerive {
 
                     quote! {
                         impl TryFrom<u8> for #type_name {
-                            type Error = ::#trait_crate::VariantError<u8>;
+                            type Error = #trait_crate::VariantError<u8>;
                             fn try_from(value: u8) -> Result<Self, Self::Error> {
                                 match value {
                                     #( x if x == Self::#variant_name as u8 => Ok(Self::#variant_name), )*
-                                    wrong => Err(::#trait_crate::VariantError(#trait_crate::tn!(#type_name_str), wrong)),
+                                    wrong => Err(#trait_crate::VariantError(#trait_crate::tn!(#type_name_str), wrong)),
                                 }
                             }
                         }
@@ -135,7 +135,7 @@ impl DeriveType<'_> {
 
         let strict_name = match self.0.conf.rename {
             Some(ref rename) => quote! {
-                fn strict_name() -> Option<::#crate_name::TypeName> {
+                fn strict_name() -> Option<#crate_name::TypeName> {
                     Some(tn!(#rename))
                 }
             },

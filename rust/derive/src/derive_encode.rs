@@ -55,8 +55,8 @@ impl DeriveInner for DeriveEncode<'_> {
         }
 
         Ok(quote! {
-            fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
-                use ::#crate_name::{TypedWrite, WriteStruct, fname};
+            fn strict_encode<W: #crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
+                use #crate_name::{TypedWrite, WriteStruct, fname};
                 writer.write_struct::<Self>(|w| {
                     Ok(w
                         #( .write_field(fname!(#field_name), &self.#orig_name)? )*
@@ -75,8 +75,8 @@ impl DeriveInner for DeriveEncode<'_> {
             .map(|(index, _)| Index::from(index));
 
         Ok(quote! {
-            fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
-                use ::#crate_name::{TypedWrite, WriteTuple};
+            fn strict_encode<W: #crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
+                use #crate_name::{TypedWrite, WriteTuple};
                 writer.write_tuple::<Self>(|w| {
                     Ok(w
                         #( .write_field(&self.#no)? )*
@@ -178,7 +178,7 @@ impl DeriveInner for DeriveEncode<'_> {
 
             quote! {
                 #[allow(unused_imports)]
-                use ::#crate_name::{DefineUnion, WriteUnion, DefineTuple, DefineStruct, WriteTuple, WriteStruct, fname, vname};
+                use #crate_name::{DefineUnion, WriteUnion, DefineTuple, DefineStruct, WriteTuple, WriteStruct, fname, vname};
                 writer.write_union::<Self>(|definer| {
                     let writer = definer
                         #( #define_variants )*
@@ -192,8 +192,8 @@ impl DeriveInner for DeriveEncode<'_> {
         };
 
         Ok(quote! {
-            fn strict_encode<W: ::#crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
-                use ::#crate_name::TypedWrite;
+            fn strict_encode<W: #crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
+                use #crate_name::TypedWrite;
                 #inner
             }
         })

@@ -53,7 +53,7 @@ impl DeriveInner for DeriveDumb<'_> {
         }
 
         let crate_name = &self.0.conf.strict_crate;
-        let trait_name = quote!(::#crate_name::StrictDumb);
+        let trait_name = quote!(#crate_name::StrictDumb);
 
         let mut items = Vec::with_capacity(fields.len());
         for named in fields {
@@ -85,7 +85,7 @@ impl DeriveInner for DeriveDumb<'_> {
         }
 
         let crate_name = &self.0.conf.strict_crate;
-        let trait_name = quote!(::#crate_name::StrictDumb);
+        let trait_name = quote!(#crate_name::StrictDumb);
 
         let mut items = Vec::with_capacity(fields.len());
         for field in fields {
