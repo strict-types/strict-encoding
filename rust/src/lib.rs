@@ -51,6 +51,7 @@ mod reader;
 mod writer;
 mod util;
 mod primitives;
+pub mod ascii;
 #[cfg(test)]
 pub(crate) mod test;
 
