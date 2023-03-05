@@ -33,9 +33,8 @@ use amplify::{Array, Wrapper};
 
 use crate::{
     DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
-    StrictEnum, StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion,
-    TypeName, TypedRead, TypedWrite, VariantError, WriteTuple, WriteUnion, STD_LIB,
-    STRICT_TYPES_LIB,
+    StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, TypeName,
+    TypedRead, TypedWrite, WriteTuple, WriteUnion, STD_LIB, STRICT_TYPES_LIB,
 };
 
 pub mod constants {
@@ -316,6 +315,8 @@ impl NumCls {
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
 enum Bool {
     #[default]
@@ -346,41 +347,6 @@ impl From<Bool> for bool {
     }
 }
 
-impl From<Bool> for u8 {
-    fn from(value: Bool) -> Self { value as u8 }
-}
-impl TryFrom<u8> for Bool {
-    type Error = VariantError<u8>;
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(Bool::False),
-            1 => Ok(Bool::True),
-            x => Err(VariantError(Self::strict_name(), x)),
-        }
-    }
-}
-
-impl StrictType for Bool {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
-    fn strict_name() -> Option<TypeName> { Some(tn!("Bool")) }
-}
-impl StrictSum for Bool {
-    const ALL_VARIANTS: &'static [(u8, &'static str)] = &[(0, "false"), (1, "true")];
-    fn variant_name(&self) -> &'static str { Self::ALL_VARIANTS[*self as u8 as usize].1 }
-}
-impl StrictEnum for Bool {}
-impl StrictEncode for Bool {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_enum::<Self>(*self)
-    }
-}
-impl StrictDecode for Bool {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_enum()
-    }
-}
-
 impl StrictType for bool {
     const STRICT_LIB_NAME: &'static str = STD_LIB;
 }
@@ -397,6 +363,8 @@ impl StrictDecode for bool {
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
 enum U4 {
     #[default]
@@ -416,74 +384,6 @@ enum U4 {
     V13,
     V14,
     V15,
-}
-impl From<U4> for u8 {
-    fn from(value: U4) -> Self { value as u8 }
-}
-impl TryFrom<u8> for U4 {
-    type Error = VariantError<u8>;
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        for v in [
-            U4::V0,
-            U4::V1,
-            U4::V2,
-            U4::V3,
-            U4::V4,
-            U4::V5,
-            U4::V6,
-            U4::V7,
-            U4::V8,
-            U4::V9,
-            U4::V10,
-            U4::V11,
-            U4::V12,
-            U4::V13,
-            U4::V14,
-            U4::V15,
-        ] {
-            if v as u8 == value {
-                return Ok(v);
-            }
-        }
-        Err(VariantError(Some(tn!("U4")), value))
-    }
-}
-
-impl StrictType for U4 {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
-    fn strict_name() -> Option<TypeName> { Some(tn!("U4")) }
-}
-impl StrictSum for U4 {
-    const ALL_VARIANTS: &'static [(u8, &'static str)] = &[
-        (0, "v0"),
-        (1, "v1"),
-        (2, "v2"),
-        (3, "v3"),
-        (4, "v4"),
-        (5, "v5"),
-        (6, "v6"),
-        (7, "v7"),
-        (8, "v8"),
-        (9, "v9"),
-        (10, "v10"),
-        (11, "v11"),
-        (12, "v12"),
-        (13, "v13"),
-        (14, "v14"),
-        (15, "v15"),
-    ];
-    fn variant_name(&self) -> &'static str { Self::ALL_VARIANTS[*self as u8 as usize].1 }
-}
-impl StrictEnum for U4 {}
-impl StrictEncode for U4 {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_enum::<Self>(*self)
-    }
-}
-impl StrictDecode for U4 {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_enum()
-    }
 }
 
 impl StrictType for u4 {
