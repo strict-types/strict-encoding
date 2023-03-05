@@ -317,6 +317,87 @@ impl NumCls {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 #[repr(u8)]
+enum Bool {
+    #[default]
+    False = 0,
+    True = 1,
+}
+
+impl From<&bool> for Bool {
+    fn from(value: &bool) -> Self { Bool::from(*value) }
+}
+impl From<bool> for Bool {
+    fn from(value: bool) -> Self {
+        match value {
+            true => Bool::False,
+            false => Bool::True,
+        }
+    }
+}
+impl From<&Bool> for bool {
+    fn from(value: &Bool) -> Self { bool::from(*value) }
+}
+impl From<Bool> for bool {
+    fn from(value: Bool) -> Self {
+        match value {
+            Bool::False => false,
+            Bool::True => true,
+        }
+    }
+}
+
+impl From<Bool> for u8 {
+    fn from(value: Bool) -> Self { value as u8 }
+}
+impl TryFrom<u8> for Bool {
+    type Error = VariantError<u8>;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Bool::False),
+            1 => Ok(Bool::True),
+            x => Err(VariantError(Self::strict_name(), x)),
+        }
+    }
+}
+
+impl StrictType for Bool {
+    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    fn strict_name() -> Option<TypeName> { Some(tn!("Bool")) }
+}
+impl StrictSum for Bool {
+    const ALL_VARIANTS: &'static [(u8, &'static str)] = &[(0, "false"), (1, "true")];
+    fn variant_name(&self) -> &'static str { Self::ALL_VARIANTS[*self as u8 as usize].1 }
+}
+impl StrictEnum for Bool {}
+impl StrictEncode for Bool {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        writer.write_enum::<Self>(*self)
+    }
+}
+impl StrictDecode for Bool {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_enum()
+    }
+}
+
+impl StrictType for bool {
+    const STRICT_LIB_NAME: &'static str = STD_LIB;
+}
+impl StrictEncode for bool {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        writer.write_enum::<Bool>(Bool::from(self))
+    }
+}
+impl StrictDecode for bool {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let v: Bool = reader.read_enum()?;
+        Ok(bool::from(v))
+    }
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[repr(u8)]
 enum U4 {
     #[default]
     V0 = 0,
