@@ -43,6 +43,7 @@ const ATTR_TAGS_ORDER: &str = "order";
 const ATTR_TAGS_REPR: &str = "repr";
 const ATTR_TAGS_CUSTOM: &str = "custom";
 const ATTR_TAG: &str = "tag";
+const ATTR_SKIP: &str = "skip";
 const ATTR_INTO_U8: &str = "into_u8";
 const ATTR_TRY_FROM_U8: &str = "try_from_u8";
 
@@ -64,6 +65,7 @@ pub struct EnumAttr {
 pub struct FieldAttr {
     pub dumb: Option<Expr>,
     pub rename: Option<LitStr>,
+    pub skip: bool,
 }
 
 pub struct VariantAttr {
@@ -187,11 +189,14 @@ impl FieldAttr {
             map.insert(ATTR_RENAME, ArgValueReq::optional(ValueClass::str()));
         }
 
-        params.check(AttrReq::with(map))?;
+        let mut attr_req = AttrReq::with(map);
+        attr_req.path_req = ListReq::maybe_one(path!(skip));
+        params.check(attr_req)?;
 
         Ok(FieldAttr {
             rename: params.arg_value(ATTR_RENAME).ok(),
             dumb: params.arg_value(ATTR_DUMB).ok(),
+            skip: params.has_verbatim(ATTR_SKIP),
         })
     }
 
