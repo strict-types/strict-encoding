@@ -252,7 +252,9 @@ impl DeriveInner for DeriveStruct<'_> {
         let mut name = Vec::with_capacity(fields.len());
         for named_field in fields {
             let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
-            name.push(attr.field_name(&named_field.name));
+            if !attr.skip {
+                name.push(attr.field_name(&named_field.name));
+            }
         }
 
         Ok(quote! {

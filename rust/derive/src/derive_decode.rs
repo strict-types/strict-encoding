@@ -38,6 +38,54 @@ impl StrictDerive {
     }
 }
 
+fn derive_struct_fields(
+    fields: &Items<NamedField>,
+    self_name: TokenStream2,
+) -> Result<TokenStream2> {
+    let mut skipped = Vec::new();
+    let mut field_name = Vec::with_capacity(fields.len());
+    let mut field_rename = Vec::with_capacity(fields.len());
+    for named_field in fields {
+        let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
+
+        let name = &named_field.name;
+        let rename = attr.field_name(name);
+
+        if attr.skip {
+            skipped.push(quote! { #name })
+        } else {
+            field_name.push(quote! { #name });
+            field_rename.push(quote! { #rename });
+        }
+    }
+    Ok(quote! {
+        #( let #field_name = r.read_field(fname!(#field_rename))?; )*
+        Ok(#self_name {
+            #(#field_name),*
+            #(#skipped: Default::default!()),*
+        })
+    })
+}
+
+fn derive_tuple_fields(fields: &Items<Field>, self_name: TokenStream2) -> Result<TokenStream2> {
+    let mut field_idx = Vec::with_capacity(fields.len());
+    let mut field_vars = Vec::with_capacity(fields.len());
+    for (index, field) in fields.iter().enumerate() {
+        let attr = FieldAttr::with(field.attr.clone(), FieldKind::Unnamed)?;
+        if attr.skip {
+            field_vars.push(quote! { Default::default() });
+        } else {
+            let index = Ident::new(&format!("_{index}"), Span::call_site());
+            field_idx.push(quote! { #index });
+            field_vars.push(quote! { #index });
+        }
+    }
+    Ok(quote! {
+        #( let #field_idx = r.read_field()?; )*
+        Ok(#self_name( #( #field_vars ),* ))
+    })
+}
+
 impl DeriveInner for DeriveDecode<'_> {
     fn derive_unit_inner(&self) -> Result<TokenStream2> {
         Err(Error::new(
@@ -49,21 +97,12 @@ impl DeriveInner for DeriveDecode<'_> {
 
     fn derive_struct_inner(&self, fields: &Items<NamedField>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
-
-        let mut orig_name = Vec::with_capacity(fields.len());
-        let mut field_name = Vec::with_capacity(fields.len());
-        for named_field in fields {
-            let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
-            orig_name.push(&named_field.name);
-            field_name.push(attr.field_name(&named_field.name));
-        }
-
+        let inner = derive_struct_fields(fields, quote! { Self })?;
         Ok(quote! {
             fn strict_decode(reader: &mut impl #crate_name::TypedRead) -> Result<Self, #crate_name::DecodeError> {
                 use #crate_name::{TypedRead, ReadStruct, fname};
                 reader.read_struct(|r| {
-                    #( let #orig_name = r.read_field(fname!(#field_name))?; )*
-                    Ok(Self { #( #orig_name ),* })
+                    #inner
                 })
             }
         })
@@ -71,20 +110,12 @@ impl DeriveInner for DeriveDecode<'_> {
 
     fn derive_tuple_inner(&self, fields: &Items<Field>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
-
-        let no = fields
-            .iter()
-            .enumerate()
-            .map(|(index, _)| Ident::new(&format!("_{index}"), Span::call_site()))
-            .collect::<Vec<_>>();
-        let no2 = no.clone();
-
+        let inner = derive_tuple_fields(fields, quote! { Self })?;
         Ok(quote! {
             fn strict_decode(reader: &mut impl #crate_name::TypedRead) -> Result<Self, #crate_name::DecodeError> {
                 use #crate_name::{TypedRead, ReadTuple};
                 reader.read_tuple(|r| {
-                    #( let #no = r.read_field()?; )*
-                    Ok(Self( #( #no2 ),* ))
+                    #inner
                 })
             }
         })
@@ -120,36 +151,18 @@ impl DeriveInner for DeriveDecode<'_> {
                         });
                     }
                     Fields::Unnamed(fields) => {
-                        let mut field_idx = Vec::with_capacity(fields.len());
-                        for index in 0..fields.len() {
-                            let index = Ident::new(&format!("_{index}"), Span::call_site());
-                            field_idx.push(quote! { #index });
-                        }
+                        let inner = derive_tuple_fields(fields, quote! { Self::#var_name })?;
                         read_variants.push(quote! {
-                            #name => r.read_tuple(|t| {
-                                #( let #field_idx = t.read_field()?; )*
-                                Ok(Self::#var_name( #(#field_idx),* ))
+                            #name => r.read_tuple(|r| {
+                                #inner
                             }),
                         });
                     }
                     Fields::Named(fields) => {
-                        let mut field_name = Vec::with_capacity(fields.len());
-                        let mut field_rename = Vec::with_capacity(fields.len());
-                        for named_field in fields {
-                            let attr =
-                                FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
-
-                            let name = &named_field.name;
-                            let rename = attr.field_name(name);
-
-                            field_name.push(quote! { #name });
-                            field_rename.push(quote! { #rename });
-                        }
-
+                        let inner = derive_struct_fields(fields, quote! { Self::#var_name })?;
                         read_variants.push(quote! {
-                            #name => r.read_struct(|s| {
-                                #( let #field_name = s.read_field(fname!(#field_rename))?; )*
-                                Ok(Self::#var_name { #(#field_name),* })
+                            #name => r.read_struct(|r| {
+                                #inner
                             }),
                         });
                     }

@@ -50,8 +50,10 @@ impl DeriveInner for DeriveEncode<'_> {
         let mut field_name = Vec::with_capacity(fields.len());
         for named_field in fields {
             let attr = FieldAttr::with(named_field.field.attr.clone(), FieldKind::Named)?;
-            orig_name.push(&named_field.name);
-            field_name.push(attr.field_name(&named_field.name));
+            if !attr.skip {
+                orig_name.push(&named_field.name);
+                field_name.push(attr.field_name(&named_field.name));
+            }
         }
 
         Ok(quote! {
@@ -69,10 +71,14 @@ impl DeriveInner for DeriveEncode<'_> {
     fn derive_tuple_inner(&self, fields: &Items<Field>) -> Result<TokenStream2> {
         let crate_name = &self.0.conf.strict_crate;
 
-        let no = fields
-            .iter()
-            .enumerate()
-            .map(|(index, _)| Index::from(index));
+        let no = fields.iter().enumerate().filter_map(|(index, field)| {
+            let attr = FieldAttr::with(field.attr.clone(), FieldKind::Unnamed).ok()?;
+            if attr.skip {
+                None
+            } else {
+                Some(Index::from(index))
+            }
+        });
 
         Ok(quote! {
             fn strict_encode<W: #crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
@@ -129,10 +135,14 @@ impl DeriveInner for DeriveEncode<'_> {
                         let mut field_ty = Vec::with_capacity(fields.len());
                         let mut field_idx = Vec::with_capacity(fields.len());
                         for (index, field) in fields.iter().enumerate() {
-                            let ty = &field.ty;
-                            let index = Ident::new(&format!("_{index}"), Span::call_site());
-                            field_ty.push(quote! { #ty });
-                            field_idx.push(quote! { #index });
+                            let attr = FieldAttr::with(field.attr.clone(), FieldKind::Unnamed)?;
+
+                            if !attr.skip {
+                                let ty = &field.ty;
+                                let index = Ident::new(&format!("_{index}"), Span::call_site());
+                                field_ty.push(quote! { #ty });
+                                field_idx.push(quote! { #index });
+                            }
                         }
                         define_variants.push(quote! {
                             .define_tuple(vname!(#name), |d| {
@@ -157,9 +167,11 @@ impl DeriveInner for DeriveEncode<'_> {
                             let name = &named_field.name;
                             let rename = attr.field_name(name);
 
-                            field_ty.push(quote! { #ty });
-                            field_name.push(quote! { #name });
-                            field_rename.push(quote! { fname!(#rename) });
+                            if !attr.skip {
+                                field_ty.push(quote! { #ty });
+                                field_name.push(quote! { #name });
+                                field_rename.push(quote! { fname!(#rename) });
+                            }
                         }
 
                         define_variants.push(quote! {
