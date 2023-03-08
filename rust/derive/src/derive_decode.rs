@@ -61,8 +61,8 @@ fn derive_struct_fields(
     Ok(quote! {
         #( let #field_name = r.read_field(fname!(#field_rename))?; )*
         Ok(#self_name {
-            #(#field_name),*
-            #(#skipped: Default::default!()),*
+            #(#field_name,)*
+            #(#skipped: Default::default()),*
         })
     })
 }

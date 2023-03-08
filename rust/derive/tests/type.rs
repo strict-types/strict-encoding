@@ -29,7 +29,9 @@ extern crate strict_encoding_derive;
 
 mod common;
 
-use strict_encoding::{tn, StrictStruct, StrictSum, StrictType};
+use strict_encoding::{
+    tn, StrictDeserialize, StrictSerialize, StrictStruct, StrictSum, StrictType,
+};
 
 const TEST_LIB: &str = "TestLib";
 
@@ -109,6 +111,41 @@ fn rename_field() -> common::Result {
     }
 
     assert_eq!(Struct::ALL_FIELDS, &["mustCamelize", "correctName"]);
+
+    Ok(())
+}
+
+#[test]
+fn skip_field() -> common::Result {
+    #[derive(Clone, PartialEq, Eq, Debug, Default)]
+    #[derive(StrictType, StrictEncode, StrictDecode)]
+    #[strict_type(lib = TEST_LIB)]
+    struct Struct {
+        must_camelize: u8,
+
+        #[strict_type(skip)]
+        wrong_name: u8,
+    }
+    impl StrictSerialize for Struct {}
+    impl StrictDeserialize for Struct {}
+
+    assert_eq!(Struct::ALL_FIELDS, &["mustCamelize"]);
+
+    let val = Struct {
+        must_camelize: 2,
+        wrong_name: 3,
+    };
+    assert_eq!(
+        val.to_strict_serialized::<{ usize::MAX }>()
+            .unwrap()
+            .as_slice(),
+        &[2]
+    );
+    let val = Struct {
+        must_camelize: 2,
+        wrong_name: 0,
+    };
+    assert_eq!(Struct::from_strict_serialized(small_vec![2]).unwrap(), val);
 
     Ok(())
 }
