@@ -145,7 +145,7 @@ impl<R: io::Read> TypedRead for StrictReader<R> {
         };
         let res = inner(&mut reader)?;
         assert_ne!(reader.read_fields, 0, "you forget to read fields for a tuple {}", name);
-        assert_ne!(
+        assert_eq!(
             reader.read_fields,
             T::FIELD_COUNT,
             "the number of fields read for a tuple {} doesn't match type declaration",
