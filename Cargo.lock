@@ -513,7 +513,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding"
-version = "2.0.0-rc.2"
+version = "2.0.0-rc.3"
 dependencies = [
  "amplify 4.0.0-beta.19",
  "half",
