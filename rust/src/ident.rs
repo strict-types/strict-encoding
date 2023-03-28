@@ -62,7 +62,7 @@ impl<O> From<FromAsciiError<O>> for InvalidIdent {
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct Ident(Confined<AsciiString, 1, 32>);
+pub struct Ident(Confined<AsciiString, 1, 64>);
 
 impl FromStr for Ident {
     type Err = InvalidIdent;
