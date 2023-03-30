@@ -330,8 +330,8 @@ impl From<&bool> for Bool {
 impl From<bool> for Bool {
     fn from(value: bool) -> Self {
         match value {
-            true => Bool::False,
-            false => Bool::True,
+            true => Bool::True,
+            false => Bool::False,
         }
     }
 }
