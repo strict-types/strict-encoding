@@ -1,6 +1,6 @@
 [package]
 name = "strict_encoding"
-version = "2.0.0"
+version = "2.0.1"
 description = "Strict encoding: deterministic & confined binary serialization for strict types"
 keywords = ["strict-types", "gadt", "serialization", "serde", "protobuf"]
 categories = ["encoding", "parsing"]
