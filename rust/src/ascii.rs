@@ -19,6 +19,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![allow(non_camel_case_types)]
+
 use std::io;
 
 use amplify::ascii::AsciiChar;
@@ -175,32 +177,57 @@ impl StrictDecode for AsciiPrintable {
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaCaps {
-    #[strict_type(dumb)]
+    #[strict_type(dumb, rename = "A")]
     A = b'A',
+    #[strict_type(rename = "B")]
     B = b'B',
+    #[strict_type(rename = "C")]
     C = b'C',
+    #[strict_type(rename = "D")]
     D = b'D',
+    #[strict_type(rename = "E")]
     E = b'E',
+    #[strict_type(rename = "F")]
     F = b'F',
+    #[strict_type(rename = "G")]
     G = b'G',
+    #[strict_type(rename = "H")]
     H = b'H',
+    #[strict_type(rename = "I")]
     I = b'I',
+    #[strict_type(rename = "J")]
     J = b'J',
+    #[strict_type(rename = "K")]
     K = b'K',
+    #[strict_type(rename = "L")]
     L = b'L',
+    #[strict_type(rename = "M")]
     M = b'M',
+    #[strict_type(rename = "N")]
     N = b'N',
+    #[strict_type(rename = "O")]
     O = b'O',
+    #[strict_type(rename = "P")]
     P = b'P',
+    #[strict_type(rename = "Q")]
     Q = b'Q',
+    #[strict_type(rename = "R")]
     R = b'R',
+    #[strict_type(rename = "S")]
     S = b'S',
+    #[strict_type(rename = "T")]
     T = b'T',
+    #[strict_type(rename = "U")]
     U = b'U',
+    #[strict_type(rename = "V")]
     V = b'V',
+    #[strict_type(rename = "W")]
     W = b'W',
+    #[strict_type(rename = "X")]
     X = b'X',
+    #[strict_type(rename = "Y")]
     Y = b'Y',
+    #[strict_type(rename = "Z")]
     Z = b'Z',
 }
 
@@ -270,85 +297,110 @@ pub enum AlphaSmall {
 #[display(inner)]
 #[repr(u8)]
 pub enum Alpha {
-    #[strict_type(dumb)]
+    #[strict_type(dumb, rename = "A")]
     A = b'A',
+    #[strict_type(rename = "B")]
     B = b'B',
+    #[strict_type(rename = "C")]
     C = b'C',
+    #[strict_type(rename = "D")]
     D = b'D',
+    #[strict_type(rename = "E")]
     E = b'E',
+    #[strict_type(rename = "F")]
     F = b'F',
+    #[strict_type(rename = "G")]
     G = b'G',
+    #[strict_type(rename = "H")]
     H = b'H',
+    #[strict_type(rename = "I")]
     I = b'I',
+    #[strict_type(rename = "J")]
     J = b'J',
+    #[strict_type(rename = "K")]
     K = b'K',
+    #[strict_type(rename = "L")]
     L = b'L',
+    #[strict_type(rename = "M")]
     M = b'M',
+    #[strict_type(rename = "N")]
     N = b'N',
+    #[strict_type(rename = "O")]
     O = b'O',
+    #[strict_type(rename = "P")]
     P = b'P',
+    #[strict_type(rename = "Q")]
     Q = b'Q',
+    #[strict_type(rename = "R")]
     R = b'R',
+    #[strict_type(rename = "S")]
     S = b'S',
+    #[strict_type(rename = "T")]
     T = b'T',
+    #[strict_type(rename = "U")]
     U = b'U',
+    #[strict_type(rename = "V")]
     V = b'V',
+    #[strict_type(rename = "W")]
     W = b'W',
+    #[strict_type(rename = "X")]
     X = b'X',
+    #[strict_type(rename = "Y")]
     Y = b'Y',
+    #[strict_type(rename = "Z")]
     Z = b'Z',
     #[display("a")]
-    SmallA = b'a',
+    a = b'a',
     #[display("b")]
-    SmallB = b'b',
+    b = b'b',
     #[display("c")]
-    SmallC = b'c',
+    c = b'c',
     #[display("d")]
-    SmallD = b'd',
+    d = b'd',
     #[display("e")]
-    SmallE = b'e',
+    e = b'e',
     #[display("f")]
-    SmallF = b'f',
+    f = b'f',
     #[display("g")]
-    SmallG = b'g',
+    g = b'g',
     #[display("h")]
-    SmallH = b'h',
+    h = b'h',
     #[display("i")]
-    SmallI = b'i',
+    i = b'i',
     #[display("j")]
-    SmallJ = b'j',
+    j = b'j',
     #[display("k")]
-    SmallK = b'k',
+    k = b'k',
     #[display("l")]
-    SmallL = b'l',
+    l = b'l',
     #[display("m")]
-    SmallM = b'm',
+    m = b'm',
     #[display("n")]
-    SmallN = b'n',
+    n = b'n',
     #[display("o")]
-    SmallO = b'o',
+    o = b'o',
     #[display("p")]
-    SmallP = b'p',
+    p = b'p',
     #[display("q")]
-    SmallQ = b'q',
+    q = b'q',
     #[display("r")]
-    SmallR = b'r',
+    r = b'r',
     #[display("s")]
-    SmallS = b's',
+    s = b's',
     #[display("t")]
-    SmallT = b't',
+    t = b't',
     #[display("u")]
-    SmallU = b'u',
+    u = b'u',
     #[display("v")]
-    SmallV = b'v',
+    v = b'v',
     #[display("w")]
-    SmallW = b'w',
+    w = b'w',
     #[display("x")]
-    SmallX = b'x',
+    x = b'x',
     #[display("y")]
-    SmallY = b'y',
+    y = b'y',
     #[display("z")]
-    SmallZ = b'z',
+    z = b'z',
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
@@ -467,33 +519,6 @@ pub enum HexDecSmall {
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaCapsNum {
-    #[strict_type(dumb)]
-    A = b'A',
-    B = b'B',
-    C = b'C',
-    D = b'D',
-    E = b'E',
-    F = b'F',
-    G = b'G',
-    H = b'H',
-    I = b'I',
-    J = b'J',
-    K = b'K',
-    L = b'L',
-    M = b'M',
-    N = b'N',
-    O = b'O',
-    P = b'P',
-    Q = b'Q',
-    R = b'R',
-    S = b'S',
-    T = b'T',
-    U = b'U',
-    V = b'V',
-    W = b'W',
-    X = b'X',
-    Y = b'Y',
-    Z = b'Z',
     #[display("0")]
     Zero = b'0',
     #[display("1")]
@@ -514,6 +539,58 @@ pub enum AlphaCapsNum {
     Eight = b'8',
     #[display("9")]
     Nine = b'9',
+    #[strict_type(dumb, rename = "A")]
+    A = b'A',
+    #[strict_type(rename = "B")]
+    B = b'B',
+    #[strict_type(rename = "C")]
+    C = b'C',
+    #[strict_type(rename = "D")]
+    D = b'D',
+    #[strict_type(rename = "E")]
+    E = b'E',
+    #[strict_type(rename = "F")]
+    F = b'F',
+    #[strict_type(rename = "G")]
+    G = b'G',
+    #[strict_type(rename = "H")]
+    H = b'H',
+    #[strict_type(rename = "I")]
+    I = b'I',
+    #[strict_type(rename = "J")]
+    J = b'J',
+    #[strict_type(rename = "K")]
+    K = b'K',
+    #[strict_type(rename = "L")]
+    L = b'L',
+    #[strict_type(rename = "M")]
+    M = b'M',
+    #[strict_type(rename = "N")]
+    N = b'N',
+    #[strict_type(rename = "O")]
+    O = b'O',
+    #[strict_type(rename = "P")]
+    P = b'P',
+    #[strict_type(rename = "Q")]
+    Q = b'Q',
+    #[strict_type(rename = "R")]
+    R = b'R',
+    #[strict_type(rename = "S")]
+    S = b'S',
+    #[strict_type(rename = "T")]
+    T = b'T',
+    #[strict_type(rename = "U")]
+    U = b'U',
+    #[strict_type(rename = "V")]
+    V = b'V',
+    #[strict_type(rename = "W")]
+    W = b'W',
+    #[strict_type(rename = "X")]
+    X = b'X',
+    #[strict_type(rename = "Y")]
+    Y = b'Y',
+    #[strict_type(rename = "Z")]
+    Z = b'Z',
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
@@ -522,85 +599,6 @@ pub enum AlphaCapsNum {
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaNum {
-    #[strict_type(dumb)]
-    A = b'A',
-    B = b'B',
-    C = b'C',
-    D = b'D',
-    E = b'E',
-    F = b'F',
-    G = b'G',
-    H = b'H',
-    I = b'I',
-    J = b'J',
-    K = b'K',
-    L = b'L',
-    M = b'M',
-    N = b'N',
-    O = b'O',
-    P = b'P',
-    Q = b'Q',
-    R = b'R',
-    S = b'S',
-    T = b'T',
-    U = b'U',
-    V = b'V',
-    W = b'W',
-    X = b'X',
-    Y = b'Y',
-    Z = b'Z',
-    #[display("a")]
-    SmallA = b'a',
-    #[display("b")]
-    SmallB = b'b',
-    #[display("c")]
-    SmallC = b'c',
-    #[display("d")]
-    SmallD = b'd',
-    #[display("e")]
-    SmallE = b'e',
-    #[display("f")]
-    SmallF = b'f',
-    #[display("g")]
-    SmallG = b'g',
-    #[display("h")]
-    SmallH = b'h',
-    #[display("i")]
-    SmallI = b'i',
-    #[display("j")]
-    SmallJ = b'j',
-    #[display("k")]
-    SmallK = b'k',
-    #[display("l")]
-    SmallL = b'l',
-    #[display("m")]
-    SmallM = b'm',
-    #[display("n")]
-    SmallN = b'n',
-    #[display("o")]
-    SmallO = b'o',
-    #[display("p")]
-    SmallP = b'p',
-    #[display("q")]
-    SmallQ = b'q',
-    #[display("r")]
-    SmallR = b'r',
-    #[display("s")]
-    SmallS = b's',
-    #[display("t")]
-    SmallT = b't',
-    #[display("u")]
-    SmallU = b'u',
-    #[display("v")]
-    SmallV = b'v',
-    #[display("w")]
-    SmallW = b'w',
-    #[display("x")]
-    SmallX = b'x',
-    #[display("y")]
-    SmallY = b'y',
-    #[display("z")]
-    SmallZ = b'z',
     #[display("0")]
     Zero = b'0',
     #[display("1")]
@@ -621,6 +619,110 @@ pub enum AlphaNum {
     Eight = b'8',
     #[display("9")]
     Nine = b'9',
+    #[strict_type(dumb, rename = "A")]
+    A = b'A',
+    #[strict_type(rename = "B")]
+    B = b'B',
+    #[strict_type(rename = "C")]
+    C = b'C',
+    #[strict_type(rename = "D")]
+    D = b'D',
+    #[strict_type(rename = "E")]
+    E = b'E',
+    #[strict_type(rename = "F")]
+    F = b'F',
+    #[strict_type(rename = "G")]
+    G = b'G',
+    #[strict_type(rename = "H")]
+    H = b'H',
+    #[strict_type(rename = "I")]
+    I = b'I',
+    #[strict_type(rename = "J")]
+    J = b'J',
+    #[strict_type(rename = "K")]
+    K = b'K',
+    #[strict_type(rename = "L")]
+    L = b'L',
+    #[strict_type(rename = "M")]
+    M = b'M',
+    #[strict_type(rename = "N")]
+    N = b'N',
+    #[strict_type(rename = "O")]
+    O = b'O',
+    #[strict_type(rename = "P")]
+    P = b'P',
+    #[strict_type(rename = "Q")]
+    Q = b'Q',
+    #[strict_type(rename = "R")]
+    R = b'R',
+    #[strict_type(rename = "S")]
+    S = b'S',
+    #[strict_type(rename = "T")]
+    T = b'T',
+    #[strict_type(rename = "U")]
+    U = b'U',
+    #[strict_type(rename = "V")]
+    V = b'V',
+    #[strict_type(rename = "W")]
+    W = b'W',
+    #[strict_type(rename = "X")]
+    X = b'X',
+    #[strict_type(rename = "Y")]
+    Y = b'Y',
+    #[strict_type(rename = "Z")]
+    Z = b'Z',
+    #[display("a")]
+    a = b'a',
+    #[display("b")]
+    b = b'b',
+    #[display("c")]
+    c = b'c',
+    #[display("d")]
+    d = b'd',
+    #[display("e")]
+    e = b'e',
+    #[display("f")]
+    f = b'f',
+    #[display("g")]
+    g = b'g',
+    #[display("h")]
+    h = b'h',
+    #[display("i")]
+    i = b'i',
+    #[display("j")]
+    j = b'j',
+    #[display("k")]
+    k = b'k',
+    #[display("l")]
+    l = b'l',
+    #[display("m")]
+    m = b'm',
+    #[display("n")]
+    n = b'n',
+    #[display("o")]
+    o = b'o',
+    #[display("p")]
+    p = b'p',
+    #[display("q")]
+    q = b'q',
+    #[display("r")]
+    r = b'r',
+    #[display("s")]
+    s = b's',
+    #[display("t")]
+    t = b't',
+    #[display("u")]
+    u = b'u',
+    #[display("v")]
+    v = b'v',
+    #[display("w")]
+    w = b'w',
+    #[display("x")]
+    x = b'x',
+    #[display("y")]
+    y = b'y',
+    #[display("z")]
+    z = b'z',
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
@@ -629,86 +731,6 @@ pub enum AlphaNum {
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaNumLodash {
-    #[strict_type(dumb)]
-    Lodash = b'_',
-    A = b'A',
-    B = b'B',
-    C = b'C',
-    D = b'D',
-    E = b'E',
-    F = b'F',
-    G = b'G',
-    H = b'H',
-    I = b'I',
-    J = b'J',
-    K = b'K',
-    L = b'L',
-    M = b'M',
-    N = b'N',
-    O = b'O',
-    P = b'P',
-    Q = b'Q',
-    R = b'R',
-    S = b'S',
-    T = b'T',
-    U = b'U',
-    V = b'V',
-    W = b'W',
-    X = b'X',
-    Y = b'Y',
-    Z = b'Z',
-    #[display("a")]
-    SmallA = b'a',
-    #[display("b")]
-    SmallB = b'b',
-    #[display("c")]
-    SmallC = b'c',
-    #[display("d")]
-    SmallD = b'd',
-    #[display("e")]
-    SmallE = b'e',
-    #[display("f")]
-    SmallF = b'f',
-    #[display("g")]
-    SmallG = b'g',
-    #[display("h")]
-    SmallH = b'h',
-    #[display("i")]
-    SmallI = b'i',
-    #[display("j")]
-    SmallJ = b'j',
-    #[display("k")]
-    SmallK = b'k',
-    #[display("l")]
-    SmallL = b'l',
-    #[display("m")]
-    SmallM = b'm',
-    #[display("n")]
-    SmallN = b'n',
-    #[display("o")]
-    SmallO = b'o',
-    #[display("p")]
-    SmallP = b'p',
-    #[display("q")]
-    SmallQ = b'q',
-    #[display("r")]
-    SmallR = b'r',
-    #[display("s")]
-    SmallS = b's',
-    #[display("t")]
-    SmallT = b't',
-    #[display("u")]
-    SmallU = b'u',
-    #[display("v")]
-    SmallV = b'v',
-    #[display("w")]
-    SmallW = b'w',
-    #[display("x")]
-    SmallX = b'x',
-    #[display("y")]
-    SmallY = b'y',
-    #[display("z")]
-    SmallZ = b'z',
     #[display("0")]
     Zero = b'0',
     #[display("1")]
@@ -729,4 +751,110 @@ pub enum AlphaNumLodash {
     Eight = b'8',
     #[display("9")]
     Nine = b'9',
+    #[strict_type(dumb, rename = "A")]
+    A = b'A',
+    #[strict_type(rename = "B")]
+    B = b'B',
+    #[strict_type(rename = "C")]
+    C = b'C',
+    #[strict_type(rename = "D")]
+    D = b'D',
+    #[strict_type(rename = "E")]
+    E = b'E',
+    #[strict_type(rename = "F")]
+    F = b'F',
+    #[strict_type(rename = "G")]
+    G = b'G',
+    #[strict_type(rename = "H")]
+    H = b'H',
+    #[strict_type(rename = "I")]
+    I = b'I',
+    #[strict_type(rename = "J")]
+    J = b'J',
+    #[strict_type(rename = "K")]
+    K = b'K',
+    #[strict_type(rename = "L")]
+    L = b'L',
+    #[strict_type(rename = "M")]
+    M = b'M',
+    #[strict_type(rename = "N")]
+    N = b'N',
+    #[strict_type(rename = "O")]
+    O = b'O',
+    #[strict_type(rename = "P")]
+    P = b'P',
+    #[strict_type(rename = "Q")]
+    Q = b'Q',
+    #[strict_type(rename = "R")]
+    R = b'R',
+    #[strict_type(rename = "S")]
+    S = b'S',
+    #[strict_type(rename = "T")]
+    T = b'T',
+    #[strict_type(rename = "U")]
+    U = b'U',
+    #[strict_type(rename = "V")]
+    V = b'V',
+    #[strict_type(rename = "W")]
+    W = b'W',
+    #[strict_type(rename = "X")]
+    X = b'X',
+    #[strict_type(rename = "Y")]
+    Y = b'Y',
+    #[strict_type(rename = "Z")]
+    Z = b'Z',
+    #[strict_type(dumb)]
+    Lodash = b'_',
+    #[display("a")]
+    a = b'a',
+    #[display("b")]
+    b = b'b',
+    #[display("c")]
+    c = b'c',
+    #[display("d")]
+    d = b'd',
+    #[display("e")]
+    e = b'e',
+    #[display("f")]
+    f = b'f',
+    #[display("g")]
+    g = b'g',
+    #[display("h")]
+    h = b'h',
+    #[display("i")]
+    i = b'i',
+    #[display("j")]
+    j = b'j',
+    #[display("k")]
+    k = b'k',
+    #[display("l")]
+    l = b'l',
+    #[display("m")]
+    m = b'm',
+    #[display("n")]
+    n = b'n',
+    #[display("o")]
+    o = b'o',
+    #[display("p")]
+    p = b'p',
+    #[display("q")]
+    q = b'q',
+    #[display("r")]
+    r = b'r',
+    #[display("s")]
+    s = b's',
+    #[display("t")]
+    t = b't',
+    #[display("u")]
+    u = b'u',
+    #[display("v")]
+    v = b'v',
+    #[display("w")]
+    w = b'w',
+    #[display("x")]
+    x = b'x',
+    #[display("y")]
+    y = b'y',
+    #[display("z")]
+    z = b'z',
 }
