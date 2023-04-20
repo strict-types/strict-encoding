@@ -19,7 +19,155 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::{StrictDecode, StrictDumb, StrictEncode, StrictType, STD_LIB};
+use std::io;
+
+use amplify::ascii::AsciiChar;
+
+use crate::{
+    DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum, StrictType,
+    TypedRead, TypedWrite, VariantError, STD_LIB,
+};
+
+#[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
+#[wrapper(Deref, Display, Debug)]
+#[wrapper_mut(DerefMut)]
+#[derive(StrictDumb)]
+#[strict_type(lib = STD_LIB, dumb = Self(AsciiChar::A), crate = crate)]
+pub struct AsciiPrintable(AsciiChar);
+
+impl From<AsciiPrintable> for u8 {
+    fn from(value: AsciiPrintable) -> Self { value.0.as_byte() }
+}
+
+impl TryFrom<u8> for AsciiPrintable {
+    type Error = VariantError<u8>;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        AsciiChar::from_ascii(value)
+            .map_err(|_| VariantError(AsciiPrintable::strict_name(), value))
+            .map(Self)
+    }
+}
+
+impl StrictType for AsciiPrintable {
+    const STRICT_LIB_NAME: &'static str = STD_LIB;
+}
+
+impl StrictSum for AsciiPrintable {
+    const ALL_VARIANTS: &'static [(u8, &'static str)] = &[
+        (b' ', "space"),
+        (b'!', "excl"),
+        (b'"', "quotes"),
+        (b'#', "hash"),
+        (b'$', "dollar"),
+        (b'%', "percent"),
+        (b'&', "ampersand"),
+        (b'\'', "apostrophe"),
+        (b'(', "bracketL"),
+        (b')', "bracketR"),
+        (b'*', "asterisk"),
+        (b'+', "plus"),
+        (b',', "comma"),
+        (b'-', "minus"),
+        (b'.', "dot"),
+        (b'/', "slash"),
+        (b'0', "zero"),
+        (b'1', "one"),
+        (b'2', "two"),
+        (b'3', "three"),
+        (b'4', "four"),
+        (b'5', "five"),
+        (b'6', "six"),
+        (b'7', "seven"),
+        (b'8', "eight"),
+        (b'9', "nine"),
+        (b':', "colon"),
+        (b';', "semiColon"),
+        (b'<', "less"),
+        (b'=', "equal"),
+        (b'>', "greater"),
+        (b'?', "question"),
+        (b'@', "at"),
+        (b'A', "A"),
+        (b'B', "B"),
+        (b'C', "C"),
+        (b'D', "D"),
+        (b'E', "E"),
+        (b'F', "F"),
+        (b'G', "G"),
+        (b'H', "H"),
+        (b'I', "I"),
+        (b'J', "J"),
+        (b'K', "K"),
+        (b'L', "L"),
+        (b'M', "M"),
+        (b'N', "N"),
+        (b'O', "O"),
+        (b'P', "P"),
+        (b'Q', "Q"),
+        (b'R', "R"),
+        (b'S', "S"),
+        (b'T', "T"),
+        (b'U', "U"),
+        (b'V', "V"),
+        (b'W', "W"),
+        (b'X', "X"),
+        (b'Y', "Y"),
+        (b'Z', "Z"),
+        (b'[', "sqBracketL"),
+        (b'\\', "backSlash"),
+        (b']', "sqBracketR"),
+        (b'^', "caret"),
+        (b'_', "lodash"),
+        (b'`', "backtick"),
+        (b'a', "a"),
+        (b'b', "b"),
+        (b'c', "c"),
+        (b'd', "d"),
+        (b'e', "e"),
+        (b'f', "f"),
+        (b'g', "g"),
+        (b'h', "h"),
+        (b'i', "i"),
+        (b'j', "j"),
+        (b'k', "k"),
+        (b'l', "l"),
+        (b'm', "m"),
+        (b'n', "n"),
+        (b'o', "o"),
+        (b'p', "p"),
+        (b'q', "q"),
+        (b'r', "r"),
+        (b's', "s"),
+        (b't', "t"),
+        (b'u', "u"),
+        (b'v', "v"),
+        (b'w', "w"),
+        (b'x', "x"),
+        (b'y', "y"),
+        (b'z', "z"),
+        (b'{', "cBracketL"),
+        (b'|', "pipe"),
+        (b'}', "cBracketR"),
+        (b'~', "tilde"),
+    ];
+    fn variant_name(&self) -> &'static str {
+        Self::ALL_VARIANTS
+            .into_iter()
+            .find(|(s, _)| *s == self.as_byte())
+            .map(|(_, v)| *v)
+            .expect("missed ASCII character variant")
+    }
+}
+impl StrictEnum for AsciiPrintable {}
+impl StrictEncode for AsciiPrintable {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> { writer.write_enum(*self) }
+}
+impl StrictDecode for AsciiPrintable {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_enum()
+    }
+}
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
