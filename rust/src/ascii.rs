@@ -318,6 +318,61 @@ pub enum HexDecSmall {
 #[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
+pub enum AlphaCapsNum {
+    #[strict_type(dumb)]
+    A = b'A',
+    B = b'B',
+    C = b'C',
+    D = b'D',
+    E = b'E',
+    F = b'F',
+    G = b'G',
+    H = b'H',
+    I = b'I',
+    J = b'J',
+    K = b'K',
+    L = b'L',
+    M = b'M',
+    N = b'N',
+    O = b'O',
+    P = b'P',
+    Q = b'Q',
+    R = b'R',
+    S = b'S',
+    T = b'T',
+    U = b'U',
+    V = b'V',
+    W = b'W',
+    X = b'X',
+    Y = b'Y',
+    Z = b'Z',
+    #[display("0")]
+    Zero = b'0',
+    #[display("1")]
+    One = b'1',
+    #[display("2")]
+    Two = b'2',
+    #[display("3")]
+    Three = b'3',
+    #[display("4")]
+    Four = b'4',
+    #[display("5")]
+    Five = b'5',
+    #[display("6")]
+    Six = b'6',
+    #[display("7")]
+    Seven = b'7',
+    #[display("8")]
+    Eight = b'8',
+    #[display("9")]
+    Nine = b'9',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[display(inner)]
+#[repr(u8)]
 pub enum AlphaNum {
     #[strict_type(dumb)]
     A = b'A',
