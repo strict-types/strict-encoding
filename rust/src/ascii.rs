@@ -210,25 +210,25 @@ pub enum Alpha {
 pub enum Dec {
     #[strict_type(dumb)]
     #[display("0")]
-    Zero = 0,
+    Zero = b'0',
     #[display("1")]
-    One = 1,
+    One = b'1',
     #[display("2")]
-    Two = 2,
+    Two = b'2',
     #[display("3")]
-    Three = 3,
+    Three = b'3',
     #[display("4")]
-    Four = 4,
+    Four = b'4',
     #[display("5")]
-    Five = 5,
+    Five = b'5',
     #[display("6")]
-    Six = 6,
+    Six = b'6',
     #[display("7")]
-    Seven = 7,
+    Seven = b'7',
     #[display("8")]
-    Eight = 8,
+    Eight = b'8',
     #[display("9")]
-    Nine = 9,
+    Nine = b'9',
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
@@ -239,25 +239,25 @@ pub enum Dec {
 pub enum HexDecCaps {
     #[strict_type(dumb)]
     #[display("0")]
-    Zero = 0,
+    Zero = b'0',
     #[display("1")]
-    One = 1,
+    One = b'1',
     #[display("2")]
-    Two = 2,
+    Two = b'2',
     #[display("3")]
-    Three = 3,
+    Three = b'3',
     #[display("4")]
-    Four = 4,
+    Four = b'4',
     #[display("5")]
-    Five = 5,
+    Five = b'5',
     #[display("6")]
-    Six = 6,
+    Six = b'6',
     #[display("7")]
-    Seven = 7,
+    Seven = b'7',
     #[display("8")]
-    Eight = 8,
+    Eight = b'8',
     #[display("9")]
-    Nine = 9,
+    Nine = b'9',
     #[display("A")]
     Ten = b'A',
     #[display("B")]
@@ -280,25 +280,25 @@ pub enum HexDecCaps {
 pub enum HexDecSmall {
     #[strict_type(dumb)]
     #[display("0")]
-    Zero = 0,
+    Zero = b'0',
     #[display("1")]
-    One = 1,
+    One = b'1',
     #[display("2")]
-    Two = 2,
+    Two = b'2',
     #[display("3")]
-    Three = 3,
+    Three = b'3',
     #[display("4")]
-    Four = 4,
+    Four = b'4',
     #[display("5")]
-    Five = 5,
+    Five = b'5',
     #[display("6")]
-    Six = 6,
+    Six = b'6',
     #[display("7")]
-    Seven = 7,
+    Seven = b'7',
     #[display("8")]
-    Eight = 8,
+    Eight = b'8',
     #[display("9")]
-    Nine = 9,
+    Nine = b'9',
     #[display("a")]
     Ten = b'a',
     #[display("b")]
@@ -399,25 +399,25 @@ pub enum AlphaNum {
     #[display("z")]
     SmallZ = b'z',
     #[display("0")]
-    Zero = 0,
+    Zero = b'0',
     #[display("1")]
-    One = 1,
+    One = b'1',
     #[display("2")]
-    Two = 2,
+    Two = b'2',
     #[display("3")]
-    Three = 3,
+    Three = b'3',
     #[display("4")]
-    Four = 4,
+    Four = b'4',
     #[display("5")]
-    Five = 5,
+    Five = b'5',
     #[display("6")]
-    Six = 6,
+    Six = b'6',
     #[display("7")]
-    Seven = 7,
+    Seven = b'7',
     #[display("8")]
-    Eight = 8,
+    Eight = b'8',
     #[display("9")]
-    Nine = 9,
+    Nine = b'9',
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
@@ -507,23 +507,23 @@ pub enum AlphaNumLodash {
     #[display("z")]
     SmallZ = b'z',
     #[display("0")]
-    Zero = 0,
+    Zero = b'0',
     #[display("1")]
-    One = 1,
+    One = b'1',
     #[display("2")]
-    Two = 2,
+    Two = b'2',
     #[display("3")]
-    Three = 3,
+    Three = b'3',
     #[display("4")]
-    Four = 4,
+    Four = b'4',
     #[display("5")]
-    Five = 5,
+    Five = b'5',
     #[display("6")]
-    Six = 6,
+    Six = b'6',
     #[display("7")]
-    Seven = 7,
+    Seven = b'7',
     #[display("8")]
-    Eight = 8,
+    Eight = b'8',
     #[display("9")]
-    Nine = 9,
+    Nine = b'9',
 }
