@@ -79,7 +79,7 @@ impl<R: io::Read> io::Read for CountingReader<R> {
         let len = self.reader.read(buf)?;
         match self.count.checked_add(len) {
             None => return Err(io::ErrorKind::OutOfMemory.into()),
-            Some(len) if len >= self.limit => return Err(io::ErrorKind::InvalidInput.into()),
+            Some(len) if len > self.limit => return Err(io::ErrorKind::InvalidInput.into()),
             Some(len) => self.count = len,
         };
         Ok(len)
