@@ -730,6 +730,140 @@ pub enum AlphaNum {
 #[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
+pub enum AlphaNumDash {
+    #[strict_type(dumb)]
+    Dash = b'-',
+    #[display("0")]
+    Zero = b'0',
+    #[display("1")]
+    One = b'1',
+    #[display("2")]
+    Two = b'2',
+    #[display("3")]
+    Three = b'3',
+    #[display("4")]
+    Four = b'4',
+    #[display("5")]
+    Five = b'5',
+    #[display("6")]
+    Six = b'6',
+    #[display("7")]
+    Seven = b'7',
+    #[display("8")]
+    Eight = b'8',
+    #[display("9")]
+    Nine = b'9',
+    #[strict_type(dumb, rename = "A")]
+    A = b'A',
+    #[strict_type(rename = "B")]
+    B = b'B',
+    #[strict_type(rename = "C")]
+    C = b'C',
+    #[strict_type(rename = "D")]
+    D = b'D',
+    #[strict_type(rename = "E")]
+    E = b'E',
+    #[strict_type(rename = "F")]
+    F = b'F',
+    #[strict_type(rename = "G")]
+    G = b'G',
+    #[strict_type(rename = "H")]
+    H = b'H',
+    #[strict_type(rename = "I")]
+    I = b'I',
+    #[strict_type(rename = "J")]
+    J = b'J',
+    #[strict_type(rename = "K")]
+    K = b'K',
+    #[strict_type(rename = "L")]
+    L = b'L',
+    #[strict_type(rename = "M")]
+    M = b'M',
+    #[strict_type(rename = "N")]
+    N = b'N',
+    #[strict_type(rename = "O")]
+    O = b'O',
+    #[strict_type(rename = "P")]
+    P = b'P',
+    #[strict_type(rename = "Q")]
+    Q = b'Q',
+    #[strict_type(rename = "R")]
+    R = b'R',
+    #[strict_type(rename = "S")]
+    S = b'S',
+    #[strict_type(rename = "T")]
+    T = b'T',
+    #[strict_type(rename = "U")]
+    U = b'U',
+    #[strict_type(rename = "V")]
+    V = b'V',
+    #[strict_type(rename = "W")]
+    W = b'W',
+    #[strict_type(rename = "X")]
+    X = b'X',
+    #[strict_type(rename = "Y")]
+    Y = b'Y',
+    #[strict_type(rename = "Z")]
+    Z = b'Z',
+    #[display("a")]
+    a = b'a',
+    #[display("b")]
+    b = b'b',
+    #[display("c")]
+    c = b'c',
+    #[display("d")]
+    d = b'd',
+    #[display("e")]
+    e = b'e',
+    #[display("f")]
+    f = b'f',
+    #[display("g")]
+    g = b'g',
+    #[display("h")]
+    h = b'h',
+    #[display("i")]
+    i = b'i',
+    #[display("j")]
+    j = b'j',
+    #[display("k")]
+    k = b'k',
+    #[display("l")]
+    l = b'l',
+    #[display("m")]
+    m = b'm',
+    #[display("n")]
+    n = b'n',
+    #[display("o")]
+    o = b'o',
+    #[display("p")]
+    p = b'p',
+    #[display("q")]
+    q = b'q',
+    #[display("r")]
+    r = b'r',
+    #[display("s")]
+    s = b's',
+    #[display("t")]
+    t = b't',
+    #[display("u")]
+    u = b'u',
+    #[display("v")]
+    v = b'v',
+    #[display("w")]
+    w = b'w',
+    #[display("x")]
+    x = b'x',
+    #[display("y")]
+    y = b'y',
+    #[display("z")]
+    z = b'z',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[display(inner)]
+#[repr(u8)]
 pub enum AlphaNumLodash {
     #[display("0")]
     Zero = b'0',
