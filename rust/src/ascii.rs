@@ -732,6 +732,7 @@ pub enum AlphaNum {
 #[repr(u8)]
 pub enum AlphaNumDash {
     #[strict_type(dumb)]
+    #[display("-")]
     Dash = b'-',
     #[display("0")]
     Zero = b'0',
@@ -938,6 +939,7 @@ pub enum AlphaNumLodash {
     #[strict_type(rename = "Z")]
     Z = b'Z',
     #[strict_type(dumb)]
+    #[display("_")]
     Lodash = b'_',
     #[display("a")]
     a = b'a',
