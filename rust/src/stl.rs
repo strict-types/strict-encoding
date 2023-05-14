@@ -85,21 +85,37 @@ impl StrictDecode for bool {
 #[repr(u8)]
 pub enum U4 {
     #[default]
+    #[strict_type(rename = "_0")]
     _0 = 0,
+    #[strict_type(rename = "_1")]
     _1,
+    #[strict_type(rename = "_2")]
     _2,
+    #[strict_type(rename = "_3")]
     _3,
+    #[strict_type(rename = "_4")]
     _4,
+    #[strict_type(rename = "_5")]
     _5,
+    #[strict_type(rename = "_6")]
     _6,
+    #[strict_type(rename = "_7")]
     _7,
+    #[strict_type(rename = "_8")]
     _8,
+    #[strict_type(rename = "_9")]
     _9,
+    #[strict_type(rename = "_10")]
     _10,
+    #[strict_type(rename = "_11")]
     _11,
+    #[strict_type(rename = "_12")]
     _12,
+    #[strict_type(rename = "_13")]
     _13,
+    #[strict_type(rename = "_14")]
     _14,
+    #[strict_type(rename = "_15")]
     _15,
 }
 
