@@ -27,14 +27,14 @@ use amplify::ascii::AsciiChar;
 
 use crate::{
     DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum, StrictType,
-    TypedRead, TypedWrite, VariantError, LIB_EMBEDDED,
+    TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
 };
 
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, Debug)]
 #[wrapper_mut(DerefMut)]
 #[derive(StrictDumb)]
-#[strict_type(lib = LIB_EMBEDDED, dumb = Self(AsciiChar::A), crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, dumb = Self(AsciiChar::A), crate = crate)]
 pub struct AsciiPrintable(AsciiChar);
 
 impl From<AsciiPrintable> for u8 {
@@ -52,7 +52,7 @@ impl TryFrom<u8> for AsciiPrintable {
 }
 
 impl StrictType for AsciiPrintable {
-    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
 }
 
 impl StrictSum for AsciiPrintable {
@@ -173,7 +173,7 @@ impl StrictDecode for AsciiPrintable {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_EMBEDDED, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaCaps {
@@ -233,7 +233,7 @@ pub enum AlphaCaps {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_EMBEDDED, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
 pub enum AlphaSmall {
     #[strict_type(dumb)]
@@ -293,7 +293,7 @@ pub enum AlphaSmall {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_EMBEDDED, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum Alpha {
@@ -405,7 +405,7 @@ pub enum Alpha {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_EMBEDDED, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
 pub enum Dec {
     #[strict_type(dumb)]
@@ -433,7 +433,7 @@ pub enum Dec {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_EMBEDDED, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum HexDecCaps {
@@ -474,7 +474,7 @@ pub enum HexDecCaps {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_EMBEDDED, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum HexDecSmall {
@@ -515,7 +515,7 @@ pub enum HexDecSmall {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_EMBEDDED, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaCapsNum {
@@ -595,7 +595,7 @@ pub enum AlphaCapsNum {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_EMBEDDED, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaNum {
@@ -727,7 +727,7 @@ pub enum AlphaNum {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_EMBEDDED, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaNumDash {
@@ -862,7 +862,7 @@ pub enum AlphaNumDash {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_EMBEDDED, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaNumLodash {
