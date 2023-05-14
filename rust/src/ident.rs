@@ -28,17 +28,17 @@ use amplify::{confinement, Wrapper};
 
 use crate::{impl_strict_newtype, STRICT_TYPES_LIB};
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum InvalidIdent {
     /// ident must contain at least one character
     Empty,
 
-    /// identifier name must start with alphabetic character and not `{0}`
-    NonAlphabetic(AsciiChar),
+    /// identifier name '{0}' must start with alphabetic character and not '{1}'
+    NonAlphabetic(AsciiString, AsciiChar),
 
-    /// identifier name contains invalid character `{0}`
-    InvalidChar(AsciiChar),
+    /// identifier name '{0}' contains invalid character '{1}'
+    InvalidChar(AsciiString, AsciiChar),
 
     #[from(AsAsciiStrError)]
     /// identifier name contains non-ASCII character(s)
@@ -95,15 +95,15 @@ impl TryFrom<AsciiString> for Ident {
         }
         let first = ascii[0];
         if !first.is_alphabetic() && first != '_' {
-            return Err(InvalidIdent::NonAlphabetic(first));
+            return Err(InvalidIdent::NonAlphabetic(ascii.clone(), first));
         }
         if let Some(ch) = ascii
             .as_slice()
             .iter()
             .copied()
-            .find(|ch| !ch.is_ascii_alphanumeric() && *ch != b'_')
+            .find(|ch| !ch.is_ascii_alphanumeric() && *ch != '_')
         {
-            return Err(InvalidIdent::InvalidChar(ch));
+            return Err(InvalidIdent::InvalidChar(ascii.clone(), ch));
         }
         let s = Confined::try_from(ascii)?;
         Ok(Self(s))
