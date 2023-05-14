@@ -28,7 +28,7 @@ use amplify::num::u4;
 
 use crate::{
     DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum, StrictType,
-    TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
+    TypeName, TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
 };
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
@@ -121,6 +121,7 @@ pub enum U4 {
 
 impl StrictType for u4 {
     const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
+    fn strict_name() -> Option<TypeName> { Some(tn!("U4")) }
 }
 impl StrictEncode for u4 {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
