@@ -51,6 +51,7 @@ mod reader;
 mod writer;
 mod util;
 mod primitives;
+mod embedded;
 pub mod stl;
 #[cfg(test)]
 pub(crate) mod test;
