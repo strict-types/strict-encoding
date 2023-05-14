@@ -368,22 +368,22 @@ impl StrictDecode for bool {
 #[repr(u8)]
 pub enum U4 {
     #[default]
-    V0 = 0,
-    V1,
-    V2,
-    V3,
-    V4,
-    V5,
-    V6,
-    V7,
-    V8,
-    V9,
-    V10,
-    V11,
-    V12,
-    V13,
-    V14,
-    V15,
+    _0 = 0,
+    _1,
+    _2,
+    _3,
+    _4,
+    _5,
+    _6,
+    _7,
+    _8,
+    _9,
+    _10,
+    _11,
+    _12,
+    _13,
+    _14,
+    _15,
 }
 
 impl StrictType for u4 {
