@@ -51,14 +51,15 @@ mod reader;
 mod writer;
 mod util;
 mod primitives;
-pub mod ascii;
+pub mod stl;
 #[cfg(test)]
 pub(crate) mod test;
 
 pub use error::{DecodeError, DeserializeError, SerializeError};
 pub use ident::{FieldName, Ident, InvalidIdent, LibName, TypeName, VariantName};
-pub use primitives::{constants, Bool, NumCls, NumInfo, NumSize, Primitive, U4};
+pub use primitives::{constants, NumCls, NumInfo, NumSize, Primitive};
 pub use reader::StrictReader;
+pub use stl::{Bool, U4};
 pub use traits::*;
 pub use types::*;
 pub use util::{Sizing, Variant};

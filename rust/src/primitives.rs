@@ -28,13 +28,13 @@ use amplify::ascii::AsciiString;
 use amplify::confinement::Confined;
 #[cfg(feature = "float")]
 use amplify::num::apfloat::{ieee, Float};
-use amplify::num::{i1024, i256, i512, u1024, u24, u256, u4, u512};
+use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
 use amplify::{Array, Wrapper};
 
 use crate::{
     DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
     StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, TypeName,
-    TypedRead, TypedWrite, WriteTuple, WriteUnion, LIB_EMBEDDED, LIB_NAME_STD, STRICT_TYPES_LIB,
+    TypedRead, TypedWrite, WriteTuple, WriteUnion, LIB_EMBEDDED, STRICT_TYPES_LIB,
 };
 
 pub mod constants {
@@ -312,93 +312,6 @@ impl NumCls {
     }
 
     pub const fn into_code(self) -> u8 { self as u8 }
-}
-
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
-#[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
-#[repr(u8)]
-pub enum Bool {
-    #[default]
-    False = 0,
-    True = 1,
-}
-
-impl From<&bool> for Bool {
-    fn from(value: &bool) -> Self { Bool::from(*value) }
-}
-impl From<bool> for Bool {
-    fn from(value: bool) -> Self {
-        match value {
-            true => Bool::True,
-            false => Bool::False,
-        }
-    }
-}
-impl From<&Bool> for bool {
-    fn from(value: &Bool) -> Self { bool::from(*value) }
-}
-impl From<Bool> for bool {
-    fn from(value: Bool) -> Self {
-        match value {
-            Bool::False => false,
-            Bool::True => true,
-        }
-    }
-}
-
-impl StrictType for bool {
-    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
-}
-impl StrictEncode for bool {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_enum::<Bool>(Bool::from(self))
-    }
-}
-impl StrictDecode for bool {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        let v: Bool = reader.read_enum()?;
-        Ok(bool::from(v))
-    }
-}
-
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
-#[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
-#[repr(u8)]
-pub enum U4 {
-    #[default]
-    _0 = 0,
-    _1,
-    _2,
-    _3,
-    _4,
-    _5,
-    _6,
-    _7,
-    _8,
-    _9,
-    _10,
-    _11,
-    _12,
-    _13,
-    _14,
-    _15,
-}
-
-impl StrictType for u4 {
-    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
-}
-impl StrictEncode for u4 {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_enum::<U4>(U4::try_from(self.to_u8()).expect("broken u4 types guarantees"))
-    }
-}
-impl StrictDecode for u4 {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        let v: U4 = reader.read_enum()?;
-        Ok(u4::with(v as u8))
-    }
 }
 
 macro_rules! encode_num {
