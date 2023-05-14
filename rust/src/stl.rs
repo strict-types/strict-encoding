@@ -22,14 +22,69 @@
 #![allow(non_camel_case_types)]
 
 use std::io;
+use std::marker::PhantomData;
 
 use amplify::ascii::AsciiChar;
+use amplify::confinement::Confined;
 use amplify::num::u4;
 
 use crate::{
     DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum, StrictType,
     TypeName, TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
 };
+
+pub trait RestrictedCharacter:
+    Copy + Into<u8> + TryFrom<u8, Error = VariantError<u8>> + StrictEncode + StrictDumb
+{
+}
+
+impl<C> RestrictedCharacter for C where C: Copy + Into<u8> + TryFrom<u8, Error = VariantError<u8>> + StrictEncode + StrictDumb
+{}
+
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
+pub struct RestrictedString<C: RestrictedCharacter, const MIN: usize, const MAX: usize>(
+    Confined<Vec<u8>, MIN, MAX>,
+    PhantomData<C>,
+);
+
+impl<C: RestrictedCharacter, const MIN: usize, const MAX: usize> RestrictedString<C, MIN, MAX> {
+    /// # Safety
+    ///
+    /// Panics if the string contains invalid characters not matching
+    /// [`RestrictedCharacter`] requirements or the string length exceeds `MAX`.
+    pub fn with(s: &'static str) -> Self {
+        let bytes = s.as_bytes();
+        for (index, b) in bytes.iter().enumerate() {
+            if C::try_from(*b).is_err() {
+                panic!(
+                    "static string {s} provided to RestrictedString::with constructor contains an \
+                     invalid character {} in position {index}",
+                    bytes[index] as char
+                );
+            }
+        }
+        let Ok(inner) = Confined::try_from_iter(bytes.iter().copied()) else {
+            panic!("length of the string {s} exceeds maximal length {MAX} required by the type")
+        };
+        Self(inner, default!())
+    }
+
+    pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, DecodeError> {
+        let bytes = bytes.as_ref();
+        for (index, b) in bytes.iter().enumerate() {
+            if C::try_from(*b).is_err() {
+                return Err(DecodeError::DataIntegrityError(format!(
+                    "restricted character string contains invalid value {} in position {index}",
+                    *b as char
+                )));
+            }
+        }
+        let col = Confined::try_from_iter(bytes.iter().copied())?;
+        Ok(RestrictedString(col, default!()))
+    }
+
+    pub fn as_bytes(&self) -> &[u8] { self.0.as_slice() }
+}
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
