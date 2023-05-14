@@ -42,9 +42,15 @@ use crate::{
 )]
 #[wrapper(Display, FromStr, Octal, BitOps)]
 #[wrapper_mut(BitAssign)]
-#[derive(StrictType, StrictEncode, StrictDecode)]
+#[derive(StrictType, StrictDecode)]
 #[strict_type(lib = LIB_EMBEDDED, crate = crate)]
 pub struct Byte(u8);
+
+impl StrictEncode for Byte {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        unsafe { writer.register_primitive(BYTE)._write_raw::<1>([self.0]) }
+    }
+}
 
 macro_rules! encode_num {
     ($ty:ty, $id:ident) => {
