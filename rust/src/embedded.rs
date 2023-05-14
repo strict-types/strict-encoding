@@ -294,7 +294,13 @@ impl<T: StrictEncode + Copy + StrictDumb, const LEN: usize> StrictEncode for [T;
         for item in self {
             writer = item.strict_encode(writer)?;
         }
-        Ok(unsafe { writer.register_array(&T::strict_dumb(), LEN as u16) })
+        Ok(unsafe {
+            if T::strict_name() == u8::strict_name() {
+                writer.register_array(&Byte::strict_dumb(), LEN as u16)
+            } else {
+                writer.register_array(&T::strict_dumb(), LEN as u16)
+            }
+        })
     }
 }
 impl<T: StrictDecode + Copy + StrictDumb, const LEN: usize> StrictDecode for [T; LEN] {
