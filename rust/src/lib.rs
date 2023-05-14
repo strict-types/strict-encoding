@@ -56,6 +56,7 @@ pub mod stl;
 #[cfg(test)]
 pub(crate) mod test;
 
+pub use embedded::Byte;
 pub use error::{DecodeError, DeserializeError, SerializeError};
 pub use ident::{FieldName, Ident, InvalidIdent, LibName, TypeName, VariantName};
 pub use primitives::{constants, NumCls, NumInfo, NumSize, Primitive};

@@ -37,6 +37,15 @@ use crate::{
     TypedRead, TypedWrite, WriteTuple, WriteUnion, LIB_EMBEDDED,
 };
 
+#[derive(
+    Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default, From
+)]
+#[wrapper(Display, FromStr, Octal, BitOps)]
+#[wrapper_mut(BitAssign)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_EMBEDDED, crate = crate)]
+pub struct Byte(u8);
+
 macro_rules! encode_num {
     ($ty:ty, $id:ident) => {
         impl $crate::StrictType for $ty {
