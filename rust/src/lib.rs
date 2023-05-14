@@ -65,5 +65,8 @@ pub use util::{Sizing, Variant};
 pub use writer::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWriter};
 
 pub const NO_LIB: &str = "No";
+#[deprecated(since = "2.2.0", note = "use LIB_NAME_STD")]
 pub const STD_LIB: &str = "StdLib";
+pub const LIB_EMBEDDED: &str = "_";
+pub const LIB_NAME_STDLIB: &str = "Std";
 pub const STRICT_TYPES_LIB: &str = "StrictTypes";
