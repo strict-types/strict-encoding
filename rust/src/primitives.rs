@@ -34,7 +34,7 @@ use amplify::{Array, Wrapper};
 use crate::{
     DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
     StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, TypeName,
-    TypedRead, TypedWrite, WriteTuple, WriteUnion, STD_LIB, STRICT_TYPES_LIB,
+    TypedRead, TypedWrite, WriteTuple, WriteUnion, LIB_EMBEDDED, LIB_NAME_STD, STRICT_TYPES_LIB,
 };
 
 pub mod constants {
@@ -316,7 +316,7 @@ impl NumCls {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
 pub enum Bool {
     #[default]
@@ -348,7 +348,7 @@ impl From<Bool> for bool {
 }
 
 impl StrictType for bool {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
 }
 impl StrictEncode for bool {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
@@ -364,7 +364,7 @@ impl StrictDecode for bool {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
 #[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
 pub enum U4 {
     #[default]
@@ -387,7 +387,7 @@ pub enum U4 {
 }
 
 impl StrictType for u4 {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
 }
 impl StrictEncode for u4 {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
@@ -404,7 +404,7 @@ impl StrictDecode for u4 {
 macro_rules! encode_num {
     ($ty:ty, $id:ident) => {
         impl $crate::StrictType for $ty {
-            const STRICT_LIB_NAME: &'static str = $crate::STD_LIB;
+            const STRICT_LIB_NAME: &'static str = $crate::LIB_EMBEDDED;
         }
         impl $crate::StrictEncode for $ty {
             fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
@@ -428,7 +428,7 @@ macro_rules! encode_float {
     ($ty:ty, $len:literal, $id:ident) => {
         #[cfg(feature = "float")]
         impl $crate::StrictType for $ty {
-            const STRICT_LIB_NAME: &'static str = $crate::STD_LIB;
+            const STRICT_LIB_NAME: &'static str = $crate::LIB_EMBEDDED;
         }
         #[cfg(feature = "float")]
         impl $crate::StrictEncode for $ty {
@@ -519,7 +519,7 @@ where T: StrictDecode
 impl<T> StrictType for Option<T>
 where T: StrictType
 {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<T> StrictSum for Option<T>
@@ -561,7 +561,7 @@ impl<T: StrictDecode> StrictDecode for Option<T> {
 }
 
 impl StrictType for () {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
 impl StrictEncode for () {
@@ -574,7 +574,7 @@ impl StrictDecode for () {
 }
 
 impl<A: StrictType, B: StrictType> StrictType for (A, B) {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<A: StrictType + Default, B: StrictType + Default> StrictProduct for (A, B) {}
@@ -597,7 +597,7 @@ impl<A: StrictDecode + Default, B: StrictDecode + Default> StrictDecode for (A, 
 }
 
 impl<A: StrictType, B: StrictType, C: StrictType> StrictType for (A, B, C) {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<A: StrictType + Default, B: StrictType + Default, C: StrictType + Default> StrictProduct
@@ -635,7 +635,7 @@ impl<A: StrictDecode + Default, B: StrictDecode + Default, C: StrictDecode + Def
 }
 
 impl<T: StrictType + Copy + StrictDumb, const LEN: usize> StrictType for [T; LEN] {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<T: StrictEncode + Copy + StrictDumb, const LEN: usize> StrictEncode for [T; LEN] {
@@ -657,7 +657,7 @@ impl<T: StrictDecode + Copy + StrictDumb, const LEN: usize> StrictDecode for [T;
 }
 
 impl<T: StrictType + StrictDumb + Copy, const LEN: usize> StrictType for Array<T, LEN> {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<T: StrictEncode + StrictDumb + Copy, const LEN: usize> StrictEncode for Array<T, LEN> {
@@ -672,7 +672,7 @@ impl<T: StrictDecode + StrictDumb + Copy, const LEN: usize> StrictDecode for Arr
 }
 
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictType for Confined<String, MIN_LEN, MAX_LEN> {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
@@ -699,7 +699,7 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictType
     for Confined<AsciiString, MIN_LEN, MAX_LEN>
 {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
@@ -726,7 +726,7 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
 impl<T: StrictType, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
     for Confined<Vec<T>, MIN_LEN, MAX_LEN>
 {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<T: StrictEncode + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
@@ -757,7 +757,7 @@ impl<T: StrictDecode, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
 impl<T: StrictType + Ord, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
     for Confined<BTreeSet<T>, MIN_LEN, MAX_LEN>
 {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<T: StrictEncode + Ord + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
@@ -794,7 +794,7 @@ impl<T: StrictDecode + Ord, const MIN_LEN: usize, const MAX_LEN: usize> StrictDe
 impl<K: StrictType + Ord + Hash, V: StrictType, const MIN_LEN: usize, const MAX_LEN: usize>
     StrictType for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
 {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<

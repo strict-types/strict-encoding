@@ -30,7 +30,6 @@ use crate::{
     DefineEnum, DefineStruct, DefineTuple, DefineUnion, FieldName, LibName, StrictEncode,
     StrictEnum, StrictStruct, StrictSum, StrictTuple, StrictUnion, TypeName, TypedParent,
     TypedWrite, Variant, VariantName, WriteEnum, WriteStruct, WriteTuple, WriteUnion, NO_LIB,
-    STD_LIB,
 };
 
 // TODO: Move to amplify crate
@@ -348,7 +347,7 @@ pub struct UnionWriter<W: io::Write> {
 impl UnionWriter<Sink> {
     pub fn sink() -> Self {
         UnionWriter {
-            lib: libname!(STD_LIB),
+            lib: libname!(NO_LIB),
             name: None,
             declared_variants: empty!(),
             defined_variant: empty!(),
