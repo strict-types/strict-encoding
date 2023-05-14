@@ -384,12 +384,16 @@ impl<T: StrictEncode + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> S
     for Confined<Vec<T>, MIN_LEN, MAX_LEN>
 {
     fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
-        unsafe {
+        let sizing = Sizing::new(MIN_LEN as u64, MAX_LEN as u64);
+        writer = unsafe {
             writer = writer.write_collection::<Vec<T>, MIN_LEN, MAX_LEN>(self)?;
-        }
-        Ok(unsafe {
-            writer.register_list(&T::strict_dumb(), Sizing::new(MIN_LEN as u64, MAX_LEN as u64))
-        })
+            if T::strict_name() == u8::strict_name() {
+                writer.register_list(&Byte::strict_dumb(), sizing)
+            } else {
+                writer.register_list(&T::strict_dumb(), sizing)
+            }
+        };
+        Ok(writer)
     }
 }
 impl<T: StrictDecode, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
