@@ -24,17 +24,122 @@
 use std::io;
 
 use amplify::ascii::AsciiChar;
+use amplify::num::u4;
 
 use crate::{
     DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum, StrictType,
-    TypedRead, TypedWrite, VariantError, STD_LIB,
+    TypeName, TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
 };
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[repr(u8)]
+pub enum Bool {
+    #[default]
+    False = 0,
+    True = 1,
+}
+
+impl From<&bool> for Bool {
+    fn from(value: &bool) -> Self { Bool::from(*value) }
+}
+impl From<bool> for Bool {
+    fn from(value: bool) -> Self {
+        match value {
+            true => Bool::True,
+            false => Bool::False,
+        }
+    }
+}
+impl From<&Bool> for bool {
+    fn from(value: &Bool) -> Self { bool::from(*value) }
+}
+impl From<Bool> for bool {
+    fn from(value: Bool) -> Self {
+        match value {
+            Bool::False => false,
+            Bool::True => true,
+        }
+    }
+}
+
+impl StrictType for bool {
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
+}
+impl StrictEncode for bool {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        writer.write_enum::<Bool>(Bool::from(self))
+    }
+}
+impl StrictDecode for bool {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let v: Bool = reader.read_enum()?;
+        Ok(bool::from(v))
+    }
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[repr(u8)]
+pub enum U4 {
+    #[default]
+    #[strict_type(rename = "_0")]
+    _0 = 0,
+    #[strict_type(rename = "_1")]
+    _1,
+    #[strict_type(rename = "_2")]
+    _2,
+    #[strict_type(rename = "_3")]
+    _3,
+    #[strict_type(rename = "_4")]
+    _4,
+    #[strict_type(rename = "_5")]
+    _5,
+    #[strict_type(rename = "_6")]
+    _6,
+    #[strict_type(rename = "_7")]
+    _7,
+    #[strict_type(rename = "_8")]
+    _8,
+    #[strict_type(rename = "_9")]
+    _9,
+    #[strict_type(rename = "_10")]
+    _10,
+    #[strict_type(rename = "_11")]
+    _11,
+    #[strict_type(rename = "_12")]
+    _12,
+    #[strict_type(rename = "_13")]
+    _13,
+    #[strict_type(rename = "_14")]
+    _14,
+    #[strict_type(rename = "_15")]
+    _15,
+}
+
+impl StrictType for u4 {
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
+    fn strict_name() -> Option<TypeName> { Some(tn!("U4")) }
+}
+impl StrictEncode for u4 {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        writer.write_enum::<U4>(U4::try_from(self.to_u8()).expect("broken u4 types guarantees"))
+    }
+}
+impl StrictDecode for u4 {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let v: U4 = reader.read_enum()?;
+        Ok(u4::with(v as u8))
+    }
+}
 
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, Debug)]
 #[wrapper_mut(DerefMut)]
 #[derive(StrictDumb)]
-#[strict_type(lib = STD_LIB, dumb = Self(AsciiChar::A), crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, dumb = Self(AsciiChar::A), crate = crate)]
 pub struct AsciiPrintable(AsciiChar);
 
 impl From<AsciiPrintable> for u8 {
@@ -52,7 +157,7 @@ impl TryFrom<u8> for AsciiPrintable {
 }
 
 impl StrictType for AsciiPrintable {
-    const STRICT_LIB_NAME: &'static str = STD_LIB;
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
 }
 
 impl StrictSum for AsciiPrintable {
@@ -173,7 +278,7 @@ impl StrictDecode for AsciiPrintable {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaCaps {
@@ -233,7 +338,7 @@ pub enum AlphaCaps {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
 pub enum AlphaSmall {
     #[strict_type(dumb)]
@@ -293,7 +398,7 @@ pub enum AlphaSmall {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum Alpha {
@@ -405,7 +510,7 @@ pub enum Alpha {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
 pub enum Dec {
     #[strict_type(dumb)]
@@ -433,7 +538,7 @@ pub enum Dec {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum HexDecCaps {
@@ -474,7 +579,7 @@ pub enum HexDecCaps {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum HexDecSmall {
@@ -515,7 +620,7 @@ pub enum HexDecSmall {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaCapsNum {
@@ -595,7 +700,7 @@ pub enum AlphaCapsNum {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaNum {
@@ -727,7 +832,7 @@ pub enum AlphaNum {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaNumDash {
@@ -862,7 +967,7 @@ pub enum AlphaNumDash {
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = STD_LIB, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaNumLodash {

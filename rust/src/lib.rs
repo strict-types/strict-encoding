@@ -51,19 +51,26 @@ mod reader;
 mod writer;
 mod util;
 mod primitives;
-pub mod ascii;
+mod embedded;
+pub mod stl;
 #[cfg(test)]
 pub(crate) mod test;
 
+pub use embedded::Byte;
 pub use error::{DecodeError, DeserializeError, SerializeError};
 pub use ident::{FieldName, Ident, InvalidIdent, LibName, TypeName, VariantName};
-pub use primitives::{constants, Bool, NumCls, NumInfo, NumSize, Primitive, U4};
+pub use primitives::{constants, NumCls, NumInfo, NumSize, Primitive};
 pub use reader::StrictReader;
+pub use stl::{Bool, U4};
 pub use traits::*;
 pub use types::*;
 pub use util::{Sizing, Variant};
 pub use writer::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWriter};
 
-pub const NO_LIB: &str = "No";
+#[deprecated(since = "2.2.0", note = "use LIB_EMBEDDED")]
+pub const NO_LIB: &str = LIB_EMBEDDED;
+#[deprecated(since = "2.2.0", note = "use LIB_NAME_STD")]
 pub const STD_LIB: &str = "StdLib";
+pub const LIB_EMBEDDED: &str = "_";
+pub const LIB_NAME_STD: &str = "Std";
 pub const STRICT_TYPES_LIB: &str = "StrictTypes";

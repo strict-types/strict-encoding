@@ -29,8 +29,7 @@ use amplify::WriteCounter;
 use crate::{
     DefineEnum, DefineStruct, DefineTuple, DefineUnion, FieldName, LibName, StrictEncode,
     StrictEnum, StrictStruct, StrictSum, StrictTuple, StrictUnion, TypeName, TypedParent,
-    TypedWrite, Variant, VariantName, WriteEnum, WriteStruct, WriteTuple, WriteUnion, NO_LIB,
-    STD_LIB,
+    TypedWrite, Variant, VariantName, WriteEnum, WriteStruct, WriteTuple, WriteUnion, LIB_EMBEDDED,
 };
 
 // TODO: Move to amplify crate
@@ -183,7 +182,7 @@ impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
 
     pub fn unnamed(parent: P, tuple: bool) -> Self {
         StructWriter {
-            lib: libname!(NO_LIB),
+            lib: libname!(LIB_EMBEDDED),
             name: None,
             named_fields: empty!(),
             tuple_fields: if tuple { Some(0) } else { None },
@@ -348,7 +347,7 @@ pub struct UnionWriter<W: io::Write> {
 impl UnionWriter<Sink> {
     pub fn sink() -> Self {
         UnionWriter {
-            lib: libname!(STD_LIB),
+            lib: libname!(LIB_EMBEDDED),
             name: None,
             declared_variants: empty!(),
             defined_variant: empty!(),
