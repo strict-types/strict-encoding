@@ -313,10 +313,18 @@ pub trait ReadUnion: Sized {
 
 pub trait StrictEncode: StrictType {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W>;
+    fn strict_write(&self, lim: usize, writer: impl io::Write) -> io::Result<usize> {
+        let counter = StrictWriter::with(lim, writer);
+        Ok(self.strict_encode(counter)?.count())
+    }
 }
 
 pub trait StrictDecode: StrictType {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError>;
+    fn strict_read(lim: usize, reader: impl io::Read) -> Result<Self, DecodeError> {
+        let mut counter = StrictReader::with(lim, reader);
+        Self::strict_decode(&mut counter)
+    }
 }
 
 impl<T: StrictEncode> StrictEncode for &T {
