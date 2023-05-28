@@ -94,6 +94,7 @@ impl<W: io::Write> StrictWriter<W> {
     pub fn with(limit: usize, writer: W) -> Self {
         StrictWriter(CountingWriter::with(limit, writer))
     }
+    pub fn count(&self) -> usize { self.0.count }
     pub fn unbox(self) -> W { self.0.unbox() }
 }
 

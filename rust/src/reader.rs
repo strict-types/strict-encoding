@@ -71,6 +71,8 @@ impl<R: io::Read> CountingReader<R> {
         }
     }
 
+    pub fn count(&self) -> usize { self.count }
+
     pub fn unbox(self) -> R { self.reader }
 }
 
