@@ -57,7 +57,7 @@ pub mod stl;
 pub(crate) mod test;
 
 pub use embedded::Byte;
-pub use error::{DecodeError, DeserializeError, SerializeError};
+pub use error::{DecodeError, DeserializeError, EncodeError, SerializeError};
 pub use ident::{FieldName, Ident, InvalidIdent, LibName, TypeName, VariantName};
 pub use primitives::{constants, NumCls, NumInfo, NumSize, Primitive};
 pub use reader::StrictReader;

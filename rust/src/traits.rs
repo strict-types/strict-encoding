@@ -27,6 +27,7 @@ use amplify::num::u24;
 use amplify::Wrapper;
 
 use super::DecodeError;
+use crate::error::EncodeError;
 use crate::{
     DeserializeError, FieldName, Primitive, SerializeError, Sizing, StrictDumb, StrictEnum,
     StrictReader, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, StrictWriter,
@@ -42,19 +43,19 @@ pub trait TypedWrite: Sized {
 
     fn write_union<T: StrictUnion>(
         self,
-        inner: impl FnOnce(Self::UnionDefiner) -> io::Result<Self>,
-    ) -> io::Result<Self>;
-    fn write_enum<T: StrictEnum>(self, value: T) -> io::Result<Self>
+        inner: impl FnOnce(Self::UnionDefiner) -> Result<Self, EncodeError>,
+    ) -> Result<Self, EncodeError>;
+    fn write_enum<T: StrictEnum>(self, value: T) -> Result<Self, EncodeError>
     where u8: From<T>;
     fn write_tuple<T: StrictTuple>(
         self,
-        inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
-    ) -> io::Result<Self>;
+        inner: impl FnOnce(Self::TupleWriter) -> Result<Self, EncodeError>,
+    ) -> Result<Self, EncodeError>;
     fn write_struct<T: StrictStruct>(
         self,
-        inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
-    ) -> io::Result<Self>;
-    fn write_newtype<T: StrictTuple>(self, value: &impl StrictEncode) -> io::Result<Self> {
+        inner: impl FnOnce(Self::StructWriter) -> Result<Self, EncodeError>,
+    ) -> Result<Self, EncodeError>;
+    fn write_newtype<T: StrictTuple>(self, value: &impl StrictEncode) -> Result<Self, EncodeError> {
         self.write_tuple::<T>(|writer| Ok(writer.write_field(value)?.complete()))
     }
 
@@ -81,13 +82,19 @@ pub trait TypedWrite: Sized {
     }
 
     #[doc(hidden)]
-    unsafe fn _write_raw<const MAX_LEN: usize>(self, bytes: impl AsRef<[u8]>) -> io::Result<Self>;
+    unsafe fn _write_raw<const MAX_LEN: usize>(
+        self,
+        bytes: impl AsRef<[u8]>,
+    ) -> Result<Self, EncodeError>;
     #[doc(hidden)]
-    unsafe fn _write_raw_array<const LEN: usize>(self, raw: [u8; LEN]) -> io::Result<Self> {
+    unsafe fn _write_raw_array<const LEN: usize>(
+        self,
+        raw: [u8; LEN],
+    ) -> Result<Self, EncodeError> {
         self._write_raw::<LEN>(raw)
     }
     #[doc(hidden)]
-    unsafe fn _write_raw_len<const MAX_LEN: usize>(self, len: usize) -> io::Result<Self> {
+    unsafe fn _write_raw_len<const MAX_LEN: usize>(self, len: usize) -> Result<Self, EncodeError> {
         match MAX_LEN {
             tiny if tiny <= u8::MAX as usize => self._write_raw_array((len as u8).to_le_bytes()),
             small if small <= u16::MAX as usize => {
@@ -109,7 +116,7 @@ pub trait TypedWrite: Sized {
     unsafe fn write_string<const MAX_LEN: usize>(
         self,
         bytes: impl AsRef<[u8]>,
-    ) -> io::Result<Self> {
+    ) -> Result<Self, EncodeError> {
         self._write_raw_len::<MAX_LEN>(bytes.as_ref().len())?
             ._write_raw::<MAX_LEN>(bytes)
     }
@@ -120,7 +127,7 @@ pub trait TypedWrite: Sized {
     unsafe fn write_collection<C: Collection, const MIN_LEN: usize, const MAX_LEN: usize>(
         mut self,
         col: &Confined<C, MIN_LEN, MAX_LEN>,
-    ) -> io::Result<Self>
+    ) -> Result<Self, EncodeError>
     where
         for<'a> &'a C: IntoIterator,
         for<'a> <&'a C as IntoIterator>::Item: StrictEncode,
@@ -204,7 +211,7 @@ pub trait DefineTuple: Sized {
 
 pub trait WriteTuple: Sized {
     type Parent: TypedParent;
-    fn write_field(self, value: &impl StrictEncode) -> io::Result<Self>;
+    fn write_field(self, value: &impl StrictEncode) -> Result<Self, EncodeError>;
     fn complete(self) -> Self::Parent;
 }
 
@@ -220,7 +227,7 @@ pub trait DefineStruct: Sized {
 
 pub trait WriteStruct: Sized {
     type Parent: TypedParent;
-    fn write_field(self, name: FieldName, value: &impl StrictEncode) -> io::Result<Self>;
+    fn write_field(self, name: FieldName, value: &impl StrictEncode) -> Result<Self, EncodeError>;
     fn complete(self) -> Self::Parent;
 }
 
@@ -237,7 +244,7 @@ pub trait DefineEnum: Sized {
 
 pub trait WriteEnum: Sized {
     type Parent: TypedWrite;
-    fn write_variant(self, name: FieldName) -> io::Result<Self>;
+    fn write_variant(self, name: FieldName) -> Result<Self, EncodeError>;
     fn complete(self) -> Self::Parent;
 }
 
@@ -266,20 +273,24 @@ pub trait WriteUnion: Sized {
     type TupleWriter: WriteTuple<Parent = Self>;
     type StructWriter: WriteStruct<Parent = Self>;
 
-    fn write_unit(self, name: FieldName) -> io::Result<Self>;
-    fn write_newtype(self, name: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
+    fn write_unit(self, name: FieldName) -> Result<Self, EncodeError>;
+    fn write_newtype(
+        self,
+        name: FieldName,
+        value: &impl StrictEncode,
+    ) -> Result<Self, EncodeError> {
         self.write_tuple(name, |writer| Ok(writer.write_field(value)?.complete()))
     }
     fn write_tuple(
         self,
         name: FieldName,
-        inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
-    ) -> io::Result<Self>;
+        inner: impl FnOnce(Self::TupleWriter) -> Result<Self, EncodeError>,
+    ) -> Result<Self, EncodeError>;
     fn write_struct(
         self,
         name: FieldName,
-        inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
-    ) -> io::Result<Self>;
+        inner: impl FnOnce(Self::StructWriter) -> Result<Self, EncodeError>,
+    ) -> Result<Self, EncodeError>;
 
     fn complete(self) -> Self::Parent;
 }
@@ -312,8 +323,8 @@ pub trait ReadUnion: Sized {
 }
 
 pub trait StrictEncode: StrictType {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W>;
-    fn strict_write(&self, lim: usize, writer: impl io::Write) -> io::Result<usize> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, EncodeError>;
+    fn strict_write(&self, lim: usize, writer: impl io::Write) -> Result<usize, EncodeError> {
         let counter = StrictWriter::with(lim, writer);
         Ok(self.strict_encode(counter)?.count())
     }
@@ -328,13 +339,13 @@ pub trait StrictDecode: StrictType {
 }
 
 impl<T: StrictEncode> StrictEncode for &T {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, EncodeError> {
         (*self).strict_encode(writer)
     }
 }
 
 pub trait StrictSerialize: StrictEncode {
-    fn strict_serialized_len(&self) -> io::Result<usize> {
+    fn strict_serialized_len(&self) -> Result<usize, EncodeError> {
         let counter = StrictWriter::counter();
         Ok(self.strict_encode(counter)?.unbox().count)
     }

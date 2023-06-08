@@ -26,6 +26,7 @@ use std::marker::PhantomData;
 
 use amplify::WriteCounter;
 
+use crate::error::EncodeError;
 use crate::{
     DefineEnum, DefineStruct, DefineTuple, DefineUnion, FieldName, LibName, StrictEncode,
     StrictEnum, StrictStruct, StrictSum, StrictTuple, StrictUnion, TypeName, TypedParent,
@@ -105,13 +106,13 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
 
     fn write_union<T: StrictUnion>(
         self,
-        inner: impl FnOnce(Self::UnionDefiner) -> io::Result<Self>,
-    ) -> io::Result<Self> {
+        inner: impl FnOnce(Self::UnionDefiner) -> Result<Self, EncodeError>,
+    ) -> Result<Self, EncodeError> {
         let writer = UnionWriter::with::<T>(self);
         inner(writer)
     }
 
-    fn write_enum<T: StrictEnum>(self, value: T) -> io::Result<Self>
+    fn write_enum<T: StrictEnum>(self, value: T) -> Result<Self, EncodeError>
     where u8: From<T> {
         let mut writer = UnionWriter::with::<T>(self);
         for (_, name) in T::ALL_VARIANTS {
@@ -124,21 +125,24 @@ impl<W: io::Write> TypedWrite for StrictWriter<W> {
 
     fn write_tuple<T: StrictTuple>(
         self,
-        inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
-    ) -> io::Result<Self> {
+        inner: impl FnOnce(Self::TupleWriter) -> Result<Self, EncodeError>,
+    ) -> Result<Self, EncodeError> {
         let writer = StructWriter::tuple::<T>(self);
         inner(writer)
     }
 
     fn write_struct<T: StrictStruct>(
         self,
-        inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
-    ) -> io::Result<Self> {
+        inner: impl FnOnce(Self::StructWriter) -> Result<Self, EncodeError>,
+    ) -> Result<Self, EncodeError> {
         let writer = StructWriter::structure::<T>(self);
         inner(writer)
     }
 
-    unsafe fn _write_raw<const LEN: usize>(mut self, bytes: impl AsRef<[u8]>) -> io::Result<Self> {
+    unsafe fn _write_raw<const LEN: usize>(
+        mut self,
+        bytes: impl AsRef<[u8]>,
+    ) -> Result<Self, EncodeError> {
         use io::Write;
         self.0.write_all(bytes.as_ref())?;
         Ok(self)
@@ -213,7 +217,7 @@ impl<W: io::Write, P: StrictParent<W>> StructWriter<W, P> {
 
     pub fn into_parent(self) -> P { self.parent }
 
-    fn write_value(mut self, value: &impl StrictEncode) -> io::Result<Self> {
+    fn write_value(mut self, value: &impl StrictEncode) -> Result<Self, EncodeError> {
         let (mut writer, remnant) = self.parent.into_write_split();
         writer = value.strict_encode(writer)?;
         self.parent = P::from_write_split(writer, remnant);
@@ -245,7 +249,11 @@ impl<W: io::Write, P: StrictParent<W>> DefineStruct for StructWriter<W, P> {
 
 impl<W: io::Write, P: StrictParent<W>> WriteStruct for StructWriter<W, P> {
     type Parent = P;
-    fn write_field(mut self, _field: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
+    fn write_field(
+        mut self,
+        _field: FieldName,
+        value: &impl StrictEncode,
+    ) -> Result<Self, EncodeError> {
         debug_assert!(self.tuple_fields.is_none(), "using struct method on tuple");
         /* TODO: Propagate information about the fields at the parent
         debug_assert!(
@@ -300,7 +308,7 @@ impl<W: io::Write, P: StrictParent<W>> DefineTuple for StructWriter<W, P> {
 
 impl<W: io::Write, P: StrictParent<W>> WriteTuple for StructWriter<W, P> {
     type Parent = P;
-    fn write_field(mut self, value: &impl StrictEncode) -> io::Result<Self> {
+    fn write_field(mut self, value: &impl StrictEncode) -> Result<Self, EncodeError> {
         /* TODO: Propagate information about number of fields at the parent
         assert!(
             self.tuple_fields.expect("writing tuple field to structure") as usize > self.cursor,
@@ -408,7 +416,11 @@ impl<W: io::Write> UnionWriter<W> {
         self
     }
 
-    fn _write_variant(mut self, name: VariantName, variant_type: VariantType) -> io::Result<Self> {
+    fn _write_variant(
+        mut self,
+        name: VariantName,
+        variant_type: VariantType,
+    ) -> Result<Self, EncodeError> {
         let (variant, t) = self
             .defined_variant
             .iter()
@@ -498,14 +510,14 @@ impl<W: io::Write> WriteUnion for UnionWriter<W> {
     type TupleWriter = StructWriter<W, Self>;
     type StructWriter = StructWriter<W, Self>;
 
-    fn write_unit(self, name: VariantName) -> io::Result<Self> {
+    fn write_unit(self, name: VariantName) -> Result<Self, EncodeError> {
         self._write_variant(name, VariantType::Unit)
     }
     fn write_tuple(
         mut self,
         name: VariantName,
-        inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
-    ) -> io::Result<Self> {
+        inner: impl FnOnce(Self::TupleWriter) -> Result<Self, EncodeError>,
+    ) -> Result<Self, EncodeError> {
         self = self._write_variant(name, VariantType::Tuple)?;
         let writer = StructWriter::unnamed(self, true);
         inner(writer)
@@ -513,8 +525,8 @@ impl<W: io::Write> WriteUnion for UnionWriter<W> {
     fn write_struct(
         mut self,
         name: VariantName,
-        inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
-    ) -> io::Result<Self> {
+        inner: impl FnOnce(Self::StructWriter) -> Result<Self, EncodeError>,
+    ) -> Result<Self, EncodeError> {
         self = self._write_variant(name, VariantType::Struct)?;
         let writer = StructWriter::unnamed(self, false);
         inner(writer)
@@ -533,7 +545,7 @@ impl<W: io::Write> DefineEnum for UnionWriter<W> {
 
 impl<W: io::Write> WriteEnum for UnionWriter<W> {
     type Parent = StrictWriter<W>;
-    fn write_variant(self, name: VariantName) -> io::Result<Self> {
+    fn write_variant(self, name: VariantName) -> Result<Self, EncodeError> {
         self._write_variant(name, VariantType::Unit)
     }
     fn complete(self) -> Self::Parent { self._complete_write() }

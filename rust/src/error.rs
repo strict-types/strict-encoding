@@ -26,6 +26,14 @@ use amplify::{confinement, IoError};
 
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 #[display(doc_comments)]
+pub enum EncodeError {
+    #[display(inner)]
+    #[from(io::Error)]
+    Io(IoError),
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
+#[display(doc_comments)]
 pub enum DecodeError {
     #[display(inner)]
     #[from(io::Error)]
@@ -75,8 +83,9 @@ pub enum DecodeError {
 #[display(doc_comments)]
 pub enum SerializeError {
     #[display(inner)]
+    #[from]
     #[from(io::Error)]
-    Io(IoError),
+    Encode(EncodeError),
 
     /// confinement requirements are not satisfied. Specifically, {0}
     #[from]

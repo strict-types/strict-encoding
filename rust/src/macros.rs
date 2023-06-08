@@ -43,7 +43,10 @@ macro_rules! impl_strict_newtype {
             const FIELD_COUNT: u8 = 1;
         }
         impl $crate::StrictEncode for $ty {
-            fn strict_encode<W: $crate::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
+            fn strict_encode<W: $crate::TypedWrite>(
+                &self,
+                writer: W,
+            ) -> Result<W, $crate::EncodeError> {
                 writer.write_newtype::<Self>(&self.0)
             }
         }
@@ -79,7 +82,7 @@ macro_rules! impl_strict_struct {
             const ALL_FIELDS: &'static [&'static str] = &[$(stringify!($field)),+];
         }
         impl $crate::StrictEncode for $ty {
-            fn strict_encode<W: $crate::TypedWrite>(&self, writer: W) -> io::Result<W> {
+            fn strict_encode<W: $crate::TypedWrite>(&self, writer: W) -> Result<W, $crate::EncodeError> {
                 writer.write_struct::<Self>(|w| {
                     Ok(w
                         $(.write_field(fname!(stringify!($field)), &self.$field)?)+

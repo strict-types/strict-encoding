@@ -21,14 +21,12 @@
 
 #![allow(non_camel_case_types)]
 
-use std::io;
-
 use amplify::ascii::AsciiChar;
 use amplify::num::u4;
 
 use crate::{
-    DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum, StrictType,
-    TypeName, TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
+    DecodeError, EncodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum,
+    StrictType, TypeName, TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
 };
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
@@ -68,7 +66,7 @@ impl StrictType for bool {
     const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
 }
 impl StrictEncode for bool {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, EncodeError> {
         writer.write_enum::<Bool>(Bool::from(self))
     }
 }
@@ -124,7 +122,7 @@ impl StrictType for u4 {
     fn strict_name() -> Option<TypeName> { Some(tn!("U4")) }
 }
 impl StrictEncode for u4 {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, EncodeError> {
         writer.write_enum::<U4>(U4::try_from(self.to_u8()).expect("broken u4 types guarantees"))
     }
 }
@@ -268,7 +266,9 @@ impl StrictSum for AsciiPrintable {
 }
 impl StrictEnum for AsciiPrintable {}
 impl StrictEncode for AsciiPrintable {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> { writer.write_enum(*self) }
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, EncodeError> {
+        writer.write_enum(*self)
+    }
 }
 impl StrictDecode for AsciiPrintable {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {

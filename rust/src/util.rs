@@ -21,7 +21,6 @@
 
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
-use std::io;
 
 use crate::{ReadStruct, VariantName, WriteStruct, STRICT_TYPES_LIB};
 
