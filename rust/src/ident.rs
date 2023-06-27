@@ -26,7 +26,7 @@ use amplify::ascii::{AsAsciiStrError, AsciiChar, AsciiString, FromAsciiError};
 use amplify::confinement::{Confined, NonEmptyVec};
 use amplify::{confinement, Wrapper};
 
-use crate::stl::AlphaNum;
+use crate::stl::AlphaNumLodash;
 use crate::{
     impl_strict_newtype, DecodeError, ReadTuple, StrictDecode, StrictDumb, StrictEncode,
     StrictProduct, StrictTuple, StrictType, TypedRead, TypedWrite, STRICT_TYPES_LIB,
@@ -136,8 +136,10 @@ impl StrictEncode for Ident {
             .0
             .as_bytes()
             .iter()
-            .map(|c| AlphaNum::try_from(*c).unwrap());
-        writer.write_newtype::<Self>(&NonEmptyVec::<AlphaNum, 100>::try_from_iter(iter).unwrap())
+            .map(|c| AlphaNumLodash::try_from(*c).unwrap());
+        writer.write_newtype::<Self>(
+            &NonEmptyVec::<AlphaNumLodash, 100>::try_from_iter(iter).unwrap(),
+        )
     }
 }
 impl StrictDecode for Ident {
