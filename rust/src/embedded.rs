@@ -31,6 +31,7 @@ use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
 use amplify::{Array, Wrapper};
 
 use crate::constants::*;
+use crate::stl::AsciiSym;
 use crate::{
     DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
     StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, TypeName,
@@ -365,7 +366,10 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         unsafe {
             writer
-                .register_ascii(Sizing::new(MIN_LEN as u64, MAX_LEN as u64))
+                .register_list(
+                    &AsciiSym::strict_dumb(),
+                    Sizing::new(MIN_LEN as u64, MAX_LEN as u64),
+                )
                 .write_string::<MAX_LEN>(self.as_bytes())
         }
     }

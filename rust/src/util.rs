@@ -25,6 +25,7 @@ use std::io;
 
 use crate::{ReadStruct, VariantName, WriteStruct, STRICT_TYPES_LIB};
 
+// TODO: Control that min > max!
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Sizing {
@@ -34,6 +35,7 @@ pub struct Sizing {
 impl_strict_struct!(Sizing, STRICT_TYPES_LIB; min, max);
 
 impl Sizing {
+    // TODO: Remove (in strict-types use Array with size 1 for char types instead).
     pub const ONE: Sizing = Sizing { min: 1, max: 1 };
 
     pub const U8: Sizing = Sizing {

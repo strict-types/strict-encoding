@@ -23,10 +23,14 @@ use std::fmt::{self, Debug, Formatter};
 use std::str::FromStr;
 
 use amplify::ascii::{AsAsciiStrError, AsciiChar, AsciiString, FromAsciiError};
-use amplify::confinement::Confined;
+use amplify::confinement::{Confined, NonEmptyVec};
 use amplify::{confinement, Wrapper};
 
-use crate::{impl_strict_newtype, STRICT_TYPES_LIB};
+use crate::stl::AlphaNumLodash;
+use crate::{
+    impl_strict_newtype, DecodeError, ReadTuple, StrictDecode, StrictDumb, StrictEncode,
+    StrictProduct, StrictTuple, StrictType, TypedRead, TypedWrite, STRICT_TYPES_LIB,
+};
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
@@ -116,7 +120,33 @@ impl Debug for Ident {
     }
 }
 
-impl_strict_newtype!(Ident, STRICT_TYPES_LIB, "Dumb");
+impl StrictDumb for Ident {
+    fn strict_dumb() -> Self { Self::from("Dumb") }
+}
+impl StrictType for Ident {
+    const STRICT_LIB_NAME: &'static str = STRICT_TYPES_LIB;
+}
+impl StrictProduct for Ident {}
+impl StrictTuple for Ident {
+    const FIELD_COUNT: u8 = 1;
+}
+impl StrictEncode for Ident {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> std::io::Result<W> {
+        let iter = self
+            .0
+            .as_bytes()
+            .iter()
+            .map(|c| AlphaNumLodash::try_from(*c).unwrap());
+        writer.write_newtype::<Self>(
+            &NonEmptyVec::<AlphaNumLodash, 100>::try_from_iter(iter).unwrap(),
+        )
+    }
+}
+impl StrictDecode for Ident {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_tuple(|r| Ok(Self(r.read_field()?)))
+    }
+}
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, FromStr)]
@@ -170,6 +200,10 @@ impl Debug for FieldName {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_tuple("FieldName").field(&self.as_str()).finish()
     }
+}
+
+impl FieldName {
+    pub fn as_str(&self) -> &str { self.0.as_str() }
 }
 
 impl_strict_newtype!(FieldName, STRICT_TYPES_LIB);

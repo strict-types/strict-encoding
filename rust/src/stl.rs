@@ -140,6 +140,179 @@ impl StrictDecode for u4 {
 #[wrapper_mut(DerefMut)]
 #[derive(StrictDumb)]
 #[strict_type(lib = LIB_NAME_STD, dumb = Self(AsciiChar::A), crate = crate)]
+pub struct AsciiSym(AsciiChar);
+
+impl From<AsciiSym> for u8 {
+    fn from(value: AsciiSym) -> Self { value.0.as_byte() }
+}
+
+impl TryFrom<u8> for AsciiSym {
+    type Error = VariantError<u8>;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        AsciiChar::from_ascii(value)
+            .map_err(|_| VariantError(AsciiSym::strict_name(), value))
+            .map(Self)
+    }
+}
+impl StrictType for AsciiSym {
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
+    fn strict_name() -> Option<TypeName> { Some(tn!("Ascii")) }
+}
+impl StrictSum for AsciiSym {
+    const ALL_VARIANTS: &'static [(u8, &'static str)] = &[
+        (b'\0', "nul"),
+        (0x01, "soh"),
+        (0x02, "stx"),
+        (0x03, "etx"),
+        (0x04, "eot"),
+        (0x05, "enq"),
+        (0x06, "ack"),
+        (0x07, "bel"),
+        (0x08, "bs"),
+        (b'\t', "ht"),
+        (b'\n', "lf"),
+        (0x0b, "vt"),
+        (0x0c, "ff"),
+        (b'\r', "cr"),
+        (0x0e, "so"),
+        (0x0f, "si"),
+        (0x10, "dle"),
+        (0x11, "dc1"),
+        (0x12, "dc2"),
+        (0x13, "dc3"),
+        (0x14, "dc4"),
+        (0x15, "nack"),
+        (0x16, "syn"),
+        (0x17, "etb"),
+        (0x18, "can"),
+        (0x19, "em"),
+        (0x1a, "sub"),
+        (0x1b, "esc"),
+        (0x1c, "fs"),
+        (0x1d, "gs"),
+        (0x1e, "rs"),
+        (0x1f, "us"),
+        (b' ', "space"),
+        (b'!', "excl"),
+        (b'"', "quotes"),
+        (b'#', "hash"),
+        (b'$', "dollar"),
+        (b'%', "percent"),
+        (b'&', "ampersand"),
+        (b'\'', "apostrophe"),
+        (b'(', "bracketL"),
+        (b')', "bracketR"),
+        (b'*', "asterisk"),
+        (b'+', "plus"),
+        (b',', "comma"),
+        (b'-', "minus"),
+        (b'.', "dot"),
+        (b'/', "slash"),
+        (b'0', "zero"),
+        (b'1', "one"),
+        (b'2', "two"),
+        (b'3', "three"),
+        (b'4', "four"),
+        (b'5', "five"),
+        (b'6', "six"),
+        (b'7', "seven"),
+        (b'8', "eight"),
+        (b'9', "nine"),
+        (b':', "colon"),
+        (b';', "semiColon"),
+        (b'<', "less"),
+        (b'=', "equal"),
+        (b'>', "greater"),
+        (b'?', "question"),
+        (b'@', "at"),
+        (b'A', "A"),
+        (b'B', "B"),
+        (b'C', "C"),
+        (b'D', "D"),
+        (b'E', "E"),
+        (b'F', "F"),
+        (b'G', "G"),
+        (b'H', "H"),
+        (b'I', "I"),
+        (b'J', "J"),
+        (b'K', "K"),
+        (b'L', "L"),
+        (b'M', "M"),
+        (b'N', "N"),
+        (b'O', "O"),
+        (b'P', "P"),
+        (b'Q', "Q"),
+        (b'R', "R"),
+        (b'S', "S"),
+        (b'T', "T"),
+        (b'U', "U"),
+        (b'V', "V"),
+        (b'W', "W"),
+        (b'X', "X"),
+        (b'Y', "Y"),
+        (b'Z', "Z"),
+        (b'[', "sqBracketL"),
+        (b'\\', "backSlash"),
+        (b']', "sqBracketR"),
+        (b'^', "caret"),
+        (b'_', "lodash"),
+        (b'`', "backtick"),
+        (b'a', "a"),
+        (b'b', "b"),
+        (b'c', "c"),
+        (b'd', "d"),
+        (b'e', "e"),
+        (b'f', "f"),
+        (b'g', "g"),
+        (b'h', "h"),
+        (b'i', "i"),
+        (b'j', "j"),
+        (b'k', "k"),
+        (b'l', "l"),
+        (b'm', "m"),
+        (b'n', "n"),
+        (b'o', "o"),
+        (b'p', "p"),
+        (b'q', "q"),
+        (b'r', "r"),
+        (b's', "s"),
+        (b't', "t"),
+        (b'u', "u"),
+        (b'v', "v"),
+        (b'w', "w"),
+        (b'x', "x"),
+        (b'y', "y"),
+        (b'z', "z"),
+        (b'{', "cBracketL"),
+        (b'|', "pipe"),
+        (b'}', "cBracketR"),
+        (b'~', "tilde"),
+        (0x7f, "del"),
+    ];
+    fn variant_name(&self) -> &'static str {
+        Self::ALL_VARIANTS
+            .into_iter()
+            .find(|(s, _)| *s == self.as_byte())
+            .map(|(_, v)| *v)
+            .expect("missed ASCII character variant")
+    }
+}
+impl StrictEnum for AsciiSym {}
+impl StrictEncode for AsciiSym {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> { writer.write_enum(*self) }
+}
+impl StrictDecode for AsciiSym {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_enum()
+    }
+}
+
+#[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
+#[wrapper(Deref, Display, Debug)]
+#[wrapper_mut(DerefMut)]
+#[derive(StrictDumb)]
+#[strict_type(lib = LIB_NAME_STD, dumb = Self(AsciiChar::A), crate = crate)]
 pub struct AsciiPrintable(AsciiChar);
 
 impl From<AsciiPrintable> for u8 {
