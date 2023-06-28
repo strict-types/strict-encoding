@@ -202,6 +202,10 @@ impl Debug for FieldName {
     }
 }
 
+impl FieldName {
+    pub fn as_str(&self) -> &str { self.0.as_str() }
+}
+
 impl_strict_newtype!(FieldName, STRICT_TYPES_LIB);
 
 pub type VariantName = FieldName;
