@@ -339,6 +339,7 @@ pub struct UnionWriter<W: io::Write> {
     lib: LibName,
     name: Option<TypeName>,
     declared_variants: BTreeMap<u8, VariantName>,
+    declared_index: BTreeMap<VariantName, u8>,
     defined_variant: BTreeMap<Variant, VariantType>,
     parent: StrictWriter<W>,
     written: bool,
@@ -351,6 +352,7 @@ impl UnionWriter<Sink> {
             lib: libname!(LIB_EMBEDDED),
             name: None,
             declared_variants: empty!(),
+            declared_index: empty!(),
             defined_variant: empty!(),
             parent: StrictWriter::sink(),
             written: false,
@@ -367,6 +369,10 @@ impl<W: io::Write> UnionWriter<W> {
             declared_variants: T::ALL_VARIANTS
                 .iter()
                 .map(|(tag, name)| (*tag, vname!(*name)))
+                .collect(),
+            declared_index: T::ALL_VARIANTS
+                .iter()
+                .map(|(tag, name)| (vname!(*name), *tag))
                 .collect(),
             defined_variant: empty!(),
             parent,
@@ -387,10 +393,9 @@ impl<W: io::Write> UnionWriter<W> {
     }
 
     pub fn tag_by_name(&self, name: &VariantName) -> u8 {
-        self.declared_variants
-            .iter()
-            .find(|(_, n)| *n == name)
-            .map(|(tag, _)| *tag)
+        *self
+            .declared_index
+            .get(name)
             .unwrap_or_else(|| panic!("unknown variant `{name}` for the enum `{}`", self.name()))
     }
 
@@ -558,6 +563,7 @@ impl<W: io::Write> StrictParent<W> for UnionWriter<W> {
             lib: remnant.lib,
             name: remnant.name,
             declared_variants: remnant.declared_variants,
+            declared_index: remnant.declared_index,
             defined_variant: remnant.defined_variant,
             parent: writer,
             written: remnant.written,
@@ -569,6 +575,7 @@ impl<W: io::Write> StrictParent<W> for UnionWriter<W> {
             lib: self.lib,
             name: self.name,
             declared_variants: self.declared_variants,
+            declared_index: self.declared_index,
             defined_variant: self.defined_variant,
             parent: StrictWriter::sink(),
             written: self.written,
