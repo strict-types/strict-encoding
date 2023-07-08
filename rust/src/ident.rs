@@ -23,13 +23,13 @@ use std::fmt::{self, Debug, Formatter};
 use std::str::FromStr;
 
 use amplify::ascii::{AsAsciiStrError, AsciiChar, AsciiString, FromAsciiError};
-use amplify::confinement::{Confined, NonEmptyVec};
+use amplify::confinement::Confined;
 use amplify::{confinement, Wrapper};
 
 use crate::stl::AlphaNumLodash;
 use crate::{
-    impl_strict_newtype, DecodeError, ReadTuple, StrictDecode, StrictDumb, StrictEncode,
-    StrictProduct, StrictTuple, StrictType, TypedRead, TypedWrite, STRICT_TYPES_LIB,
+    impl_strict_newtype, DecodeError, ReadTuple, RestrictedString, StrictDecode, StrictDumb,
+    StrictEncode, StrictProduct, StrictTuple, StrictType, TypedRead, TypedWrite, STRICT_TYPES_LIB,
 };
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
@@ -132,19 +132,23 @@ impl StrictTuple for Ident {
 }
 impl StrictEncode for Ident {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> std::io::Result<W> {
-        let iter = self
-            .0
-            .as_bytes()
-            .iter()
-            .map(|c| AlphaNumLodash::try_from(*c).unwrap());
-        writer.write_newtype::<Self>(
-            &NonEmptyVec::<AlphaNumLodash, 100>::try_from_iter(iter).unwrap(),
-        )
+        let s = RestrictedString::<AlphaNumLodash, 1, 100>::from_bytes(self.0.as_bytes())
+            .expect("invalid Ident value when invariant is expected");
+        writer.write_newtype::<Self>(&s)
     }
 }
 impl StrictDecode for Ident {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        reader.read_tuple(|r| Ok(Self(r.read_field()?)))
+        reader.read_tuple(|r| {
+            let s: RestrictedString<AlphaNumLodash, 1, 100> = r.read_field()?;
+            Ok(Self(
+                Confined::try_from(
+                    AsciiString::from_ascii(s.as_bytes())
+                        .expect("restricted character set mut be a valid ASCII chars"),
+                )
+                .expect("Ident requirements on sizing differs from generic"),
+            ))
+        })
     }
 }
 

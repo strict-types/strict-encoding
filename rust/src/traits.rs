@@ -107,7 +107,7 @@ pub trait TypedWrite: Sized {
         }
     }
 
-    /// Used by unicode strings, ASCII strings (excluding byte strings).
+    /// Used by unicode strings, ASCII strings and restricted char set strings.
     #[doc(hidden)]
     unsafe fn write_string<const MAX_LEN: usize>(
         self,
@@ -117,8 +117,7 @@ pub trait TypedWrite: Sized {
             ._write_raw::<MAX_LEN>(bytes)
     }
 
-    /// Vec and sets - excluding strings, written by [`Self::write_string`], but
-    /// including byte strings.
+    /// Vec and sets - excluding strings, written by [`Self::write_string`].
     #[doc(hidden)]
     unsafe fn write_collection<C: Collection, const MIN_LEN: usize, const MAX_LEN: usize>(
         mut self,

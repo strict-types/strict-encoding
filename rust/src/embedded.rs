@@ -33,9 +33,9 @@ use amplify::{Array, Wrapper};
 use crate::constants::*;
 use crate::stl::AsciiSym;
 use crate::{
-    DecodeError, DefineUnion, ReadTuple, ReadUnion, Sizing, StrictDecode, StrictDumb, StrictEncode,
-    StrictProduct, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, TypeName,
-    TypedRead, TypedWrite, WriteTuple, WriteUnion, LIB_EMBEDDED,
+    DecodeError, DefineUnion, ReadTuple, ReadUnion, RestrictedCharacter, RestrictedString, Sizing,
+    StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct, StrictSum, StrictTuple,
+    StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteTuple, WriteUnion, LIB_EMBEDDED,
 };
 
 #[derive(
@@ -381,6 +381,33 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
         let bytes = unsafe { reader.read_string::<MAX_LEN>()? };
         let s = AsciiString::from_ascii(bytes).map_err(|err| err.ascii_error())?;
         Confined::try_from(s).map_err(DecodeError::from)
+    }
+}
+
+impl<C: RestrictedCharacter, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
+    for RestrictedString<C, MIN_LEN, MAX_LEN>
+{
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
+    fn strict_name() -> Option<TypeName> { None }
+}
+impl<C: RestrictedCharacter, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
+    for RestrictedString<C, MIN_LEN, MAX_LEN>
+{
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        let sizing = Sizing::new(MIN_LEN as u64, MAX_LEN as u64);
+        unsafe {
+            writer
+                .register_list(&C::strict_dumb(), sizing)
+                .write_string::<MAX_LEN>(self.as_bytes())
+        }
+    }
+}
+impl<C: RestrictedCharacter, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
+    for RestrictedString<C, MIN_LEN, MAX_LEN>
+{
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let bytes = unsafe { reader.read_string::<MAX_LEN>()? };
+        RestrictedString::from_bytes(bytes)
     }
 }
 
