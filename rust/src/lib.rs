@@ -65,7 +65,7 @@ pub use error::{DecodeError, DeserializeError, SerializeError};
 pub use ident::{FieldName, Ident, InvalidIdent, LibName, TypeName, VariantName};
 pub use primitives::{constants, NumCls, NumInfo, NumSize, Primitive};
 pub use reader::StrictReader;
-pub use stl::{Bool, RestrictedCharacter, RestrictedString, U4};
+pub use stl::{Bool, RestrictedCharacter, RestrictedString, U4, U5};
 pub use traits::*;
 pub use types::*;
 pub use util::{Sizing, Variant};
