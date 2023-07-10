@@ -26,7 +26,7 @@ use std::marker::PhantomData;
 
 use amplify::ascii::AsciiChar;
 use amplify::confinement::Confined;
-use amplify::num::u4;
+use amplify::num::{u4, u5};
 
 use crate::{
     DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum, StrictType,
@@ -187,6 +187,94 @@ impl StrictDecode for u4 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         let v: U4 = reader.read_enum()?;
         Ok(u4::with(v as u8))
+    }
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+#[derive(StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[repr(u8)]
+pub enum U5 {
+    #[default]
+    #[strict_type(rename = "u5_0")]
+    _0 = 0,
+    #[strict_type(rename = "u5_1")]
+    _1,
+    #[strict_type(rename = "u5_2")]
+    _2,
+    #[strict_type(rename = "u5_3")]
+    _3,
+    #[strict_type(rename = "u5_4")]
+    _4,
+    #[strict_type(rename = "u5_5")]
+    _5,
+    #[strict_type(rename = "u5_6")]
+    _6,
+    #[strict_type(rename = "u5_7")]
+    _7,
+    #[strict_type(rename = "u5_8")]
+    _8,
+    #[strict_type(rename = "u5_9")]
+    _9,
+    #[strict_type(rename = "u5_10")]
+    _10,
+    #[strict_type(rename = "u5_11")]
+    _11,
+    #[strict_type(rename = "u5_12")]
+    _12,
+    #[strict_type(rename = "u5_13")]
+    _13,
+    #[strict_type(rename = "u5_14")]
+    _14,
+    #[strict_type(rename = "u5_15")]
+    _15,
+    #[strict_type(rename = "u5_16")]
+    _16,
+    #[strict_type(rename = "u5_17")]
+    _17,
+    #[strict_type(rename = "u5_18")]
+    _18,
+    #[strict_type(rename = "u5_19")]
+    _19,
+    #[strict_type(rename = "u5_20")]
+    _20,
+    #[strict_type(rename = "u5_21")]
+    _21,
+    #[strict_type(rename = "u5_22")]
+    _22,
+    #[strict_type(rename = "u5_23")]
+    _23,
+    #[strict_type(rename = "u5_24")]
+    _24,
+    #[strict_type(rename = "u5_25")]
+    _25,
+    #[strict_type(rename = "u5_26")]
+    _26,
+    #[strict_type(rename = "u5_27")]
+    _27,
+    #[strict_type(rename = "u5_28")]
+    _28,
+    #[strict_type(rename = "u5_29")]
+    _29,
+    #[strict_type(rename = "u5_30")]
+    _30,
+    #[strict_type(rename = "u5_31")]
+    _31,
+}
+
+impl StrictType for u5 {
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
+    fn strict_name() -> Option<TypeName> { Some(tn!("U5")) }
+}
+impl StrictEncode for u5 {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        writer.write_enum::<U5>(U5::try_from(self.to_u8()).expect("broken u5 types guarantees"))
+    }
+}
+impl StrictDecode for u5 {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let v: U5 = reader.read_enum()?;
+        Ok(u5::with(v as u8))
     }
 }
 
