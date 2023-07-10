@@ -140,37 +140,37 @@ impl StrictDecode for bool {
 #[repr(u8)]
 pub enum U4 {
     #[default]
-    #[strict_type(rename = "_0")]
+    #[strict_type(rename = "u4_0")]
     _0 = 0,
-    #[strict_type(rename = "_1")]
+    #[strict_type(rename = "u4_1")]
     _1,
-    #[strict_type(rename = "_2")]
+    #[strict_type(rename = "u4_2")]
     _2,
-    #[strict_type(rename = "_3")]
+    #[strict_type(rename = "u4_3")]
     _3,
-    #[strict_type(rename = "_4")]
+    #[strict_type(rename = "u4_4")]
     _4,
-    #[strict_type(rename = "_5")]
+    #[strict_type(rename = "u4_5")]
     _5,
-    #[strict_type(rename = "_6")]
+    #[strict_type(rename = "u4_6")]
     _6,
-    #[strict_type(rename = "_7")]
+    #[strict_type(rename = "u4_7")]
     _7,
-    #[strict_type(rename = "_8")]
+    #[strict_type(rename = "u4_8")]
     _8,
-    #[strict_type(rename = "_9")]
+    #[strict_type(rename = "u4_9")]
     _9,
-    #[strict_type(rename = "_10")]
+    #[strict_type(rename = "u4_10")]
     _10,
-    #[strict_type(rename = "_11")]
+    #[strict_type(rename = "u4_11")]
     _11,
-    #[strict_type(rename = "_12")]
+    #[strict_type(rename = "u4_12")]
     _12,
-    #[strict_type(rename = "_13")]
+    #[strict_type(rename = "u4_13")]
     _13,
-    #[strict_type(rename = "_14")]
+    #[strict_type(rename = "u4_14")]
     _14,
-    #[strict_type(rename = "_15")]
+    #[strict_type(rename = "u4_15")]
     _15,
 }
 
