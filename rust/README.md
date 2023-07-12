@@ -54,7 +54,7 @@ To use the library, you just need to reference a latest version, in
 `[dependencies]` section of your project `Cargo.toml`.
 
 ```toml
-strict_encoding = "1.3"
+strict_encoding = "2.5"
 ```
 
 If you are using other client-side-validation libraries, consider importing
