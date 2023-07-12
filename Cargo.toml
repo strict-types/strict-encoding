@@ -7,6 +7,6 @@ resolver = "2"
 authors = ["Dr Maxim Orlovsky <orlovsky@ubideco.org>"]
 homepage = "https://strict-types.org"
 repository = "https://github.com/strict-types/strict-encoding"
-rust-version = "1.66" # Due to GAT & map_last feature
+rust-version = "1.67" # Due to NonZero::BITS
 edition = "2021"
 license = "Apache-2.0"
