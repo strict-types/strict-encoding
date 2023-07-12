@@ -35,6 +35,9 @@ pub enum DecodeError {
     #[from]
     Confinement(confinement::Error),
 
+    /// non-zero natural number can't have a value equal to zero.
+    ZeroNatural,
+
     /// string data are not in valid UTF-8 encoding.\nDetails: {0}
     #[from]
     Utf8(std::string::FromUtf8Error),
