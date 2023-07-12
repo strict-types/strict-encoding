@@ -22,6 +22,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::hash::Hash;
 use std::io;
+use std::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8};
 
 use amplify::ascii::AsciiString;
 use amplify::confinement::Confined;
@@ -76,6 +77,30 @@ macro_rules! encode_num {
     };
 }
 
+macro_rules! encode_nonzero {
+    ($ty:ty, $p:ty, $id:ident) => {
+        impl $crate::StrictType for $ty {
+            const STRICT_LIB_NAME: &'static str = $crate::LIB_EMBEDDED;
+        }
+        impl $crate::StrictEncode for $ty {
+            fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+                unsafe {
+                    writer
+                        .register_primitive($id)
+                        ._write_raw_array(self.get().to_le_bytes())
+                }
+            }
+        }
+        impl $crate::StrictDecode for $ty {
+            fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+                let buf = unsafe { reader._read_raw_array::<{ Self::BITS as usize / 8 }>()? };
+                let v = <$p>::from_le_bytes(buf);
+                Self::new(v).ok_or(DecodeError::ZeroNatural)
+            }
+        }
+    };
+}
+
 macro_rules! encode_float {
     ($ty:ty, $len:literal, $id:ident) => {
         #[cfg(feature = "float")]
@@ -122,6 +147,12 @@ encode_num!(i128, I128);
 encode_num!(i256, I256);
 encode_num!(i512, I512);
 encode_num!(i1024, I1024);
+
+encode_nonzero!(NonZeroU8, u8, N8);
+encode_nonzero!(NonZeroU16, u16, N16);
+encode_nonzero!(NonZeroU32, u32, U32);
+encode_nonzero!(NonZeroU64, u64, U64);
+encode_nonzero!(NonZeroU128, u128, U128);
 
 encode_float!(ieee::Half, 2, F16);
 encode_float!(ieee::Single, 4, F32);
