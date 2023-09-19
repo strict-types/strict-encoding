@@ -345,16 +345,22 @@ impl<T: StrictDecode + Copy + StrictDumb, const LEN: usize> StrictDecode for [T;
     }
 }
 
-impl<T: StrictType + StrictDumb + Copy, const LEN: usize> StrictType for Array<T, LEN> {
+impl<T: StrictType + StrictDumb + Copy, const LEN: usize, const REVERSE_STR: bool> StrictType
+    for Array<T, LEN, REVERSE_STR>
+{
     const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
-impl<T: StrictEncode + StrictDumb + Copy, const LEN: usize> StrictEncode for Array<T, LEN> {
+impl<T: StrictEncode + StrictDumb + Copy, const LEN: usize, const REVERSE_STR: bool> StrictEncode
+    for Array<T, LEN, REVERSE_STR>
+{
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         self.as_inner().strict_encode(writer)
     }
 }
-impl<T: StrictDecode + StrictDumb + Copy, const LEN: usize> StrictDecode for Array<T, LEN> {
+impl<T: StrictDecode + StrictDumb + Copy, const LEN: usize, const REVERSE_STR: bool> StrictDecode
+    for Array<T, LEN, REVERSE_STR>
+{
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         <[T; LEN]>::strict_decode(reader).map(Self::from_inner)
     }
