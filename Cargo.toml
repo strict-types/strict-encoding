@@ -10,6 +10,3 @@ repository = "https://github.com/strict-types/strict-encoding"
 rust-version = "1.67" # Due to NonZero::BITS
 edition = "2021"
 license = "Apache-2.0"
-
-[patch.crates-io]
-amplify = { git = "https://github.com/rust-amplify/rust-amplify", branch = "feat/array-reverse" }
