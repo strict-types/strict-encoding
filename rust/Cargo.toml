@@ -22,7 +22,7 @@ serde_crate = { workspace = true, optional = true }
 [dev-dependencies]
 rand = "0.8.5"
 amplify = { workspace = true, features = ["proc_attr", "hex"] }
-strict_encoding_test = { version = "2.0.0-alpha.2", path = "./test_helpers" }
+strict_encoding_test = { version = "2.0.0", path = "./test_helpers" }
 
 [features]
 default = [
