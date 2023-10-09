@@ -15,7 +15,7 @@ exclude = ["derive", "test_helpers"]
 
 [dependencies]
 amplify = { workspace = true, features = ["proc_attr"] }
-strict_encoding_derive = { version = "2.0.0", path = "derive" }
+strict_encoding_derive = { version = "2.0.1", path = "derive" }
 half = { version = "~2.2.0", optional = true } # Required to maintain MSRV
 serde_crate = { workspace = true, optional = true }
 

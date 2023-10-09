@@ -509,7 +509,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_derive"
-version = "2.0.1"
+version = "2.0.0"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -524,7 +524,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_test"
-version = "2.0.0-alpha.2"
+version = "2.0.0"
 dependencies = [
  "amplify",
  "strict_encoding",

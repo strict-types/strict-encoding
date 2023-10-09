@@ -1,6 +1,6 @@
 [package]
 name = "strict_encoding_derive"
-version = "2.0.0"
+version = "2.0.1"
 description = "Strict encoding derivation macros"
 keywords = ["strict-encoding", "proc-macro"]
 categories = ["development-tools", "encoding"]
