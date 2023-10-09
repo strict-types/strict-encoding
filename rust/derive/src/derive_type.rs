@@ -58,6 +58,7 @@ impl StrictDerive {
                     let variant_name = variants.iter().map(|var| &var.name);
 
                     quote! {
+                        #[automatically_derived]
                         impl TryFrom<u8> for #type_name {
                             type Error = #trait_crate::VariantError<u8>;
                             fn try_from(value: u8) -> Result<Self, Self::Error> {
@@ -74,6 +75,7 @@ impl StrictDerive {
 
                 let impl_into_u8 = if enum_attr.into_u8 {
                     quote! {
+                        #[automatically_derived]
                         impl From<#type_name> for u8 {
                             #[inline]
                             fn from(value: #type_name) -> u8 {
