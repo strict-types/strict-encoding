@@ -435,7 +435,7 @@ impl StrictSum for AsciiSym {
     ];
     fn variant_name(&self) -> &'static str {
         Self::ALL_VARIANTS
-            .into_iter()
+            .iter()
             .find(|(s, _)| *s == self.as_byte())
             .map(|(_, v)| *v)
             .expect("missed ASCII character variant")
@@ -576,7 +576,7 @@ impl StrictSum for AsciiPrintable {
     ];
     fn variant_name(&self) -> &'static str {
         Self::ALL_VARIANTS
-            .into_iter()
+            .iter()
             .find(|(s, _)| *s == self.as_byte())
             .map(|(_, v)| *v)
             .expect("missed ASCII character variant")

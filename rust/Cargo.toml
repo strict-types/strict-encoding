@@ -14,15 +14,15 @@ readme = "README.md"
 exclude = ["derive", "test_helpers"]
 
 [dependencies]
-amplify = { version = "4.1.0", features = ["proc_attr"] }
+amplify = { workspace = true, features = ["proc_attr"] }
 strict_encoding_derive = { version = "2.0.0", path = "derive" }
 half = { version = "~2.2.0", optional = true } # Required to maintain MSRV
-serde_crate = { package = "serde", version = "1", features = ["derive"], optional = true }
+serde_crate = { workspace = true, optional = true }
 
 [dev-dependencies]
 rand = "0.8.5"
-amplify = { version = "4.1.0", features = ["proc_attr", "hex"] }
-strict_encoding_test = { version = "2.0.0-alpha.2", path = "./test_helpers" }
+amplify = { workspace = true, features = ["proc_attr", "hex"] }
+strict_encoding_test = { version = "2.0.0", path = "./test_helpers" }
 
 [features]
 default = [

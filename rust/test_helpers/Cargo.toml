@@ -1,6 +1,6 @@
 [package]
 name = "strict_encoding_test"
-version = "2.0.0-alpha.2"
+version = "2.0.0"
 description = "Helper functions for testing strict encodings"
 keywords = ["strict-encoding", "test-helpers"]
 categories = ["encoding", "parsing", "development-tools"]
@@ -15,5 +15,5 @@ readme = "../README.md"
 [lib]
 
 [dependencies]
-amplify = "4.0.0"
-strict_encoding = { version = "2.1.0", path = ".." }
+amplify = { workspace = true }
+strict_encoding = { version = "2.6.0", path = ".." }
