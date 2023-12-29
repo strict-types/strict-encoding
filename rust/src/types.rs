@@ -22,6 +22,7 @@
 use std::any;
 use std::collections::BTreeSet;
 use std::fmt::{Debug, Display};
+use std::marker::PhantomData;
 
 use crate::{FieldName, LibName, TypeName};
 
@@ -68,6 +69,10 @@ pub trait StrictType: Sized {
 
 impl<T: StrictType> StrictType for &T {
     const STRICT_LIB_NAME: &'static str = T::STRICT_LIB_NAME;
+}
+
+impl<T> StrictType for PhantomData<T> {
+    const STRICT_LIB_NAME: &'static str = "";
 }
 
 pub trait StrictProduct: StrictType + StrictDumb {}
