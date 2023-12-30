@@ -20,6 +20,7 @@
 // limitations under the License.
 
 use std::io::{BufRead, Seek};
+use std::marker::PhantomData;
 use std::{fs, io};
 
 use amplify::confinement::{Collection, Confined};
@@ -333,6 +334,14 @@ impl<T: StrictEncode> StrictEncode for &T {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         (*self).strict_encode(writer)
     }
+}
+
+impl<T> StrictEncode for PhantomData<T> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> { Ok(writer) }
+}
+
+impl<T> StrictDecode for PhantomData<T> {
+    fn strict_decode(_reader: &mut impl TypedRead) -> Result<Self, DecodeError> { Ok(default!()) }
 }
 
 pub trait StrictSerialize: StrictEncode {
