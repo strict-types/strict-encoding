@@ -341,7 +341,7 @@ impl<T> StrictEncode for PhantomData<T> {
 }
 
 impl<T> StrictDecode for PhantomData<T> {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> { Ok(default!()) }
+    fn strict_decode(_reader: &mut impl TypedRead) -> Result<Self, DecodeError> { Ok(default!()) }
 }
 
 pub trait StrictSerialize: StrictEncode {
