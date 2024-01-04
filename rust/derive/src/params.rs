@@ -232,7 +232,15 @@ impl TryFrom<ParametrizedAttr> for VariantAttr {
 impl VariantAttr {
     pub fn variant_name(&self, name: &Ident) -> LitStr {
         match self.rename {
-            None => LitStr::new(&name.to_string().to_lower_camel_case(), name.span()),
+            None => {
+                let mut camel_case = name.to_string().to_lower_camel_case();
+                if let Some(first) = camel_case.chars().next() {
+                    if !first.is_alphabetic() {
+                        camel_case = "_".to_owned() + &camel_case;
+                    }
+                }
+                LitStr::new(&camel_case, name.span())
+            }
             Some(ref name) => name.clone(),
         }
     }
