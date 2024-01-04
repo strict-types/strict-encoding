@@ -19,14 +19,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![allow(non_camel_case_types)]
+#![allow(non_camel_case_types, unused_imports)]
 
 use std::io;
 use std::marker::PhantomData;
 
 use amplify::ascii::AsciiChar;
 use amplify::confinement::Confined;
-use amplify::num::{u4, u5};
+use amplify::num::{u2, u3, u4, u5, u6, u7};
 
 use crate::{
     DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum, StrictType,
@@ -134,101 +134,63 @@ impl StrictDecode for bool {
     }
 }
 
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
-#[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
-#[repr(u8)]
-pub enum U4 {
-    #[default]
-    _0 = 0,
-    _1,
-    _2,
-    _3,
-    _4,
-    _5,
-    _6,
-    _7,
-    _8,
-    _9,
-    _10,
-    _11,
-    _12,
-    _13,
-    _14,
-    _15,
-}
+macro_rules! impl_u {
+    ($ty:ident, $inner:ty, $( $no:ident )+) => {
+        #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
+        #[derive(StrictType, StrictEncode, StrictDecode)]
+        #[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+        #[repr(u8)]
+        pub enum $ty {
+            #[default]
+            $( $no ),+
+        }
 
-impl StrictType for u4 {
-    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
-    fn strict_name() -> Option<TypeName> { Some(tn!("U4")) }
-}
-impl StrictEncode for u4 {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_enum::<U4>(U4::try_from(self.to_u8()).expect("broken u4 types guarantees"))
-    }
-}
-impl StrictDecode for u4 {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        let v: U4 = reader.read_enum()?;
-        Ok(u4::with(v as u8))
+        impl StrictType for $inner {
+            const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
+            fn strict_name() -> Option<TypeName> { Some(tn!(stringify!($ty))) }
+        }
+        impl StrictEncode for $inner {
+            fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+                writer.write_enum::<$ty>($ty::try_from(self.to_u8())
+                    .expect(concat!("broken", stringify!($inner), "type guarantees")))
+            }
+        }
+        impl StrictDecode for $inner {
+            fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+                let v: $ty = reader.read_enum()?;
+                Ok(<$inner>::with(v as u8))
+            }
+        }
     }
 }
 
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
-#[derive(StrictType, StrictEncode, StrictDecode)]
-#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
-#[repr(u8)]
-pub enum U5 {
-    #[default]
-    _0 = 0,
-    _1,
-    _2,
-    _3,
-    _4,
-    _5,
-    _6,
-    _7,
-    _8,
-    _9,
-    _10,
-    _11,
-    _12,
-    _13,
-    _14,
-    _15,
-    _16,
-    _17,
-    _18,
-    _19,
-    _20,
-    _21,
-    _22,
-    _23,
-    _24,
-    _25,
-    _26,
-    _27,
-    _28,
-    _29,
-    _30,
-    _31,
-}
-
-impl StrictType for u5 {
-    const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
-    fn strict_name() -> Option<TypeName> { Some(tn!("U5")) }
-}
-impl StrictEncode for u5 {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        writer.write_enum::<U5>(U5::try_from(self.to_u8()).expect("broken u5 types guarantees"))
-    }
-}
-impl StrictDecode for u5 {
-    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        let v: U5 = reader.read_enum()?;
-        Ok(u5::with(v as u8))
-    }
-}
+impl_u!(U2, u2, _0 _1 _2 _3);
+impl_u!(U3, u3, _0 _1 _2 _3 _4 _5 _6 _7);
+impl_u!(U4, u4, _0 _1 _2 _3 _4 _5 _6 _7 _8 _9 _10 _11 _12 _13 _14 _15);
+impl_u!(U5, u5, _0 _1 _2 _3 _4 _5 _6 _7 _8 _9 
+                _10 _11 _12 _13 _14 _15 _16 _17 _18 _19 
+                _20 _21 _22 _23 _24 _25 _26 _27 _28 _29
+                _30 _31);
+impl_u!(U6, u6, _0 _1 _2 _3 _4 _5 _6 _7 _8 _9 
+                _10 _11 _12 _13 _14 _15 _16 _17 _18 _19 
+                _20 _21 _22 _23 _24 _25 _26 _27 _28 _29
+                _30 _31 _32 _33 _34 _35 _36 _37 _38 _39
+                _40 _41 _42 _43 _44 _45 _46 _47 _48 _49
+                _50 _51 _52 _53 _54 _55 _56 _57 _58 _59
+                _60 _61 _62 _63);
+impl_u!(U7, u7, _0 _1 _2 _3 _4 _5 _6 _7 _8 _9 
+                _10 _11 _12 _13 _14 _15 _16 _17 _18 _19 
+                _20 _21 _22 _23 _24 _25 _26 _27 _28 _29
+                _30 _31 _32 _33 _34 _35 _36 _37 _38 _39
+                _40 _41 _42 _43 _44 _45 _46 _47 _48 _49
+                _50 _51 _52 _53 _54 _55 _56 _57 _58 _59
+                _60 _61 _62 _63 _64 _65 _66 _67 _68 _69
+                _70 _71 _72 _73 _74 _75 _76 _77 _78 _79
+                _80 _81 _82 _83 _84 _85 _86 _87 _88 _89
+                _90 _91 _92 _93 _94 _95 _96 _97 _98 _99
+                _100 _101 _102 _103 _104 _105 _106 _107 _108 _109
+                _110 _111 _112 _113 _114 _115 _116 _117 _118 _119
+                _120 _121 _122 _123 _124 _125 _126 _127);
 
 #[derive(Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, Debug)]
