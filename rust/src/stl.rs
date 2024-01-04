@@ -140,37 +140,21 @@ impl StrictDecode for bool {
 #[repr(u8)]
 pub enum U4 {
     #[default]
-    #[strict_type(rename = "u4_0")]
     _0 = 0,
-    #[strict_type(rename = "u4_1")]
     _1,
-    #[strict_type(rename = "u4_2")]
     _2,
-    #[strict_type(rename = "u4_3")]
     _3,
-    #[strict_type(rename = "u4_4")]
     _4,
-    #[strict_type(rename = "u4_5")]
     _5,
-    #[strict_type(rename = "u4_6")]
     _6,
-    #[strict_type(rename = "u4_7")]
     _7,
-    #[strict_type(rename = "u4_8")]
     _8,
-    #[strict_type(rename = "u4_9")]
     _9,
-    #[strict_type(rename = "u4_10")]
     _10,
-    #[strict_type(rename = "u4_11")]
     _11,
-    #[strict_type(rename = "u4_12")]
     _12,
-    #[strict_type(rename = "u4_13")]
     _13,
-    #[strict_type(rename = "u4_14")]
     _14,
-    #[strict_type(rename = "u4_15")]
     _15,
 }
 
@@ -196,69 +180,37 @@ impl StrictDecode for u4 {
 #[repr(u8)]
 pub enum U5 {
     #[default]
-    #[strict_type(rename = "u5_0")]
     _0 = 0,
-    #[strict_type(rename = "u5_1")]
     _1,
-    #[strict_type(rename = "u5_2")]
     _2,
-    #[strict_type(rename = "u5_3")]
     _3,
-    #[strict_type(rename = "u5_4")]
     _4,
-    #[strict_type(rename = "u5_5")]
     _5,
-    #[strict_type(rename = "u5_6")]
     _6,
-    #[strict_type(rename = "u5_7")]
     _7,
-    #[strict_type(rename = "u5_8")]
     _8,
-    #[strict_type(rename = "u5_9")]
     _9,
-    #[strict_type(rename = "u5_10")]
     _10,
-    #[strict_type(rename = "u5_11")]
     _11,
-    #[strict_type(rename = "u5_12")]
     _12,
-    #[strict_type(rename = "u5_13")]
     _13,
-    #[strict_type(rename = "u5_14")]
     _14,
-    #[strict_type(rename = "u5_15")]
     _15,
-    #[strict_type(rename = "u5_16")]
     _16,
-    #[strict_type(rename = "u5_17")]
     _17,
-    #[strict_type(rename = "u5_18")]
     _18,
-    #[strict_type(rename = "u5_19")]
     _19,
-    #[strict_type(rename = "u5_20")]
     _20,
-    #[strict_type(rename = "u5_21")]
     _21,
-    #[strict_type(rename = "u5_22")]
     _22,
-    #[strict_type(rename = "u5_23")]
     _23,
-    #[strict_type(rename = "u5_24")]
     _24,
-    #[strict_type(rename = "u5_25")]
     _25,
-    #[strict_type(rename = "u5_26")]
     _26,
-    #[strict_type(rename = "u5_27")]
     _27,
-    #[strict_type(rename = "u5_28")]
     _28,
-    #[strict_type(rename = "u5_29")]
     _29,
-    #[strict_type(rename = "u5_30")]
     _30,
-    #[strict_type(rename = "u5_31")]
     _31,
 }
 
