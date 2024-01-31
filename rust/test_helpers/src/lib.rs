@@ -553,9 +553,9 @@ pub fn test_object_encoding_roundtrip<T, const MAX: usize>(
 where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
     let ast_data = StrictWriter::in_memory(MAX);
     let encoded_object = object.strict_encode(ast_data)?.unbox();
-    let mut reader = StrictReader::in_memory(encoded_object, MAX);
+    let mut reader = StrictReader::in_memory::<MAX>(encoded_object);
     let decoded_object = T::strict_decode(&mut reader).map_err(|e| {
-        DataEncodingTestFailure::DecoderFailure(e, reader.clone().unbox().into_inner())
+        DataEncodingTestFailure::DecoderFailure(e, reader.clone().into_cursor().into_inner())
     })?;
     if &decoded_object != object {
         return Err(DataEncodingTestFailure::TranscodedObjectDiffersFromOriginal {
@@ -563,7 +563,7 @@ where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
             transcoded: decoded_object,
         });
     }
-    Ok(reader.unbox().into_inner())
+    Ok(reader.into_cursor().into_inner())
 }
 
 /// Test helper performing decode-eecode roundtrip for a provided test vector
@@ -603,12 +603,12 @@ pub fn test_vec_decoding_roundtrip<T, const MAX: usize>(
     test_vec: Vec<u8>,
 ) -> Result<T, DataEncodingTestFailure<T>>
 where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
-    let mut reader = StrictReader::in_memory(test_vec, MAX);
+    let mut reader = StrictReader::in_memory::<MAX>(test_vec);
     let decoded_object = T::strict_decode(&mut reader).map_err(|e| {
-        DataEncodingTestFailure::DecoderFailure(e, reader.clone().unbox().into_inner())
+        DataEncodingTestFailure::DecoderFailure(e, reader.clone().into_cursor().into_inner())
     })?;
     let encoded_object = test_object_encoding_roundtrip::<T, MAX>(&decoded_object)?;
-    let inner = reader.unbox().into_inner();
+    let inner = reader.into_cursor().into_inner();
     if inner != encoded_object {
         return Err(DataEncodingTestFailure::TranscodedVecDiffersFromOriginal {
             original: inner,

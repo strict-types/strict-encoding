@@ -27,7 +27,8 @@ use amplify::confinement::{Collection, Confined};
 use amplify::num::u24;
 use amplify::Wrapper;
 
-use super::{DecodeError, VariantName};
+use crate::reader::StreamReader;
+use super::{DecodeError, DecodeRawLe, VariantName};
 use crate::{
     DeserializeError, FieldName, Primitive, SerializeError, Sizing, StrictDumb, StrictEnum,
     StrictReader, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, StrictWriter,
@@ -138,12 +139,33 @@ pub trait TypedWrite: Sized {
     // TODO: Do `write_keyed_collection`
 }
 
-pub trait TypedRead: Sized {
+pub trait ReadRaw {
+    fn read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>>;
+
+    fn read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]>;
+
+    fn read_raw_len<const MAX_LEN: usize>(&mut self) -> Result<usize, DecodeError> {
+        Ok(match MAX_LEN {
+            tiny if tiny <= u8::MAX as usize => u8::decode_raw_le(self)? as usize,
+            small if small <= u16::MAX as usize => u16::decode_raw_le(self)? as usize,
+            medium if medium <= u24::MAX.into_usize() => u24::decode_raw_le(self)?.into_usize(),
+            large if large <= u32::MAX as usize => u32::decode_raw_le(self)? as usize,
+            huge if huge <= u64::MAX as usize => u64::decode_raw_le(self)? as usize,
+            _ => unreachable!("confined collections larger than u64::MAX must not exist"),
+        })
+    }
+}
+
+pub trait TypedRead {
     type TupleReader<'parent>: ReadTuple
     where Self: 'parent;
     type StructReader<'parent>: ReadStruct
     where Self: 'parent;
     type UnionReader: ReadUnion;
+    type RawReader: ReadRaw;
+
+    #[doc(hidden)]
+    unsafe fn raw_reader(&mut self) -> &mut Self::RawReader;
 
     fn read_union<T: StrictUnion>(
         &mut self,
@@ -175,27 +197,11 @@ pub trait TypedRead: Sized {
     }
 
     #[doc(hidden)]
-    unsafe fn _read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>>;
-
-    #[doc(hidden)]
-    unsafe fn _read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]>;
-
-    #[doc(hidden)]
-    unsafe fn _read_raw_len<const MAX_LEN: usize>(&mut self) -> Result<usize, DecodeError> {
-        Ok(match MAX_LEN {
-            tiny if tiny <= u8::MAX as usize => u8::strict_decode(self)? as usize,
-            small if small <= u16::MAX as usize => u16::strict_decode(self)? as usize,
-            medium if medium <= u24::MAX.into_usize() => u24::strict_decode(self)?.into_usize(),
-            large if large <= u32::MAX as usize => u32::strict_decode(self)? as usize,
-            huge if huge <= u64::MAX as usize => u64::strict_decode(self)? as usize,
-            _ => unreachable!("confined collections larger than u64::MAX must not exist"),
-        })
-    }
-
-    #[doc(hidden)]
     unsafe fn read_string<const MAX_LEN: usize>(&mut self) -> Result<Vec<u8>, DecodeError> {
-        let len = self._read_raw_len::<MAX_LEN>()?;
-        self._read_raw::<MAX_LEN>(len).map_err(DecodeError::from)
+        let len = self.raw_reader().read_raw_len::<MAX_LEN>()?;
+        self.raw_reader()
+            .read_raw::<MAX_LEN>(len)
+            .map_err(DecodeError::from)
     }
 }
 
@@ -328,8 +334,8 @@ pub trait StrictEncode: StrictType {
 
 pub trait StrictDecode: StrictType {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError>;
-    fn strict_read(lim: usize, reader: impl io::Read) -> Result<Self, DecodeError> {
-        let mut counter = StrictReader::with(lim, reader);
+    fn strict_read(reader: impl ReadRaw) -> Result<Self, DecodeError> {
+        let mut counter = StrictReader::with(reader);
         Self::strict_decode(&mut counter)
     }
 }
@@ -376,10 +382,9 @@ pub trait StrictDeserialize: StrictDecode {
     fn from_strict_serialized<const MAX: usize>(
         ast_data: Confined<Vec<u8>, 0, MAX>,
     ) -> Result<Self, DeserializeError> {
-        let cursor = io::Cursor::new(ast_data.into_inner());
-        let mut reader = StrictReader::with(MAX, cursor);
+        let mut reader = StrictReader::in_memory::<MAX>(ast_data);
         let me = Self::strict_decode(&mut reader)?;
-        let mut cursor = reader.unbox();
+        let mut cursor = reader.into_cursor();
         if !cursor.fill_buf()?.is_empty() {
             return Err(DeserializeError::DataNotEntirelyConsumed);
         }
@@ -390,9 +395,10 @@ pub trait StrictDeserialize: StrictDecode {
         path: impl AsRef<std::path::Path>,
     ) -> Result<Self, DeserializeError> {
         let file = fs::File::open(path)?;
-        let mut reader = StrictReader::with(MAX, file);
+        // TODO: Do FileReader
+        let mut reader = StrictReader::with(StreamReader::new::<MAX>(file));
         let me = Self::strict_decode(&mut reader)?;
-        let mut file = reader.unbox();
+        let mut file = reader.unbox().unconfine();
         if file.stream_position()? != file.seek(io::SeekFrom::End(0))? {
             return Err(DeserializeError::DataNotEntirelyConsumed);
         }

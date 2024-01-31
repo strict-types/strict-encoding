@@ -34,10 +34,15 @@ use amplify::{Array, Wrapper};
 use crate::constants::*;
 use crate::stl::AsciiSym;
 use crate::{
-    DecodeError, DefineUnion, ReadTuple, ReadUnion, RestrictedCharacter, RestrictedString, Sizing,
-    StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct, StrictSum, StrictTuple,
-    StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteTuple, WriteUnion, LIB_EMBEDDED,
+    DecodeError, DefineUnion, ReadRaw, ReadTuple, ReadUnion, RestrictedCharacter, RestrictedString,
+    Sizing, StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct, StrictSum,
+    StrictTuple, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteTuple, WriteUnion,
+    LIB_EMBEDDED,
 };
+
+pub trait DecodeRawLe: Sized {
+    fn decode_raw_le(reader: &mut (impl ReadRaw + ?Sized)) -> Result<Self, DecodeError>;
+}
 
 #[derive(
     Wrapper, WrapperMut, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default, From
@@ -68,10 +73,15 @@ macro_rules! encode_num {
                 }
             }
         }
+        impl $crate::DecodeRawLe for $ty {
+            fn decode_raw_le(reader: &mut (impl ReadRaw + ?Sized)) -> Result<Self, DecodeError> {
+                let buf = reader.read_raw_array::<{ Self::BITS as usize / 8 }>()?;
+                Ok(Self::from_le_bytes(buf))
+            }
+        }
         impl $crate::StrictDecode for $ty {
             fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-                let buf = unsafe { reader._read_raw_array::<{ Self::BITS as usize / 8 }>()? };
-                Ok(Self::from_le_bytes(buf))
+                Self::decode_raw_le(unsafe { reader.raw_reader() })
             }
         }
     };
@@ -93,7 +103,11 @@ macro_rules! encode_nonzero {
         }
         impl $crate::StrictDecode for $ty {
             fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-                let buf = unsafe { reader._read_raw_array::<{ Self::BITS as usize / 8 }>()? };
+                let buf = unsafe {
+                    reader
+                        .raw_reader()
+                        .read_raw_array::<{ Self::BITS as usize / 8 }>()?
+                };
                 let v = <$p>::from_le_bytes(buf);
                 Self::new(v).ok_or(DecodeError::ZeroNatural)
             }
@@ -120,7 +134,7 @@ macro_rules! encode_float {
             fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
                 const BYTES: usize = <$ty>::BITS / 8;
                 let mut inner = [0u8; 32];
-                let buf = unsafe { reader._read_raw_array::<BYTES>()? };
+                let buf = unsafe { reader.raw_reader().read_raw_array::<BYTES>()? };
                 inner[..BYTES].copy_from_slice(&buf[..]);
                 let bits = u256::from_le_bytes(inner);
                 Ok(Self::from_bits(bits))
@@ -474,7 +488,7 @@ impl<T: StrictDecode, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
     for Confined<Vec<T>, MIN_LEN, MAX_LEN>
 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        let len = unsafe { reader._read_raw_len::<MAX_LEN>()? };
+        let len = unsafe { reader.raw_reader().read_raw_len::<MAX_LEN>()? };
         let mut col = Vec::<T>::with_capacity(len);
         for _ in 0..len {
             col.push(StrictDecode::strict_decode(reader)?);
@@ -505,7 +519,7 @@ impl<T: StrictDecode + Ord, const MIN_LEN: usize, const MAX_LEN: usize> StrictDe
     for Confined<BTreeSet<T>, MIN_LEN, MAX_LEN>
 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        let len = unsafe { reader._read_raw_len::<MAX_LEN>()? };
+        let len = unsafe { reader.raw_reader().read_raw_len::<MAX_LEN>()? };
         let mut col = BTreeSet::<T>::new();
         for _ in 0..len {
             let item = StrictDecode::strict_decode(reader)?;
@@ -558,7 +572,7 @@ impl<
 > StrictDecode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-        let len = unsafe { reader._read_raw_len::<MAX_LEN>()? };
+        let len = unsafe { reader.raw_reader().read_raw_len::<MAX_LEN>()? };
         let mut col = BTreeMap::new();
         for _ in 0..len {
             let key = StrictDecode::strict_decode(reader)?;
