@@ -169,13 +169,20 @@ impl From<&'static str> for TypeName {
 impl TryFrom<String> for TypeName {
     type Error = InvalidIdent;
 
-    fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
+    fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
 
 impl Debug for TypeName {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_tuple("TypeName").field(&self.as_str()).finish()
     }
+}
+
+impl TypeName {
+    pub fn as_str(&self) -> &str { self.0.as_str() }
+    pub fn as_ident(&self) -> &Ident { &self.0 }
+    pub fn to_ident(&self) -> Ident { self.clone().into() }
+    pub fn into_ident(self) -> Ident { self.into() }
 }
 
 impl_strict_newtype!(TypeName, STRICT_TYPES_LIB);
@@ -197,7 +204,7 @@ impl From<&'static str> for FieldName {
 impl TryFrom<String> for FieldName {
     type Error = InvalidIdent;
 
-    fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
+    fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
 
 impl Debug for FieldName {
@@ -208,11 +215,47 @@ impl Debug for FieldName {
 
 impl FieldName {
     pub fn as_str(&self) -> &str { self.0.as_str() }
+    pub fn as_ident(&self) -> &Ident { &self.0 }
+    pub fn to_ident(&self) -> Ident { self.clone().into() }
+    pub fn into_ident(self) -> Ident { self.into() }
 }
 
 impl_strict_newtype!(FieldName, STRICT_TYPES_LIB);
 
-pub type VariantName = FieldName;
+#[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
+#[wrapper(Deref, Display, FromStr)]
+#[wrapper_mut(DerefMut)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(crate = "serde_crate", transparent)
+)]
+pub struct VariantName(Ident);
+
+impl From<&'static str> for VariantName {
+    fn from(ident: &'static str) -> Self { VariantName(Ident::from(ident)) }
+}
+
+impl TryFrom<String> for VariantName {
+    type Error = InvalidIdent;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
+}
+
+impl Debug for VariantName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("VariantName").field(&self.as_str()).finish()
+    }
+}
+
+impl VariantName {
+    pub fn as_str(&self) -> &str { self.0.as_str() }
+    pub fn as_ident(&self) -> &Ident { &self.0 }
+    pub fn to_ident(&self) -> Ident { self.clone().into() }
+    pub fn into_ident(self) -> Ident { self.into() }
+}
+
+impl_strict_newtype!(VariantName, STRICT_TYPES_LIB);
 
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, FromStr)]
@@ -231,13 +274,20 @@ impl From<&'static str> for LibName {
 impl TryFrom<String> for LibName {
     type Error = InvalidIdent;
 
-    fn try_from(s: String) -> Result<Self, Self::Error> { Ident::try_from(s).map(Self) }
+    fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
 
 impl Debug for LibName {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_tuple("LibName").field(&self.as_str()).finish()
     }
+}
+
+impl LibName {
+    pub fn as_str(&self) -> &str { self.0.as_str() }
+    pub fn as_ident(&self) -> &Ident { &self.0 }
+    pub fn to_ident(&self) -> Ident { self.clone().into() }
+    pub fn into_ident(self) -> Ident { self.into() }
 }
 
 impl_strict_newtype!(LibName, STRICT_TYPES_LIB);

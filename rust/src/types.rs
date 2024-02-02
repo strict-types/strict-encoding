@@ -24,7 +24,7 @@ use std::collections::BTreeSet;
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 
-use crate::{FieldName, LibName, TypeName};
+use crate::{FieldName, LibName, TypeName, VariantName};
 
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error)]
 #[display("unexpected variant {1} for enum or union {0:?}")]
@@ -155,7 +155,7 @@ pub trait StrictSum: StrictType {
         );
     }
 
-    fn variant_name_by_tag(tag: u8) -> Option<FieldName> {
+    fn variant_name_by_tag(tag: u8) -> Option<VariantName> {
         Self::ALL_VARIANTS
             .iter()
             .find(|(n, _)| *n == tag)
