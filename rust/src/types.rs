@@ -24,7 +24,7 @@ use std::collections::BTreeSet;
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 
-use crate::{FieldName, LibName, TypeName, VariantName};
+use crate::{LibName, TypeName, VariantName};
 
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error)]
 #[display("unexpected variant {1} for enum or union {0:?}")]
@@ -195,7 +195,7 @@ where
     Self: StrictSum + Copy + TryFrom<u8, Error = VariantError<u8>>,
     u8: From<Self>,
 {
-    fn from_variant_name(name: &FieldName) -> Result<Self, VariantError<&FieldName>> {
+    fn from_variant_name(name: &VariantName) -> Result<Self, VariantError<&VariantName>> {
         for (tag, n) in Self::ALL_VARIANTS {
             if *n == name.as_str() {
                 return Self::try_from(*tag).map_err(|_| VariantError(Self::strict_name(), name));
