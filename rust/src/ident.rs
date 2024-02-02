@@ -120,6 +120,12 @@ impl Debug for Ident {
     }
 }
 
+impl Ident {
+    pub fn from_uint(val: impl Into<u64>) -> Ident {
+        Self::try_from(format!("_{}", val.into())).expect("always a valid identifier")
+    }
+}
+
 impl StrictDumb for Ident {
     fn strict_dumb() -> Self { Self::from("Dumb") }
 }
