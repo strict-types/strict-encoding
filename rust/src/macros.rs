@@ -99,6 +99,16 @@ macro_rules! impl_strict_struct {
 }
 
 #[macro_export]
+macro_rules! ident {
+    ($name:literal) => {
+        $crate::Ident::from($name).into()
+    };
+    ($name:expr) => {
+        $crate::Ident::from($name).into()
+    };
+}
+
+#[macro_export]
 macro_rules! tn {
     ($name:literal) => {
         $crate::TypeName::from($name).into()
