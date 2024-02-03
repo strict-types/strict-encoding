@@ -143,7 +143,7 @@ where T: Clone + PartialEq + Debug
     /// Test case failure representing failed byte string representation of the
     /// encoded enum variant
     #[display(
-        "Enum variant `{enum_name}:{variant_name}` has incorrect encoding:
+        "Enum variant `{enum_name}.{variant_name}` has incorrect encoding:
         \tExpected: {expected:02x?}
         \tActual: {actual:02x?}
         "
