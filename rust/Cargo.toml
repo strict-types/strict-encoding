@@ -1,6 +1,6 @@
 [package]
 name = "strict_encoding"
-version = "2.6.2"
+version = "2.7.0"
 description = "Strict encoding: deterministic & confined binary serialization for strict types"
 keywords = ["strict-types", "gadt", "serialization", "serde", "protobuf"]
 categories = ["encoding", "parsing"]
@@ -15,14 +15,14 @@ exclude = ["derive", "test_helpers"]
 
 [dependencies]
 amplify = { workspace = true, features = ["proc_attr"] }
-strict_encoding_derive = { version = "2.0.1", path = "derive" }
+strict_encoding_derive = { version = "2.7.0", path = "derive" }
 half = { version = "~2.2.0", optional = true } # Required to maintain MSRV
 serde_crate = { workspace = true, optional = true }
 
 [dev-dependencies]
 rand = "0.8.5"
 amplify = { workspace = true, features = ["proc_attr", "hex"] }
-strict_encoding_test = { version = "2.0.0", path = "./test_helpers" }
+strict_encoding_test = { version = "2.7.0", path = "./test_helpers" }
 
 [features]
 default = [
