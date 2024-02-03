@@ -54,7 +54,7 @@ pub trait StrictType: Sized {
                 .unwrap_or(path)
         }
 
-        let name = any::type_name::<Self>();
+        let name = any::type_name::<Self>().replace('&', "");
         let mut ident = vec![];
         for mut arg in name.split([',', '<', '>', '(', ')']) {
             arg = arg.trim();
