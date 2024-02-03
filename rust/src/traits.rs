@@ -27,7 +27,7 @@ use amplify::confinement::{Collection, Confined};
 use amplify::num::u24;
 use amplify::Wrapper;
 
-use super::DecodeError;
+use super::{DecodeError, VariantName};
 use crate::{
     DeserializeError, FieldName, Primitive, SerializeError, Sizing, StrictDumb, StrictEnum,
     StrictReader, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, StrictWriter,
@@ -147,7 +147,7 @@ pub trait TypedRead: Sized {
 
     fn read_union<T: StrictUnion>(
         &mut self,
-        inner: impl FnOnce(FieldName, &mut Self::UnionReader) -> Result<T, DecodeError>,
+        inner: impl FnOnce(VariantName, &mut Self::UnionReader) -> Result<T, DecodeError>,
     ) -> Result<T, DecodeError>;
 
     fn read_enum<T: StrictEnum>(&mut self) -> Result<T, DecodeError>
@@ -234,13 +234,13 @@ pub trait ReadStruct {
 pub trait DefineEnum: Sized {
     type Parent: TypedWrite;
     type EnumWriter: WriteEnum<Parent = Self::Parent>;
-    fn define_variant(self, name: FieldName) -> Self;
+    fn define_variant(self, name: VariantName) -> Self;
     fn complete(self) -> Self::EnumWriter;
 }
 
 pub trait WriteEnum: Sized {
     type Parent: TypedWrite;
-    fn write_variant(self, name: FieldName) -> io::Result<Self>;
+    fn write_variant(self, name: VariantName) -> io::Result<Self>;
     fn complete(self) -> Self::Parent;
 }
 
@@ -250,14 +250,18 @@ pub trait DefineUnion: Sized {
     type StructDefiner: DefineStruct<Parent = Self>;
     type UnionWriter: WriteUnion<Parent = Self::Parent>;
 
-    fn define_unit(self, name: FieldName) -> Self;
-    fn define_newtype<T: StrictEncode + StrictDumb>(self, name: FieldName) -> Self {
+    fn define_unit(self, name: VariantName) -> Self;
+    fn define_newtype<T: StrictEncode + StrictDumb>(self, name: VariantName) -> Self {
         self.define_tuple(name, |definer| definer.define_field::<T>().complete())
     }
-    fn define_tuple(self, name: FieldName, inner: impl FnOnce(Self::TupleDefiner) -> Self) -> Self;
+    fn define_tuple(
+        self,
+        name: VariantName,
+        inner: impl FnOnce(Self::TupleDefiner) -> Self,
+    ) -> Self;
     fn define_struct(
         self,
-        name: FieldName,
+        name: VariantName,
         inner: impl FnOnce(Self::StructDefiner) -> Self,
     ) -> Self;
 
@@ -269,18 +273,18 @@ pub trait WriteUnion: Sized {
     type TupleWriter: WriteTuple<Parent = Self>;
     type StructWriter: WriteStruct<Parent = Self>;
 
-    fn write_unit(self, name: FieldName) -> io::Result<Self>;
-    fn write_newtype(self, name: FieldName, value: &impl StrictEncode) -> io::Result<Self> {
+    fn write_unit(self, name: VariantName) -> io::Result<Self>;
+    fn write_newtype(self, name: VariantName, value: &impl StrictEncode) -> io::Result<Self> {
         self.write_tuple(name, |writer| Ok(writer.write_field(value)?.complete()))
     }
     fn write_tuple(
         self,
-        name: FieldName,
+        name: VariantName,
         inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
     ) -> io::Result<Self>;
     fn write_struct(
         self,
-        name: FieldName,
+        name: VariantName,
         inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
     ) -> io::Result<Self>;
 
