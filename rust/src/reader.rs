@@ -96,6 +96,12 @@ impl<R: io::Read> StreamReader<R> {
     pub fn unconfine(self) -> R { self.0.unconfine() }
 }
 
+impl<T: AsRef<[u8]>> StreamReader<io::Cursor<T>> {
+    pub fn cursor<const MAX: usize>(inner: T) -> Self {
+        Self(ConfinedReader::with(MAX, io::Cursor::new(inner)))
+    }
+}
+
 impl<R: io::Read> ReadRaw for StreamReader<R> {
     fn read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>> {
         use io::Read;
