@@ -27,8 +27,8 @@ use amplify::confinement::{Collection, Confined};
 use amplify::num::u24;
 use amplify::Wrapper;
 
-use crate::reader::StreamReader;
 use super::{DecodeError, DecodeRawLe, VariantName};
+use crate::reader::StreamReader;
 use crate::{
     DeserializeError, FieldName, Primitive, SerializeError, Sizing, StrictDumb, StrictEnum,
     StrictReader, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, StrictWriter,
@@ -153,6 +153,16 @@ pub trait ReadRaw {
             huge if huge <= u64::MAX as usize => u64::decode_raw_le(self)? as usize,
             _ => unreachable!("confined collections larger than u64::MAX must not exist"),
         })
+    }
+}
+
+impl<T: ReadRaw> ReadRaw for &mut T {
+    fn read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>> {
+        (*self).read_raw::<MAX_LEN>(len)
+    }
+
+    fn read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]> {
+        (*self).read_raw_array::<LEN>()
     }
 }
 
