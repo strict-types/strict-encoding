@@ -551,8 +551,8 @@ pub fn test_object_encoding_roundtrip<T, const MAX: usize>(
     object: &T,
 ) -> Result<Vec<u8>, DataEncodingTestFailure<T>>
 where T: StrictEncode + StrictDecode + PartialEq + Clone + Debug {
-    let ast_data = StrictWriter::in_memory(MAX);
-    let encoded_object = object.strict_encode(ast_data)?.unbox();
+    let ast_data = StrictWriter::in_memory::<MAX>();
+    let encoded_object = object.strict_encode(ast_data)?.unbox().unconfine();
     let mut reader = StrictReader::in_memory::<MAX>(encoded_object);
     let decoded_object = T::strict_decode(&mut reader).map_err(|e| {
         DataEncodingTestFailure::DecoderFailure(e, reader.clone().into_cursor().into_inner())

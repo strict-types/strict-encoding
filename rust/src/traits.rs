@@ -29,6 +29,7 @@ use amplify::Wrapper;
 
 use super::{DecodeError, DecodeRawLe, VariantName};
 use crate::reader::StreamReader;
+use crate::writer::StreamWriter;
 use crate::{
     DeserializeError, FieldName, Primitive, SerializeError, Sizing, StrictDumb, StrictEnum,
     StrictReader, StrictStruct, StrictSum, StrictTuple, StrictType, StrictUnion, StrictWriter,
@@ -36,11 +37,40 @@ use crate::{
 
 pub trait TypedParent: Sized {}
 
+pub trait WriteRaw {
+    fn write_raw<const MAX_LEN: usize>(&mut self, bytes: impl AsRef<[u8]>) -> io::Result<()>;
+    fn write_raw_array<const LEN: usize>(&mut self, raw: [u8; LEN]) -> io::Result<()> {
+        self.write_raw::<LEN>(raw)
+    }
+    fn write_raw_len<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<()> {
+        match MAX_LEN {
+            tiny if tiny <= u8::MAX as usize => self.write_raw_array((len as u8).to_le_bytes()),
+            small if small <= u16::MAX as usize => self.write_raw_array((len as u16).to_le_bytes()),
+            medium if medium <= u24::MAX.into_usize() => {
+                self.write_raw_array((u24::with(len as u32)).to_le_bytes())
+            }
+            large if large <= u32::MAX as usize => self.write_raw_array((len as u32).to_le_bytes()),
+            huge if huge <= u64::MAX as usize => self.write_raw_array((len as u64).to_le_bytes()),
+            _ => unreachable!("confined collections larger than u64::MAX must not exist"),
+        }
+    }
+}
+
+impl<T: WriteRaw> WriteRaw for &mut T {
+    fn write_raw<const MAX_LEN: usize>(&mut self, bytes: impl AsRef<[u8]>) -> io::Result<()> {
+        (*self).write_raw::<MAX_LEN>(bytes)
+    }
+}
+
 #[allow(unused_variables)]
 pub trait TypedWrite: Sized {
     type TupleWriter: WriteTuple<Parent = Self>;
     type StructWriter: WriteStruct<Parent = Self>;
     type UnionDefiner: DefineUnion<Parent = Self>;
+    type RawWriter: WriteRaw;
+
+    #[doc(hidden)]
+    unsafe fn raw_writer(&mut self) -> &mut Self::RawWriter;
 
     fn write_union<T: StrictUnion>(
         self,
@@ -85,38 +115,16 @@ pub trait TypedWrite: Sized {
         self
     }
 
-    #[doc(hidden)]
-    unsafe fn _write_raw<const MAX_LEN: usize>(self, bytes: impl AsRef<[u8]>) -> io::Result<Self>;
-    #[doc(hidden)]
-    unsafe fn _write_raw_array<const LEN: usize>(self, raw: [u8; LEN]) -> io::Result<Self> {
-        self._write_raw::<LEN>(raw)
-    }
-    #[doc(hidden)]
-    unsafe fn _write_raw_len<const MAX_LEN: usize>(self, len: usize) -> io::Result<Self> {
-        match MAX_LEN {
-            tiny if tiny <= u8::MAX as usize => self._write_raw_array((len as u8).to_le_bytes()),
-            small if small <= u16::MAX as usize => {
-                self._write_raw_array((len as u16).to_le_bytes())
-            }
-            medium if medium <= u24::MAX.into_usize() => {
-                self._write_raw_array((u24::with(len as u32)).to_le_bytes())
-            }
-            large if large <= u32::MAX as usize => {
-                self._write_raw_array((len as u32).to_le_bytes())
-            }
-            huge if huge <= u64::MAX as usize => self._write_raw_array((len as u64).to_le_bytes()),
-            _ => unreachable!("confined collections larger than u64::MAX must not exist"),
-        }
-    }
-
     /// Used by unicode strings, ASCII strings and restricted char set strings.
     #[doc(hidden)]
     unsafe fn write_string<const MAX_LEN: usize>(
-        self,
+        mut self,
         bytes: impl AsRef<[u8]>,
     ) -> io::Result<Self> {
-        self._write_raw_len::<MAX_LEN>(bytes.as_ref().len())?
-            ._write_raw::<MAX_LEN>(bytes)
+        self.raw_writer()
+            .write_raw_len::<MAX_LEN>(bytes.as_ref().len())?;
+        self.raw_writer().write_raw::<MAX_LEN>(bytes)?;
+        Ok(self)
     }
 
     /// Vec and sets - excluding strings, written by [`Self::write_string`].
@@ -129,7 +137,7 @@ pub trait TypedWrite: Sized {
         for<'a> &'a C: IntoIterator,
         for<'a> <&'a C as IntoIterator>::Item: StrictEncode,
     {
-        self = self._write_raw_len::<MAX_LEN>(col.len())?;
+        self.raw_writer().write_raw_len::<MAX_LEN>(col.len())?;
         for item in col {
             self = item.strict_encode(self)?;
         }
@@ -336,17 +344,18 @@ pub trait ReadUnion: Sized {
 
 pub trait StrictEncode: StrictType {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W>;
-    fn strict_write(&self, lim: usize, writer: impl io::Write) -> io::Result<usize> {
-        let counter = StrictWriter::with(lim, writer);
-        Ok(self.strict_encode(counter)?.count())
+    fn strict_write(&self, writer: impl WriteRaw) -> io::Result<()> {
+        let w = StrictWriter::with(writer);
+        self.strict_encode(w)?;
+        Ok(())
     }
 }
 
 pub trait StrictDecode: StrictType {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError>;
     fn strict_read(reader: impl ReadRaw) -> Result<Self, DecodeError> {
-        let mut counter = StrictReader::with(reader);
-        Self::strict_decode(&mut counter)
+        let mut r = StrictReader::with(reader);
+        Self::strict_decode(&mut r)
     }
 }
 
@@ -367,14 +376,14 @@ impl<T> StrictDecode for PhantomData<T> {
 pub trait StrictSerialize: StrictEncode {
     fn strict_serialized_len(&self) -> io::Result<usize> {
         let counter = StrictWriter::counter();
-        Ok(self.strict_encode(counter)?.unbox().count)
+        Ok(self.strict_encode(counter)?.unbox().unconfine().count)
     }
 
     fn to_strict_serialized<const MAX: usize>(
         &self,
     ) -> Result<Confined<Vec<u8>, 0, MAX>, SerializeError> {
-        let ast_data = StrictWriter::in_memory(MAX);
-        let data = self.strict_encode(ast_data)?.unbox();
+        let ast_data = StrictWriter::in_memory::<MAX>();
+        let data = self.strict_encode(ast_data)?.unbox().unconfine();
         Confined::<Vec<u8>, 0, MAX>::try_from(data).map_err(SerializeError::from)
     }
 
@@ -382,7 +391,9 @@ pub trait StrictSerialize: StrictEncode {
         &self,
         path: impl AsRef<std::path::Path>,
     ) -> Result<(), SerializeError> {
-        let file = StrictWriter::with(MAX, fs::File::create(path)?);
+        let file = fs::File::create(path)?;
+        // TODO: Do FileReader
+        let file = StrictWriter::with(StreamWriter::new::<MAX>(file));
         self.strict_encode(file)?;
         Ok(())
     }

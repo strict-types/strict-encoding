@@ -29,8 +29,8 @@ use crate::{StrictDecode, StrictEncode, StrictReader, StrictWriter};
 pub fn encode<T: StrictEncode + Debug + Eq>(val: &T) -> Vec<u8> {
     const MAX: usize = u16::MAX as usize;
 
-    let ast_data = StrictWriter::in_memory(MAX);
-    let data = val.strict_encode(ast_data).unwrap().unbox();
+    let ast_data = StrictWriter::in_memory::<MAX>();
+    let data = val.strict_encode(ast_data).unwrap().unbox().unconfine();
     Confined::<Vec<u8>, 0, MAX>::try_from(data)
         .unwrap()
         .into_inner()

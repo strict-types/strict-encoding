@@ -123,19 +123,19 @@ pub struct StrictReader<R: ReadRaw>(R);
 
 impl<T: AsRef<[u8]>> StrictReader<StreamReader<io::Cursor<T>>> {
     pub fn in_memory<const MAX: usize>(data: T) -> Self {
-        StrictReader(StreamReader::new::<MAX>(io::Cursor::new(data)))
+        Self(StreamReader::new::<MAX>(io::Cursor::new(data)))
     }
     pub fn into_cursor(self) -> io::Cursor<T> { self.0.unconfine() }
 }
 
 impl StrictReader<StreamReader<ReadCounter>> {
     pub fn counter<const MAX: usize>() -> Self {
-        StrictReader(StreamReader::new::<MAX>(ReadCounter::default()))
+        Self(StreamReader::new::<MAX>(ReadCounter::default()))
     }
 }
 
 impl<R: ReadRaw> StrictReader<R> {
-    pub fn with(reader: R) -> Self { StrictReader(reader) }
+    pub fn with(reader: R) -> Self { Self(reader) }
 
     pub fn unbox(self) -> R { self.0 }
 }
