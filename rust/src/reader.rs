@@ -118,20 +118,27 @@ impl<R: io::Read> ReadRaw for StreamReader<R> {
     }
 }
 
+impl<T: AsRef<[u8]>> StreamReader<io::Cursor<T>> {
+    pub fn in_memory<const MAX: usize>(data: T) -> Self { Self::new::<MAX>(io::Cursor::new(data)) }
+    pub fn into_cursor(self) -> io::Cursor<T> { self.0.unconfine() }
+}
+
+impl StreamReader<ReadCounter> {
+    pub fn counter<const MAX: usize>() -> Self { Self::new::<MAX>(ReadCounter::default()) }
+}
+
 #[derive(Clone, Debug, From)]
 pub struct StrictReader<R: ReadRaw>(R);
 
 impl<T: AsRef<[u8]>> StrictReader<StreamReader<io::Cursor<T>>> {
     pub fn in_memory<const MAX: usize>(data: T) -> Self {
-        Self(StreamReader::new::<MAX>(io::Cursor::new(data)))
+        Self(StreamReader::in_memory::<MAX>(data))
     }
-    pub fn into_cursor(self) -> io::Cursor<T> { self.0.unconfine() }
+    pub fn into_cursor(self) -> io::Cursor<T> { self.0.into_cursor() }
 }
 
 impl StrictReader<StreamReader<ReadCounter>> {
-    pub fn counter<const MAX: usize>() -> Self {
-        Self(StreamReader::new::<MAX>(ReadCounter::default()))
-    }
+    pub fn counter<const MAX: usize>() -> Self { Self(StreamReader::counter::<MAX>()) }
 }
 
 impl<R: ReadRaw> StrictReader<R> {

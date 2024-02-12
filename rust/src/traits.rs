@@ -374,8 +374,8 @@ impl<T> StrictDecode for PhantomData<T> {
 }
 
 pub trait StrictSerialize: StrictEncode {
-    fn strict_serialized_len(&self) -> io::Result<usize> {
-        let counter = StrictWriter::counter();
+    fn strict_serialized_len<const MAX: usize>(&self) -> io::Result<usize> {
+        let counter = StrictWriter::counter::<MAX>();
         Ok(self.strict_encode(counter)?.unbox().unconfine().count)
     }
 

@@ -24,6 +24,7 @@ use std::io;
 use std::io::Sink;
 use std::marker::PhantomData;
 
+use amplify::confinement::U64 as U64MAX;
 use amplify::WriteCounter;
 
 use crate::{
@@ -92,19 +93,31 @@ impl<W: io::Write> WriteRaw for StreamWriter<W> {
     }
 }
 
+impl StreamWriter<Vec<u8>> {
+    pub fn in_memory<const MAX: usize>() -> Self { Self::new::<MAX>(vec![]) }
+}
+
+impl StreamWriter<WriteCounter> {
+    pub fn counter<const MAX: usize>() -> Self { Self::new::<MAX>(WriteCounter::default()) }
+}
+
+impl StreamWriter<Sink> {
+    pub fn sink<const MAX: usize>() -> Self { Self::new::<MAX>(Sink::default()) }
+}
+
 #[derive(Debug, From)]
 pub struct StrictWriter<W: WriteRaw>(W);
 
 impl StrictWriter<StreamWriter<Vec<u8>>> {
-    pub fn in_memory<const MAX: usize>() -> Self { Self(StreamWriter::new::<MAX>(vec![])) }
+    pub fn in_memory<const MAX: usize>() -> Self { Self(StreamWriter::in_memory::<MAX>()) }
 }
 
 impl StrictWriter<StreamWriter<WriteCounter>> {
-    pub fn counter() -> Self { Self(StreamWriter(ConfinedWriter::from(WriteCounter::default()))) }
+    pub fn counter<const MAX: usize>() -> Self { Self(StreamWriter::counter::<MAX>()) }
 }
 
 impl StrictWriter<StreamWriter<Sink>> {
-    pub fn sink() -> Self { Self(StreamWriter(ConfinedWriter::from(Sink::default()))) }
+    pub fn sink<const MAX: usize>() -> Self { Self(StreamWriter::sink::<MAX>()) }
 }
 
 impl<W: WriteRaw> StrictWriter<W> {
@@ -365,7 +378,7 @@ impl UnionWriter<StreamWriter<Sink>> {
             declared_variants: empty!(),
             declared_index: empty!(),
             defined_variant: empty!(),
-            parent: StrictWriter::sink(),
+            parent: StrictWriter::sink::<U64MAX>(),
             written: false,
             parent_ident: None,
         }
@@ -588,7 +601,7 @@ impl<W: WriteRaw> StrictParent<W> for UnionWriter<W> {
             declared_variants: self.declared_variants,
             declared_index: self.declared_index,
             defined_variant: self.defined_variant,
-            parent: StrictWriter::sink(),
+            parent: StrictWriter::sink::<U64MAX>(),
             written: self.written,
             parent_ident: self.parent_ident,
         };
