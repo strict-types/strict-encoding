@@ -7,10 +7,10 @@ resolver = "2"
 authors = ["Dr Maxim Orlovsky <orlovsky@ubideco.org>"]
 homepage = "https://strict-types.org"
 repository = "https://github.com/strict-types/strict-encoding"
-rust-version = "1.67" # Due to NonZero::BITS
+rust-version = "1.69.0" # Due to amplify crate
 edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-amplify = { version = "4.5.1" }
+amplify = { version = "4.6.0" }
 serde_crate = { package = "serde", version = "1", features = ["derive"] }

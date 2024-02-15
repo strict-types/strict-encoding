@@ -28,16 +28,15 @@ use amplify::ascii::AsciiString;
 use amplify::confinement::Confined;
 #[cfg(feature = "float")]
 use amplify::num::apfloat::{ieee, Float};
-use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
+use amplify::num::{i1024, i256, i512, u1024, u24, u256, u40, u48, u512, u56};
 use amplify::{Array, Wrapper};
 
-use crate::constants::*;
 use crate::stl::AsciiSym;
 use crate::{
-    DecodeError, DefineUnion, ReadRaw, ReadTuple, ReadUnion, RestrictedCharacter, RestrictedString,
-    Sizing, StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct, StrictSum,
-    StrictTuple, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteRaw, WriteTuple,
-    WriteUnion, LIB_EMBEDDED,
+    DecodeError, DefineUnion, Primitive, ReadRaw, ReadTuple, ReadUnion, RestrictedCharacter,
+    RestrictedString, Sizing, StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct,
+    StrictSum, StrictTuple, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteRaw,
+    WriteTuple, WriteUnion, LIB_EMBEDDED,
 };
 
 pub trait DecodeRawLe: Sized {
@@ -56,7 +55,7 @@ pub struct Byte(u8);
 impl StrictEncode for Byte {
     fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
         unsafe {
-            writer = writer.register_primitive(BYTE);
+            writer = writer.register_primitive(Primitive::BYTE);
             writer.raw_writer().write_raw::<1>([self.0])?;
         }
         Ok(writer)
@@ -71,7 +70,7 @@ macro_rules! encode_num {
         impl $crate::StrictEncode for $ty {
             fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
                 unsafe {
-                    writer = writer.register_primitive($id);
+                    writer = writer.register_primitive(Primitive::$id);
                     writer.raw_writer().write_raw_array(self.to_le_bytes())?;
                 }
                 Ok(writer)
@@ -99,7 +98,7 @@ macro_rules! encode_nonzero {
         impl $crate::StrictEncode for $ty {
             fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
                 unsafe {
-                    writer = writer.register_primitive($id);
+                    writer = writer.register_primitive(Primitive::$id);
                     writer
                         .raw_writer()
                         .write_raw_array(self.get().to_le_bytes())?;
@@ -133,7 +132,7 @@ macro_rules! encode_float {
                 let mut be = [0u8; $len];
                 be.copy_from_slice(&self.to_bits().to_le_bytes()[..$len]);
                 unsafe {
-                    writer = writer.register_primitive($id);
+                    writer = writer.register_primitive(Primitive::$id);
                     writer.raw_writer().write_raw_array(be)?;
                 }
                 Ok(writer)
@@ -157,6 +156,9 @@ encode_num!(u8, U8);
 encode_num!(u16, U16);
 encode_num!(u24, U24);
 encode_num!(u32, U32);
+encode_num!(u40, U40);
+encode_num!(u48, U48);
+encode_num!(u56, U56);
 encode_num!(u64, U64);
 encode_num!(u128, U128);
 encode_num!(u256, U256);
@@ -273,7 +275,7 @@ impl StrictType for () {
 }
 impl StrictEncode for () {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
-        Ok(unsafe { writer.register_primitive(UNIT) })
+        Ok(unsafe { writer.register_primitive(Primitive::UNIT) })
     }
 }
 impl StrictDecode for () {
