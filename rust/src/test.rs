@@ -20,7 +20,6 @@
 // limitations under the License.
 
 use std::fmt::Debug;
-use std::io;
 use std::io::BufRead;
 
 use amplify::confinement::Confined;
@@ -30,8 +29,8 @@ use crate::{StrictDecode, StrictEncode, StrictReader, StrictWriter};
 pub fn encode<T: StrictEncode + Debug + Eq>(val: &T) -> Vec<u8> {
     const MAX: usize = u16::MAX as usize;
 
-    let ast_data = StrictWriter::in_memory(MAX);
-    let data = val.strict_encode(ast_data).unwrap().unbox();
+    let ast_data = StrictWriter::in_memory::<MAX>();
+    let data = val.strict_encode(ast_data).unwrap().unbox().unconfine();
     Confined::<Vec<u8>, 0, MAX>::try_from(data)
         .unwrap()
         .into_inner()
@@ -40,10 +39,9 @@ pub fn encode<T: StrictEncode + Debug + Eq>(val: &T) -> Vec<u8> {
 pub fn decode<T: StrictDecode + Debug + Eq>(data: impl AsRef<[u8]>) -> T {
     const MAX: usize = u16::MAX as usize;
 
-    let cursor = io::Cursor::new(data);
-    let mut reader = StrictReader::with(MAX, cursor);
+    let mut reader = StrictReader::in_memory::<MAX>(data);
     let val2 = T::strict_decode(&mut reader).unwrap();
-    let mut cursor = reader.unbox();
+    let mut cursor = reader.into_cursor();
     assert!(!cursor.fill_buf().unwrap().is_empty(), "data not entirely consumed");
 
     val2

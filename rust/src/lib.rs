@@ -60,16 +60,18 @@ pub mod stl;
 #[cfg(test)]
 pub(crate) mod test;
 
-pub use embedded::Byte;
+pub use embedded::{Byte, DecodeRawLe};
 pub use error::{DecodeError, DeserializeError, SerializeError};
 pub use ident::{FieldName, Ident, InvalidIdent, LibName, TypeName, VariantName};
 pub use primitives::{constants, NumCls, NumInfo, NumSize, Primitive};
-pub use reader::StrictReader;
+pub use reader::{ConfinedReader, StreamReader, StrictReader};
 pub use stl::{Bool, RestrictedCharacter, RestrictedString, U4, U5};
 pub use traits::*;
 pub use types::*;
 pub use util::{Sizing, Variant};
-pub use writer::{SplitParent, StrictParent, StrictWriter, StructWriter, UnionWriter};
+pub use writer::{
+    SplitParent, StreamWriter, StrictParent, StrictWriter, StructWriter, UnionWriter,
+};
 
 #[deprecated(since = "2.2.0", note = "use LIB_EMBEDDED")]
 pub const NO_LIB: &str = LIB_EMBEDDED;
