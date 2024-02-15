@@ -63,7 +63,7 @@ pub(crate) mod test;
 pub use embedded::{Byte, DecodeRawLe};
 pub use error::{DecodeError, DeserializeError, SerializeError};
 pub use ident::{FieldName, Ident, InvalidIdent, LibName, TypeName, VariantName};
-pub use primitives::{constants, NumCls, NumInfo, NumSize, Primitive};
+pub use primitives::{NumCls, NumInfo, NumSize, Primitive};
 pub use reader::{ConfinedReader, StreamReader, StrictReader};
 pub use stl::{Bool, RestrictedCharacter, RestrictedString, U4, U5};
 pub use traits::*;

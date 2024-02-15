@@ -26,9 +26,11 @@ use amplify::Wrapper;
 
 use crate::STRICT_TYPES_LIB;
 
-pub mod constants {
-    use super::Primitive;
+#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+pub struct Primitive(u8);
 
+impl Primitive {
     pub const U8: Primitive = Primitive::unsigned(1);
     pub const U16: Primitive = Primitive::unsigned(2);
     pub const U24: Primitive = Primitive::unsigned(3);
@@ -128,14 +130,7 @@ pub mod constants {
     pub const FLOAT_RESERVED_52: Primitive = Primitive(0xFC);
     pub const FLOAT_RESERVED_53: Primitive = Primitive(0xFE);
     pub const FLOAT_RESERVED_54: Primitive = Primitive(0xFF);
-}
-use self::constants::*;
 
-#[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
-pub struct Primitive(u8);
-
-impl Primitive {
     pub const fn unsigned(bytes: u16) -> Self {
         Primitive(
             NumInfo {
@@ -187,10 +182,10 @@ impl Primitive {
 impl Display for Primitive {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match *self {
-            UNIT => return f.write_str("()"),
-            BYTE => return f.write_str("Byte"),
-            F16B => return f.write_str("F16b"),
-            RESERVED => unreachable!("reserved primitive value"),
+            Primitive::UNIT => return f.write_str("()"),
+            Primitive::BYTE => return f.write_str("Byte"),
+            Primitive::F16B => return f.write_str("F16b"),
+            Primitive::RESERVED => unreachable!("reserved primitive value"),
             _ => {}
         }
 
@@ -305,11 +300,11 @@ impl NumCls {
 
 #[cfg(test)]
 mod test {
-    use super::constants::U8;
+    use crate::Primitive;
 
     #[test]
     fn u8() {
-        let prim = U8;
+        let prim = Primitive::U8;
         assert_eq!(prim.byte_size(), 1);
     }
 }
