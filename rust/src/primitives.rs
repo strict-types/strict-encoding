@@ -35,7 +35,9 @@ impl Primitive {
     pub const U16: Primitive = Primitive::unsigned(2);
     pub const U24: Primitive = Primitive::unsigned(3);
     pub const U32: Primitive = Primitive::unsigned(4);
+    pub const U40: Primitive = Primitive::unsigned(5);
     pub const U48: Primitive = Primitive::unsigned(6);
+    pub const U56: Primitive = Primitive::unsigned(7);
     pub const U64: Primitive = Primitive::unsigned(8);
     pub const U128: Primitive = Primitive::unsigned(16);
     pub const U160: Primitive = Primitive::unsigned(20);
@@ -47,7 +49,9 @@ impl Primitive {
     pub const I16: Primitive = Primitive::signed(2);
     pub const I24: Primitive = Primitive::signed(3);
     pub const I32: Primitive = Primitive::signed(4);
+    pub const I40: Primitive = Primitive::signed(5);
     pub const I48: Primitive = Primitive::signed(6);
+    pub const I56: Primitive = Primitive::signed(7);
     pub const I64: Primitive = Primitive::signed(8);
     pub const I128: Primitive = Primitive::signed(16);
     pub const I256: Primitive = Primitive::signed(32);
