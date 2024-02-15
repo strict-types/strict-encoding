@@ -246,6 +246,8 @@ impl NumSize {
     pub(super) const fn from_code(id: u8) -> Self {
         let code = id & 0x1F;
         NumSize(match (id & 0x20) / 0x20 {
+            0 if id == Primitive::BYTE.0 => NumSizeInner::Bytes(1),
+            0 if id == Primitive::F16B.0 => NumSizeInner::Bytes(2),
             0 => NumSizeInner::Bytes(code),
             1 => NumSizeInner::Factored(code),
             _ => unreachable!(),
@@ -262,7 +264,7 @@ impl NumSize {
     pub const fn byte_size(self) -> u16 {
         match self.0 {
             NumSizeInner::Bytes(bytes) => bytes as u16,
-            NumSizeInner::Factored(factor) => 2 * (factor as u16 + 1),
+            NumSizeInner::Factored(factor) => 16 * (factor as u16 + 2),
         }
     }
 }
@@ -307,8 +309,63 @@ mod test {
     use crate::Primitive;
 
     #[test]
-    fn u8() {
-        let prim = Primitive::U8;
-        assert_eq!(prim.byte_size(), 1);
+    fn unsigned_byte_size() {
+        assert_eq!(Primitive::U8.byte_size(), 1);
+        assert_eq!(Primitive::U16.byte_size(), 2);
+        assert_eq!(Primitive::U24.byte_size(), 3);
+        assert_eq!(Primitive::U32.byte_size(), 4);
+        assert_eq!(Primitive::U40.byte_size(), 5);
+        assert_eq!(Primitive::U48.byte_size(), 6);
+        assert_eq!(Primitive::U56.byte_size(), 7);
+        assert_eq!(Primitive::U64.byte_size(), 8);
+        assert_eq!(Primitive::U128.byte_size(), 16);
+        assert_eq!(Primitive::U160.byte_size(), 20);
+        assert_eq!(Primitive::U256.byte_size(), 32);
+        assert_eq!(Primitive::U512.byte_size(), 64);
+        assert_eq!(Primitive::U1024.byte_size(), 128);
+    }
+
+    #[test]
+    fn signed_byte_size() {
+        assert_eq!(Primitive::I8.byte_size(), 1);
+        assert_eq!(Primitive::I16.byte_size(), 2);
+        assert_eq!(Primitive::I24.byte_size(), 3);
+        assert_eq!(Primitive::I32.byte_size(), 4);
+        assert_eq!(Primitive::I40.byte_size(), 5);
+        assert_eq!(Primitive::I48.byte_size(), 6);
+        assert_eq!(Primitive::I56.byte_size(), 7);
+        assert_eq!(Primitive::I64.byte_size(), 8);
+        assert_eq!(Primitive::I128.byte_size(), 16);
+        assert_eq!(Primitive::I256.byte_size(), 32);
+        assert_eq!(Primitive::I512.byte_size(), 64);
+        assert_eq!(Primitive::I1024.byte_size(), 128);
+    }
+
+    #[test]
+    fn nonzero_byte_size() {
+        assert_eq!(Primitive::N8.byte_size(), 1);
+        assert_eq!(Primitive::N16.byte_size(), 2);
+        assert_eq!(Primitive::N24.byte_size(), 3);
+        assert_eq!(Primitive::N32.byte_size(), 4);
+        assert_eq!(Primitive::N48.byte_size(), 6);
+        assert_eq!(Primitive::N64.byte_size(), 8);
+        assert_eq!(Primitive::N128.byte_size(), 16);
+    }
+
+    #[test]
+    fn float_byte_size() {
+        assert_eq!(Primitive::F16.byte_size(), 2);
+        assert_eq!(Primitive::F16B.byte_size(), 2);
+        assert_eq!(Primitive::F32.byte_size(), 4);
+        assert_eq!(Primitive::F64.byte_size(), 8);
+        assert_eq!(Primitive::F80.byte_size(), 10);
+        assert_eq!(Primitive::F128.byte_size(), 16);
+        assert_eq!(Primitive::F256.byte_size(), 32);
+    }
+
+    #[test]
+    fn spec_byte_size() {
+        assert_eq!(Primitive::UNIT.byte_size(), 0);
+        assert_eq!(Primitive::BYTE.byte_size(), 1);
     }
 }
