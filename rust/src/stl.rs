@@ -26,7 +26,7 @@ use std::marker::PhantomData;
 
 use amplify::ascii::AsciiChar;
 use amplify::confinement::Confined;
-use amplify::num::{u2, u3, u4, u5, u6, u7};
+use amplify::num::{u1, u2, u3, u4, u5, u6, u7};
 
 use crate::{
     DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum, StrictType,
@@ -164,6 +164,7 @@ macro_rules! impl_u {
     }
 }
 
+impl_u!(U1, u1, _0 _1);
 impl_u!(U2, u2, _0 _1 _2 _3);
 impl_u!(U3, u3, _0 _1 _2 _3 _4 _5 _6 _7);
 impl_u!(U4, u4, _0 _1 _2 _3 _4 _5 _6 _7 _8 _9 _10 _11 _12 _13 _14 _15);

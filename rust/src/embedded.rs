@@ -28,7 +28,7 @@ use amplify::ascii::AsciiString;
 use amplify::confinement::Confined;
 #[cfg(feature = "float")]
 use amplify::num::apfloat::{ieee, Float};
-use amplify::num::{i1024, i256, i512, u1024, u24, u256, u512};
+use amplify::num::{i1024, i256, i512, u1024, u24, u256, u40, u48, u512, u56};
 use amplify::{Array, Wrapper};
 
 use crate::stl::AsciiSym;
@@ -156,6 +156,9 @@ encode_num!(u8, U8);
 encode_num!(u16, U16);
 encode_num!(u24, U24);
 encode_num!(u32, U32);
+encode_num!(u40, U40);
+encode_num!(u48, U48);
+encode_num!(u56, U56);
 encode_num!(u64, U64);
 encode_num!(u128, U128);
 encode_num!(u256, U256);
