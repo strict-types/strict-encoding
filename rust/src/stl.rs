@@ -175,6 +175,12 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: u
     }
 }
 
+impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize>
+    From<RString<C, C1, MIN, MAX>> for String
+{
+    fn from(s: RString<C, C1, MIN, MAX>) -> Self { s.s.into_inner().into() }
+}
+
 impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize> Debug
     for RString<C, C1, MIN, MAX>
 {

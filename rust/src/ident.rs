@@ -31,6 +31,10 @@ use crate::{impl_strict_newtype, InvalidRString, RString, STRICT_TYPES_LIB};
 #[macro_export]
 macro_rules! impl_ident_type {
     ($ty:ty) => {
+        impl From<$ty> for String {
+            fn from(ident: $ty) -> String { ident.0.into() }
+        }
+
         impl From<&'static str> for $ty {
             fn from(ident: &'static str) -> Self { Self(RString::from(ident)) }
         }
