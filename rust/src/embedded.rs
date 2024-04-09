@@ -454,6 +454,18 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MA
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
+    StrictDumb for RString<C, C1, MIN_LEN, MAX_LEN>
+{
+    fn strict_dumb() -> Self {
+        Self::try_from(format!(
+            "{}{}",
+            C1::strict_dumb(),
+            String::from_utf8(vec![C::strict_dumb().into(); MIN_LEN]).expect("dumb")
+        ))
+        .expect("dumb")
+    }
+}
+impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
     StrictEncode for RString<C, C1, MIN_LEN, MAX_LEN>
 {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {

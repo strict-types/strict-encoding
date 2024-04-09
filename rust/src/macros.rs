@@ -101,17 +101,17 @@ macro_rules! impl_strict_struct {
 #[macro_export]
 macro_rules! ident {
     ($name:literal) => {
-        $crate::Ident::from($name).into()
+        $crate::Ident::from($name)
     };
     ($name:expr) => {
-        $crate::Ident::from($name).into()
+        $crate::Ident::from($name)
     };
 }
 
 #[macro_export]
 macro_rules! tn {
     ($name:literal) => {
-        $crate::TypeName::from($name).into()
+        $crate::TypeName::from($name)
     };
     ($name:expr) => {
         {
@@ -129,20 +129,20 @@ macro_rules! tn {
 #[macro_export]
 macro_rules! vname {
     ($name:literal) => {
-        $crate::VariantName::from($name).into()
+        $crate::VariantName::from($name)
     };
     ($name:expr) => {
-        $crate::VariantName::from($name).into()
+        $crate::VariantName::from($name)
     };
 }
 
 #[macro_export]
 macro_rules! fname {
     ($name:literal) => {
-        $crate::FieldName::from($name).into()
+        $crate::FieldName::from($name)
     };
     ($name:expr) => {
-        $crate::FieldName::from($name).into()
+        $crate::FieldName::from($name)
     };
 }
 

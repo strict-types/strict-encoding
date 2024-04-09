@@ -64,7 +64,7 @@ impl StrictDerive {
                             fn try_from(value: u8) -> Result<Self, Self::Error> {
                                 match value {
                                     #( x if x == Self::#variant_name as u8 => Ok(Self::#variant_name), )*
-                                    wrong => Err(#trait_crate::VariantError(#trait_crate::tn!(#type_name_str), wrong)),
+                                    wrong => Err(#trait_crate::VariantError(Some(#trait_crate::tn!(#type_name_str)), wrong)),
                                 }
                             }
                         }

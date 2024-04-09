@@ -49,6 +49,7 @@ extern crate serde_crate as serde;
 mod macros;
 mod types;
 mod traits;
+#[macro_use]
 mod ident;
 mod error;
 mod reader;

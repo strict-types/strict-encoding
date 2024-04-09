@@ -21,7 +21,7 @@
 
 #![allow(non_camel_case_types, unused_imports)]
 
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::str::FromStr;
@@ -65,7 +65,7 @@ impl<O> From<FromAsciiError<O>> for InvalidRString {
 }
 
 pub trait RestrictedCharSet:
-    Copy + Into<u8> + TryFrom<u8, Error = VariantError<u8>> + StrictEncode + StrictDumb
+    Copy + Into<u8> + TryFrom<u8, Error = VariantError<u8>> + Display + StrictEncode + StrictDumb
 {
 }
 
@@ -94,18 +94,6 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: u
     for RString<C, C1, MIN, MAX>
 {
     fn as_ref(&self) -> &[u8] { self.s.as_bytes() }
-}
-
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MAX: usize> Default
-    for RString<C, C1, 0, MAX>
-{
-    fn default() -> Self {
-        Self {
-            s: default!(),
-            first: Default::default(),
-            rest: Default::default(),
-        }
-    }
 }
 
 impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize> AsRef<str>
