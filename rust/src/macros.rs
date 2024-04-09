@@ -104,8 +104,12 @@ macro_rules! ident {
         $crate::Ident::from($name)
     };
     ($name:expr) => {
-        $crate::Ident::from($name)
+        $crate::Ident::try_from($name).expect("hardcoded parameter is not a valid identifier name")
     };
+    ($fmt:literal, $($arg:expr),+) => {{
+        $crate::Ident::try_from(format!($fmt, $($arg),+))
+            .unwrap_or_else(|_| panic!("invalid identifier from formatter"))
+    }};
 }
 
 #[macro_export]
@@ -114,16 +118,12 @@ macro_rules! tn {
         $crate::TypeName::from($name)
     };
     ($name:expr) => {
-        {
-            let name_copy = $name.clone();
-            $crate::TypeName::try_from($name)
-                .unwrap_or_else(|_| panic!("invalid type name `{name_copy}` from formatter"))
-                .into()
-        }
+        $crate::TypeName::try_from($name).expect("hardcoded parameter is not a valid type name")
     };
-    ($name:literal, $($arg:expr),+) => {
-        tn!(format!($name, $($arg),+))
-    };
+    ($name:literal, $($arg:expr),+) => {{
+        $crate::Ident::try_from(format!($fmt, $($arg),+))
+            .unwrap_or_else(|_| panic!("invalid type name from formatter"))
+    }};
 }
 
 #[macro_export]
@@ -132,7 +132,8 @@ macro_rules! vname {
         $crate::VariantName::from($name)
     };
     ($name:expr) => {
-        $crate::VariantName::from($name)
+        $crate::VariantName::try_from($name)
+            .expect("hardcoded parameter is not a valid variant name")
     };
 }
 
@@ -142,7 +143,7 @@ macro_rules! fname {
         $crate::FieldName::from($name)
     };
     ($name:expr) => {
-        $crate::FieldName::from($name)
+        $crate::FieldName::try_from($name).expect("hardcoded parameter is not a valid field name")
     };
 }
 
@@ -152,6 +153,6 @@ macro_rules! libname {
         $crate::LibName::from($name)
     };
     ($name:expr) => {
-        $crate::LibName::from($name)
+        $crate::LibName::try_from($name).expect("hardcoded parameter is not a valid library name")
     };
 }
