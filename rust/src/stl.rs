@@ -1706,6 +1706,8 @@ pub enum AlphaNumLodash {
     z = b'z',
 }
 
+impl RestrictedCharSet for AsciiPrintable {}
+impl RestrictedCharSet for AsciiSym {}
 impl RestrictedCharSet for Alpha {}
 impl RestrictedCharSet for AlphaLodash {}
 impl RestrictedCharSet for AlphaCaps {}
@@ -1716,3 +1718,6 @@ impl RestrictedCharSet for AlphaNum {}
 impl RestrictedCharSet for AlphaNumDash {}
 impl RestrictedCharSet for AlphaNumLodash {}
 impl RestrictedCharSet for AlphaCapsNum {}
+impl RestrictedCharSet for Dec {}
+impl RestrictedCharSet for HexDecCaps {}
+impl RestrictedCharSet for HexDecSmall {}

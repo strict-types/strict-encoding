@@ -25,7 +25,7 @@ use std::str::FromStr;
 use amplify::Wrapper;
 
 use crate::stl::{AlphaCapsLodash, AlphaLodash, AlphaNumLodash, AlphaSmallLodash};
-use crate::{impl_strict_newtype, InvalidRString, RString, STRICT_TYPES_LIB};
+use crate::{impl_strict_newtype, RString, STRICT_TYPES_LIB};
 
 pub const IDENT_MAX_LEN: usize = 100;
 
