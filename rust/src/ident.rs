@@ -22,40 +22,15 @@
 use std::fmt::{self, Debug, Formatter};
 use std::str::FromStr;
 
-use amplify::ascii::{AsAsciiStrError, AsciiChar, AsciiString, FromAsciiError};
+use amplify::ascii::AsciiString;
 use amplify::confinement::Confined;
-use amplify::{confinement, Wrapper};
+use amplify::Wrapper;
 
-use crate::stl::AlphaNumLodash;
+use crate::stl::{AlphaLodash, AlphaNumLodash};
 use crate::{
-    impl_strict_newtype, DecodeError, ReadTuple, RestrictedString, StrictDecode, StrictDumb,
+    impl_strict_newtype, DecodeError, InvalidRString, RString, ReadTuple, StrictDecode, StrictDumb,
     StrictEncode, StrictProduct, StrictTuple, StrictType, TypedRead, TypedWrite, STRICT_TYPES_LIB,
 };
-
-#[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
-#[display(doc_comments)]
-pub enum InvalidIdent {
-    /// ident must contain at least one character
-    Empty,
-
-    /// identifier name '{0}' must start with alphabetic character and not '{1}'
-    NonAlphabetic(AsciiString, AsciiChar),
-
-    /// identifier name '{0}' contains invalid character '{1}'
-    InvalidChar(AsciiString, AsciiChar),
-
-    #[from(AsAsciiStrError)]
-    /// identifier name contains non-ASCII character(s)
-    NonAsciiChar,
-
-    /// identifier name has invalid length
-    #[from]
-    Confinement(confinement::Error),
-}
-
-impl<O> From<FromAsciiError<O>> for InvalidIdent {
-    fn from(_: FromAsciiError<O>) -> Self { InvalidIdent::NonAsciiChar }
-}
 
 /// Identifier (field or type name).
 #[derive(Wrapper, WrapperMut, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
@@ -69,7 +44,7 @@ impl<O> From<FromAsciiError<O>> for InvalidIdent {
 pub struct Ident(Confined<AsciiString, 1, 100>);
 
 impl FromStr for Ident {
-    type Err = InvalidIdent;
+    type Err = InvalidRString;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s = AsciiString::from_ascii(s.as_bytes())?;
@@ -82,7 +57,7 @@ impl From<&'static str> for Ident {
 }
 
 impl TryFrom<String> for Ident {
-    type Error = InvalidIdent;
+    type Error = InvalidRString;
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
         let s = AsciiString::from_ascii(s.as_bytes())?;
@@ -91,15 +66,15 @@ impl TryFrom<String> for Ident {
 }
 
 impl TryFrom<AsciiString> for Ident {
-    type Error = InvalidIdent;
+    type Error = InvalidRString;
 
-    fn try_from(ascii: AsciiString) -> Result<Self, InvalidIdent> {
+    fn try_from(ascii: AsciiString) -> Result<Self, InvalidRString> {
         if ascii.is_empty() {
-            return Err(InvalidIdent::Empty);
+            return Err(InvalidRString::Empty);
         }
         let first = ascii[0];
         if !first.is_alphabetic() && first != '_' {
-            return Err(InvalidIdent::NonAlphabetic(ascii.clone(), first));
+            return Err(InvalidRString::DisallowedFirst(ascii.clone(), first));
         }
         if let Some(ch) = ascii
             .as_slice()
@@ -107,7 +82,7 @@ impl TryFrom<AsciiString> for Ident {
             .copied()
             .find(|ch| !ch.is_ascii_alphanumeric() && *ch != '_')
         {
-            return Err(InvalidIdent::InvalidChar(ascii.clone(), ch));
+            return Err(InvalidRString::InvalidChar(ascii.clone(), ch));
         }
         let s = Confined::try_from(ascii)?;
         Ok(Self(s))
@@ -138,7 +113,7 @@ impl StrictTuple for Ident {
 }
 impl StrictEncode for Ident {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> std::io::Result<W> {
-        let s = RestrictedString::<AlphaNumLodash, 1, 100>::from_bytes(self.0.as_bytes())
+        let s = RString::<AlphaLodash, AlphaNumLodash, 1, 100>::try_from(self.0.as_bytes())
             .expect("invalid Ident value when invariant is expected");
         writer.write_newtype::<Self>(&s)
     }
@@ -146,7 +121,7 @@ impl StrictEncode for Ident {
 impl StrictDecode for Ident {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         reader.read_tuple(|r| {
-            let s: RestrictedString<AlphaNumLodash, 1, 100> = r.read_field()?;
+            let s: RString<AlphaLodash, AlphaNumLodash, 1, 100> = r.read_field()?;
             Ok(Self(
                 Confined::try_from(
                     AsciiString::from_ascii(s.as_bytes())
@@ -173,7 +148,7 @@ impl From<&'static str> for TypeName {
 }
 
 impl TryFrom<String> for TypeName {
-    type Error = InvalidIdent;
+    type Error = InvalidRString;
 
     fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
@@ -208,7 +183,7 @@ impl From<&'static str> for FieldName {
 }
 
 impl TryFrom<String> for FieldName {
-    type Error = InvalidIdent;
+    type Error = InvalidRString;
 
     fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
@@ -243,7 +218,7 @@ impl From<&'static str> for VariantName {
 }
 
 impl TryFrom<String> for VariantName {
-    type Error = InvalidIdent;
+    type Error = InvalidRString;
 
     fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
@@ -278,7 +253,7 @@ impl From<&'static str> for LibName {
 }
 
 impl TryFrom<String> for LibName {
-    type Error = InvalidIdent;
+    type Error = InvalidRString;
 
     fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
 }
