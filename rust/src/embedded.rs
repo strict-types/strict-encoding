@@ -66,6 +66,7 @@ macro_rules! encode_num {
     ($ty:ty, $id:ident) => {
         impl $crate::StrictType for $ty {
             const STRICT_LIB_NAME: &'static str = $crate::LIB_EMBEDDED;
+            fn strict_name() -> Option<TypeName> { Some(tn!(stringify!($id))) }
         }
         impl $crate::StrictEncode for $ty {
             fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
@@ -94,6 +95,7 @@ macro_rules! encode_nonzero {
     ($ty:ty, $p:ty, $id:ident) => {
         impl $crate::StrictType for $ty {
             const STRICT_LIB_NAME: &'static str = $crate::LIB_EMBEDDED;
+            fn strict_name() -> Option<TypeName> { Some(tn!(stringify!($id))) }
         }
         impl $crate::StrictEncode for $ty {
             fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
@@ -125,6 +127,7 @@ macro_rules! encode_float {
         #[cfg(feature = "float")]
         impl $crate::StrictType for $ty {
             const STRICT_LIB_NAME: &'static str = $crate::LIB_EMBEDDED;
+            fn strict_name() -> Option<TypeName> { Some(tn!(stringify!($id))) }
         }
         #[cfg(feature = "float")]
         impl $crate::StrictEncode for $ty {

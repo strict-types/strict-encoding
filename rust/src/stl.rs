@@ -73,8 +73,8 @@ pub trait RestrictedCharSet:
 #[display("{s}")]
 #[cfg_attr(feature = "serde", derive(Serialize), serde(crate = "serde_crate", transparent))]
 pub struct RString<
-    C: RestrictedCharSet,
-    C1: RestrictedCharSet = C,
+    C1: RestrictedCharSet,
+    C: RestrictedCharSet = C1,
     const MIN: usize = 0,
     const MAX: usize = 255,
 > {
@@ -83,36 +83,36 @@ pub struct RString<
     rest: PhantomData<C>,
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize> Deref
-    for RString<C, C1, MIN, MAX>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> Deref
+    for RString<C1, C, MIN, MAX>
 {
     type Target = AsciiString;
     fn deref(&self) -> &Self::Target { self.s.as_inner() }
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize> AsRef<[u8]>
-    for RString<C, C1, MIN, MAX>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> AsRef<[u8]>
+    for RString<C1, C, MIN, MAX>
 {
     fn as_ref(&self) -> &[u8] { self.s.as_bytes() }
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize> AsRef<str>
-    for RString<C, C1, MIN, MAX>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> AsRef<str>
+    for RString<C1, C, MIN, MAX>
 {
     #[inline]
     fn as_ref(&self) -> &str { self.s.as_str() }
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize> FromStr
-    for RString<C, C1, MIN, MAX>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> FromStr
+    for RString<C1, C, MIN, MAX>
 {
     type Err = InvalidRString;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> { Self::try_from(s.as_bytes()) }
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize>
-    From<&'static str> for RString<C, C1, MIN, MAX>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+    From<&'static str> for RString<C1, C, MIN, MAX>
 {
     /// # Safety
     ///
@@ -123,32 +123,32 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: u
     }
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize>
-    TryFrom<String> for RString<C, C1, MIN, MAX>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+    TryFrom<String> for RString<C1, C, MIN, MAX>
 {
     type Error = InvalidRString;
 
     fn try_from(s: String) -> Result<Self, Self::Error> { Self::try_from(s.as_bytes()) }
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize>
-    TryFrom<AsciiString> for RString<C, C1, MIN, MAX>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+    TryFrom<AsciiString> for RString<C1, C, MIN, MAX>
 {
     type Error = InvalidRString;
 
     fn try_from(ascii: AsciiString) -> Result<Self, InvalidRString> { ascii.as_bytes().try_into() }
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize>
-    TryFrom<Vec<u8>> for RString<C, C1, MIN, MAX>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+    TryFrom<Vec<u8>> for RString<C1, C, MIN, MAX>
 {
     type Error = InvalidRString;
 
     fn try_from(vec: Vec<u8>) -> Result<Self, InvalidRString> { vec.as_slice().try_into() }
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize> TryFrom<&[u8]>
-    for RString<C, C1, MIN, MAX>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> TryFrom<&[u8]>
+    for RString<C1, C, MIN, MAX>
 {
     type Error = InvalidRString;
 
@@ -175,18 +175,18 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: u
     }
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize>
-    From<RString<C, C1, MIN, MAX>> for String
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+    From<RString<C1, C, MIN, MAX>> for String
 {
-    fn from(s: RString<C, C1, MIN, MAX>) -> Self { s.s.into_inner().into() }
+    fn from(s: RString<C1, C, MIN, MAX>) -> Self { s.s.into_inner().into() }
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize> Debug
-    for RString<C, C1, MIN, MAX>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> Debug
+    for RString<C1, C, MIN, MAX>
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let c = any::type_name::<C>();
-        let c1 = any::type_name::<C1>();
+        let c1 = any::type_name::<C>();
         let c = if c == c1 {
             c.to_owned()
         } else {
@@ -205,8 +205,8 @@ mod _serde {
 
     use super::*;
 
-    impl<'de, C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize>
-        Deserialize<'de> for RString<C, C1, MIN, MAX>
+    impl<'de, C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+        Deserialize<'de> for RString<C1, C, MIN, MAX>
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer<'de> {
@@ -339,7 +339,7 @@ impl TryFrom<u8> for AsciiSym {
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         AsciiChar::from_ascii(value)
-            .map_err(|_| VariantError(AsciiSym::strict_name(), value))
+            .map_err(|_| VariantError::with::<AsciiSym>(value))
             .map(Self)
     }
 }
@@ -512,7 +512,7 @@ impl TryFrom<u8> for AsciiPrintable {
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         AsciiChar::from_ascii(value)
-            .map_err(|_| VariantError(AsciiPrintable::strict_name(), value))
+            .map_err(|_| VariantError::with::<AsciiPrintable>(value))
             .map(Self)
     }
 }
@@ -700,9 +700,134 @@ pub enum AlphaCaps {
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[display(inner)]
+#[repr(u8)]
+pub enum AlphaCapsLodash {
+    #[strict_type(rename = "A")]
+    A = b'A',
+    #[strict_type(rename = "B")]
+    B = b'B',
+    #[strict_type(rename = "C")]
+    C = b'C',
+    #[strict_type(rename = "D")]
+    D = b'D',
+    #[strict_type(rename = "E")]
+    E = b'E',
+    #[strict_type(rename = "F")]
+    F = b'F',
+    #[strict_type(rename = "G")]
+    G = b'G',
+    #[strict_type(rename = "H")]
+    H = b'H',
+    #[strict_type(rename = "I")]
+    I = b'I',
+    #[strict_type(rename = "J")]
+    J = b'J',
+    #[strict_type(rename = "K")]
+    K = b'K',
+    #[strict_type(rename = "L")]
+    L = b'L',
+    #[strict_type(rename = "M")]
+    M = b'M',
+    #[strict_type(rename = "N")]
+    N = b'N',
+    #[strict_type(rename = "O")]
+    O = b'O',
+    #[strict_type(rename = "P")]
+    P = b'P',
+    #[strict_type(rename = "Q")]
+    Q = b'Q',
+    #[strict_type(rename = "R")]
+    R = b'R',
+    #[strict_type(rename = "S")]
+    S = b'S',
+    #[strict_type(rename = "T")]
+    T = b'T',
+    #[strict_type(rename = "U")]
+    U = b'U',
+    #[strict_type(rename = "V")]
+    V = b'V',
+    #[strict_type(rename = "W")]
+    W = b'W',
+    #[strict_type(rename = "X")]
+    X = b'X',
+    #[strict_type(rename = "Y")]
+    Y = b'Y',
+    #[strict_type(rename = "Z")]
+    Z = b'Z',
+    #[strict_type(dumb)]
+    #[display("_")]
+    Lodash = b'_',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
 pub enum AlphaSmall {
     #[strict_type(dumb)]
+    #[display("a")]
+    A = b'a',
+    #[display("b")]
+    B = b'b',
+    #[display("c")]
+    C = b'c',
+    #[display("d")]
+    D = b'd',
+    #[display("e")]
+    E = b'e',
+    #[display("f")]
+    F = b'f',
+    #[display("g")]
+    G = b'g',
+    #[display("h")]
+    H = b'h',
+    #[display("i")]
+    I = b'i',
+    #[display("j")]
+    J = b'j',
+    #[display("k")]
+    K = b'k',
+    #[display("l")]
+    L = b'l',
+    #[display("m")]
+    M = b'm',
+    #[display("n")]
+    N = b'n',
+    #[display("o")]
+    O = b'o',
+    #[display("p")]
+    P = b'p',
+    #[display("q")]
+    Q = b'q',
+    #[display("r")]
+    R = b'r',
+    #[display("s")]
+    S = b's',
+    #[display("t")]
+    T = b't',
+    #[display("u")]
+    U = b'u',
+    #[display("v")]
+    V = b'v',
+    #[display("w")]
+    W = b'w',
+    #[display("x")]
+    X = b'x',
+    #[display("y")]
+    Y = b'y',
+    #[display("z")]
+    Z = b'z',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[repr(u8)]
+pub enum AlphaSmallLodash {
+    #[strict_type(dumb)]
+    #[display("_")]
+    Lodash = b'_',
     #[display("a")]
     A = b'a',
     #[display("b")]
@@ -1577,9 +1702,11 @@ pub enum AlphaNumLodash {
 }
 
 impl RestrictedCharSet for Alpha {}
-impl RestrictedCharSet for AlphaCaps {}
-impl RestrictedCharSet for AlphaSmall {}
 impl RestrictedCharSet for AlphaLodash {}
+impl RestrictedCharSet for AlphaCaps {}
+impl RestrictedCharSet for AlphaCapsLodash {}
+impl RestrictedCharSet for AlphaSmall {}
+impl RestrictedCharSet for AlphaSmallLodash {}
 impl RestrictedCharSet for AlphaNum {}
 impl RestrictedCharSet for AlphaNumDash {}
 impl RestrictedCharSet for AlphaNumLodash {}

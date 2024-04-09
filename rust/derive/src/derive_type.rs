@@ -22,9 +22,9 @@
 use amplify_syn::{
     DataInner, DeriveInner, EnumKind, Field, FieldKind, Fields, Items, NamedField, Variant,
 };
-use proc_macro2::{Span, TokenStream as TokenStream2};
+use proc_macro2::TokenStream as TokenStream2;
 use quote::ToTokens;
-use syn::{LitStr, Result};
+use syn::Result;
 
 use crate::params::{EnumAttr, FieldAttr, StrictDerive, VariantAttr, VariantTags};
 
@@ -54,7 +54,6 @@ impl StrictDerive {
                 let enum_attr = EnumAttr::with(self.data.attr.clone(), variants.enum_kind())?;
 
                 let impl_try_from_u8 = if enum_attr.try_from_u8 {
-                    let type_name_str = LitStr::new(&type_name.to_string(), Span::call_site());
                     let variant_name = variants.iter().map(|var| &var.name);
 
                     quote! {
@@ -64,7 +63,7 @@ impl StrictDerive {
                             fn try_from(value: u8) -> Result<Self, Self::Error> {
                                 match value {
                                     #( x if x == Self::#variant_name as u8 => Ok(Self::#variant_name), )*
-                                    wrong => Err(#trait_crate::VariantError(Some(#trait_crate::tn!(#type_name_str)), wrong)),
+                                    wrong => Err(#trait_crate::VariantError::with::<Self>(wrong)),
                                 }
                             }
                         }

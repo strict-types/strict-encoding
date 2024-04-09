@@ -25,7 +25,7 @@ use std::str::FromStr;
 
 use amplify::Wrapper;
 
-use crate::stl::{AlphaCaps, AlphaLodash, AlphaNumLodash, AlphaSmall};
+use crate::stl::{AlphaCapsLodash, AlphaLodash, AlphaNumLodash, AlphaSmallLodash};
 use crate::{impl_strict_newtype, InvalidRString, RString, STRICT_TYPES_LIB};
 
 #[macro_export]
@@ -94,7 +94,7 @@ impl_strict_newtype!(Ident, STRICT_TYPES_LIB);
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct TypeName(RString<AlphaCaps, AlphaNumLodash, 1, 100>);
+pub struct TypeName(RString<AlphaCapsLodash, AlphaNumLodash, 1, 100>);
 
 impl_ident_type!(TypeName);
 impl_ident_subtype!(TypeName);
@@ -107,7 +107,7 @@ impl_strict_newtype!(TypeName, STRICT_TYPES_LIB);
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct FieldName(RString<AlphaSmall, AlphaNumLodash, 1, 100>);
+pub struct FieldName(RString<AlphaSmallLodash, AlphaNumLodash, 1, 100>);
 
 impl_ident_type!(FieldName);
 impl_ident_subtype!(FieldName);
@@ -120,7 +120,7 @@ impl_strict_newtype!(FieldName, STRICT_TYPES_LIB);
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct VariantName(RString<AlphaSmall, AlphaNumLodash, 1, 100>);
+pub struct VariantName(RString<AlphaSmallLodash, AlphaNumLodash, 1, 100>);
 
 impl_ident_type!(VariantName);
 impl_ident_subtype!(VariantName);
@@ -133,7 +133,7 @@ impl_strict_newtype!(VariantName, STRICT_TYPES_LIB);
     derive(Serialize, Deserialize),
     serde(crate = "serde_crate", transparent)
 )]
-pub struct LibName(RString<AlphaCaps, AlphaNumLodash, 1, 100>);
+pub struct LibName(RString<AlphaCapsLodash, AlphaNumLodash, 1, 100>);
 
 impl_ident_type!(LibName);
 impl_ident_subtype!(LibName);
