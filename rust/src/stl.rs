@@ -46,10 +46,10 @@ pub enum InvalidRString {
     Empty,
 
     /// string '{0}' must not start with character '{1}'
-    DisallowedFirst(AsciiString, AsciiChar),
+    DisallowedFirst(String, char),
 
     /// string '{0}' contains invalid character '{1}'
-    InvalidChar(AsciiString, AsciiChar),
+    InvalidChar(String, char),
 
     #[from(AsAsciiStrError)]
     /// string contains non-ASCII character(s)
@@ -108,10 +108,7 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: u
 {
     type Err = InvalidRString;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let s = AsciiString::from_ascii(s.as_bytes())?;
-        Self::try_from(s)
-    }
+    fn from_str(s: &str) -> Result<Self, Self::Err> { Self::try_from(s.as_bytes()) }
 }
 
 impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize>
@@ -121,7 +118,9 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: u
     ///
     /// Panics if the string contains invalid characters not matching
     /// [`RestrictedCharSet`] requirements or the string length exceeds `MAX`.
-    fn from(s: &'static str) -> Self { Self::from_str(s).expect("invalid static string") }
+    fn from(s: &'static str) -> Self {
+        Self::try_from(s.as_bytes()).expect("invalid static string")
+    }
 }
 
 impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize>
@@ -129,10 +128,7 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: u
 {
     type Error = InvalidRString;
 
-    fn try_from(s: String) -> Result<Self, Self::Error> {
-        let s = AsciiString::from_ascii(s.as_bytes())?;
-        Self::try_from(s)
-    }
+    fn try_from(s: String) -> Result<Self, Self::Error> { Self::try_from(s.as_bytes()) }
 }
 
 impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize>
@@ -140,24 +136,7 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: u
 {
     type Error = InvalidRString;
 
-    fn try_from(ascii: AsciiString) -> Result<Self, InvalidRString> {
-        let mut iter = ascii.as_slice().iter().copied();
-        let Some(first) = iter.next() else {
-            return Err(InvalidRString::Empty);
-        };
-        if C1::try_from(first.as_byte()).is_err() {
-            return Err(InvalidRString::DisallowedFirst(ascii, first));
-        }
-        if let Some(ch) = iter.find(|ch| C::try_from(ch.as_byte()).is_err()) {
-            return Err(InvalidRString::InvalidChar(ascii, ch));
-        }
-        let s = Confined::try_from(ascii)?;
-        Ok(Self {
-            s,
-            first: PhantomData,
-            rest: PhantomData,
-        })
-    }
+    fn try_from(ascii: AsciiString) -> Result<Self, InvalidRString> { ascii.as_bytes().try_into() }
 }
 
 impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: usize>
@@ -174,7 +153,25 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN: usize, const MAX: u
     type Error = InvalidRString;
 
     fn try_from(bytes: &[u8]) -> Result<Self, InvalidRString> {
-        AsciiString::from_ascii(bytes)?.try_into()
+        let err = String::from_utf8_lossy(bytes);
+        let mut iter = bytes.into_iter();
+        let Some(first) = iter.next() else {
+            return Err(InvalidRString::Empty);
+        };
+        if C1::try_from(*first).is_err() {
+            return Err(InvalidRString::DisallowedFirst(err.to_string(), char::from(*first)));
+        }
+        if let Some(ch) = iter.find(|ch| C::try_from(**ch).is_err()) {
+            return Err(InvalidRString::InvalidChar(err.to_string(), char::from(*ch)));
+        }
+        let s = Confined::try_from(
+            AsciiString::from_ascii(bytes).expect("not an ASCII characted subset"),
+        )?;
+        Ok(Self {
+            s,
+            first: PhantomData,
+            rest: PhantomData,
+        })
     }
 }
 
