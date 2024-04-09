@@ -55,6 +55,7 @@ macro_rules! impl_ident_type {
         }
 
         impl $ty {
+            /// Returns string reference.
             pub fn as_str(&self) -> &str { self.0.as_str() }
         }
     };
@@ -70,7 +71,9 @@ macro_rules! impl_ident_subtype {
         }
 
         impl $ty {
+            /// Converts to identifier name.
             pub fn to_ident(&self) -> $crate::Ident { self.clone().into() }
+            /// Converts into identifier name.
             pub fn into_ident(self) -> $crate::Ident { self.into() }
         }
     };
