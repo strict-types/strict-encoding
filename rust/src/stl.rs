@@ -414,32 +414,32 @@ impl StrictSum for AsciiSym {
         (b'>', "greater"),
         (b'?', "question"),
         (b'@', "at"),
-        (b'A', "A"),
-        (b'B', "B"),
-        (b'C', "C"),
-        (b'D', "D"),
-        (b'E', "E"),
-        (b'F', "F"),
-        (b'G', "G"),
-        (b'H', "H"),
-        (b'I', "I"),
-        (b'J', "J"),
-        (b'K', "K"),
-        (b'L', "L"),
-        (b'M', "M"),
-        (b'N', "N"),
-        (b'O', "O"),
-        (b'P', "P"),
-        (b'Q', "Q"),
-        (b'R', "R"),
-        (b'S', "S"),
-        (b'T', "T"),
-        (b'U', "U"),
-        (b'V', "V"),
-        (b'W', "W"),
-        (b'X', "X"),
-        (b'Y', "Y"),
-        (b'Z', "Z"),
+        (b'A', "_A"),
+        (b'B', "_B"),
+        (b'C', "_C"),
+        (b'D', "_D"),
+        (b'E', "_E"),
+        (b'F', "_F"),
+        (b'G', "_G"),
+        (b'H', "_H"),
+        (b'I', "_I"),
+        (b'J', "_J"),
+        (b'K', "_K"),
+        (b'L', "_L"),
+        (b'M', "_M"),
+        (b'N', "_N"),
+        (b'O', "_O"),
+        (b'P', "_P"),
+        (b'Q', "_Q"),
+        (b'R', "_R"),
+        (b'S', "_S"),
+        (b'T', "_T"),
+        (b'U', "_U"),
+        (b'V', "_V"),
+        (b'W', "_W"),
+        (b'X', "_X"),
+        (b'Y', "_Y"),
+        (b'Z', "_Z"),
         (b'[', "sqBracketL"),
         (b'\\', "backSlash"),
         (b']', "sqBracketR"),
@@ -556,32 +556,32 @@ impl StrictSum for AsciiPrintable {
         (b'>', "greater"),
         (b'?', "question"),
         (b'@', "at"),
-        (b'A', "A"),
-        (b'B', "B"),
-        (b'C', "C"),
-        (b'D', "D"),
-        (b'E', "E"),
-        (b'F', "F"),
-        (b'G', "G"),
-        (b'H', "H"),
-        (b'I', "I"),
-        (b'J', "J"),
-        (b'K', "K"),
-        (b'L', "L"),
-        (b'M', "M"),
-        (b'N', "N"),
-        (b'O', "O"),
-        (b'P', "P"),
-        (b'Q', "Q"),
-        (b'R', "R"),
-        (b'S', "S"),
-        (b'T', "T"),
-        (b'U', "U"),
-        (b'V', "V"),
-        (b'W', "W"),
-        (b'X', "X"),
-        (b'Y', "Y"),
-        (b'Z', "Z"),
+        (b'A', "_A"),
+        (b'B', "_B"),
+        (b'C', "_C"),
+        (b'D', "_D"),
+        (b'E', "_E"),
+        (b'F', "_F"),
+        (b'G', "_G"),
+        (b'H', "_H"),
+        (b'I', "_I"),
+        (b'J', "_J"),
+        (b'K', "_K"),
+        (b'L', "_L"),
+        (b'M', "_M"),
+        (b'N', "_N"),
+        (b'O', "_O"),
+        (b'P', "_P"),
+        (b'Q', "_Q"),
+        (b'R', "_R"),
+        (b'S', "_S"),
+        (b'T', "_T"),
+        (b'U', "_U"),
+        (b'V', "_V"),
+        (b'W', "_W"),
+        (b'X', "_X"),
+        (b'Y', "_Y"),
+        (b'Z', "_Z"),
         (b'[', "sqBracketL"),
         (b'\\', "backSlash"),
         (b']', "sqBracketR"),
@@ -643,57 +643,57 @@ impl StrictDecode for AsciiPrintable {
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaCaps {
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(dumb, rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
 }
 
@@ -703,57 +703,57 @@ pub enum AlphaCaps {
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaCapsLodash {
-    #[strict_type(rename = "A")]
+    #[strict_type(rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
     #[strict_type(dumb)]
     #[display("_")]
@@ -888,57 +888,57 @@ pub enum AlphaSmallLodash {
 #[display(inner)]
 #[repr(u8)]
 pub enum Alpha {
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(dumb, rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
     #[display("a")]
     a = b'a',
@@ -1000,57 +1000,57 @@ pub enum Alpha {
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaLodash {
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(dumb, rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
     #[strict_type(dumb)]
     #[display("_")]
@@ -1245,57 +1245,57 @@ pub enum AlphaCapsNum {
     Eight = b'8',
     #[display("9")]
     Nine = b'9',
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(dumb, rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
 }
 
@@ -1325,57 +1325,57 @@ pub enum AlphaNum {
     Eight = b'8',
     #[display("9")]
     Nine = b'9',
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(dumb, rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
     #[display("a")]
     a = b'a',
@@ -1460,57 +1460,57 @@ pub enum AlphaNumDash {
     Eight = b'8',
     #[display("9")]
     Nine = b'9',
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(dumb, rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
     #[display("a")]
     a = b'a',
@@ -1592,57 +1592,57 @@ pub enum AlphaNumLodash {
     Eight = b'8',
     #[display("9")]
     Nine = b'9',
-    #[strict_type(rename = "A")]
+    #[strict_type(rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
     #[strict_type(dumb)]
     #[display("_")]
