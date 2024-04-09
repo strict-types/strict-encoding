@@ -41,7 +41,7 @@ macro_rules! impl_ident_type {
         }
 
         impl TryFrom<String> for $ty {
-            type Error = InvalidRString;
+            type Error = $crate::InvalidRString;
 
             fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
         }
@@ -63,15 +63,15 @@ macro_rules! impl_ident_type {
 #[macro_export]
 macro_rules! impl_ident_subtype {
     ($ty:ty) => {
-        impl From<$ty> for Ident {
+        impl From<$ty> for $crate::Ident {
             fn from(name: $ty) -> Self {
-                Ident::from_str(name.as_str()).expect("ident is a superset")
+                $crate::Ident::from_str(name.as_str()).expect("ident is a superset")
             }
         }
 
         impl $ty {
-            pub fn to_ident(&self) -> Ident { self.clone().into() }
-            pub fn into_ident(self) -> Ident { self.into() }
+            pub fn to_ident(&self) -> $crate::Ident { self.clone().into() }
+            pub fn into_ident(self) -> $crate::Ident { self.into() }
         }
     };
 }
