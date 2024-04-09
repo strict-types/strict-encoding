@@ -153,7 +153,7 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
 
     fn try_from(bytes: &[u8]) -> Result<Self, InvalidRString> {
         let err = String::from_utf8_lossy(bytes);
-        let mut iter = bytes.into_iter();
+        let mut iter = bytes.iter();
         let Some(first) = iter.next() else {
             return Err(InvalidRString::Empty);
         };

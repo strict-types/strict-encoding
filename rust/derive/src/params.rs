@@ -52,7 +52,9 @@ pub struct ContainerAttr {
     pub lib: Expr,
     pub rename: Option<LitStr>,
     pub dumb: Option<Expr>,
+    #[allow(dead_code)]
     pub encode_with: Option<Path>,
+    #[allow(dead_code)]
     pub decode_with: Option<Path>,
 }
 
