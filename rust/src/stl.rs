@@ -69,8 +69,7 @@ pub trait RestrictedCharSet:
 {
 }
 
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Display)]
-#[display("{s}")]
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize), serde(crate = "serde_crate", transparent))]
 pub struct RString<
     C1: RestrictedCharSet,
@@ -196,6 +195,12 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
             .field(&self.as_str())
             .finish()
     }
+}
+
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> Display
+    for RString<C1, C, MIN, MAX>
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { Display::fmt(&self.s, f) }
 }
 
 #[cfg(feature = "serde")]
