@@ -19,7 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::any;
 use std::fmt::{self, Debug, Formatter};
 use std::str::FromStr;
 
@@ -47,7 +46,7 @@ macro_rules! impl_ident_type {
 
         impl Debug for $ty {
             fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-                f.debug_tuple(any::type_name::<Self>())
+                f.debug_tuple(&$crate::type_name::<Self>())
                     .field(&self.as_str())
                     .finish()
             }

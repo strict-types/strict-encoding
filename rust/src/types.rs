@@ -26,7 +26,7 @@ use std::marker::PhantomData;
 
 use crate::{LibName, TypeName, VariantName};
 
-fn type_name<T>() -> String {
+pub fn type_name<T>() -> String {
     fn get_ident(path: &str) -> &str {
         path.rsplit_once("::")
             .map(|(_, n)| n.trim())
@@ -175,7 +175,7 @@ pub trait StrictSum: StrictType {
         unreachable!(
             "not all variants are enumerated for {} enum in StrictUnion::all_variants \
              implementation",
-            any::type_name::<Self>()
+            type_name::<Self>()
         )
     }
     fn variant_name(&self) -> &'static str;

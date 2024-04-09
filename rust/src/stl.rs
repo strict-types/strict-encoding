@@ -33,8 +33,8 @@ use amplify::confinement::Confined;
 use amplify::num::{u1, u2, u3, u4, u5, u6, u7};
 
 use crate::{
-    DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum, StrictType,
-    TypeName, TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
+    type_name, DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum,
+    StrictType, TypeName, TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
 };
 
 // TODO: Move RString and related ASCII types to amplify library
@@ -185,8 +185,8 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
     for RString<C1, C, MIN, MAX>
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let c = any::type_name::<C>();
-        let c1 = any::type_name::<C>();
+        let c = type_name::<C>();
+        let c1 = type_name::<C>();
         let c = if c == c1 {
             c.to_owned()
         } else {
