@@ -256,6 +256,7 @@ impl From<Bool> for bool {
 
 impl StrictType for bool {
     const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
+    fn strict_name() -> Option<TypeName> { Some(tn!("Bool")) }
 }
 impl StrictEncode for bool {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
