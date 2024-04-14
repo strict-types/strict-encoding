@@ -152,6 +152,13 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
     type Error = InvalidRString;
 
     fn try_from(bytes: &[u8]) -> Result<Self, InvalidRString> {
+        if bytes.is_empty() && MIN == 0 {
+            return Ok(Self {
+                s: Confined::from_collection_unsafe(AsciiString::new()),
+                first: PhantomData,
+                rest: PhantomData,
+            });
+        }
         let err = String::from_utf8_lossy(bytes);
         let mut iter = bytes.iter();
         let Some(first) = iter.next() else {
