@@ -460,7 +460,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding"
-version = "2.7.0-beta.1"
+version = "2.7.0-beta.3"
 dependencies = [
  "amplify",
  "half",
@@ -472,7 +472,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_derive"
-version = "2.7.0-beta.1"
+version = "2.7.0-beta.3"
 dependencies = [
  "amplify",
  "amplify_syn",
