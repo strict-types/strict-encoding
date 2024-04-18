@@ -22,19 +22,19 @@
 use amplify_syn::{
     DataInner, DeriveInner, EnumKind, Field, FieldKind, Fields, Items, NamedField, Variant,
 };
-use proc_macro2::{Span, TokenStream as TokenStream2};
+use proc_macro2::TokenStream as TokenStream2;
 use quote::ToTokens;
-use syn::{LitStr, Result};
+use syn::Result;
 
-use crate::params::{ContainerAttr, EnumAttr, FieldAttr, StrictDerive, VariantAttr, VariantTags};
+use crate::params::{EnumAttr, FieldAttr, StrictDerive, VariantAttr, VariantTags};
 
 struct DeriveType<'a>(&'a StrictDerive);
-struct DeriveProduct<'a>(&'a Fields);
-struct DeriveTuple<'a>(&'a Items<Field>);
-struct DeriveStruct<'a>(&'a Items<NamedField>);
-struct DeriveSum<'a>(&'a Items<Variant>, &'a ContainerAttr, EnumAttr);
-struct DeriveEnum<'a>(&'a Items<Variant>);
-struct DeriveUnion<'a>(&'a Items<Variant>);
+struct DeriveProduct;
+struct DeriveTuple;
+struct DeriveStruct;
+struct DeriveSum(EnumAttr);
+struct DeriveEnum;
+struct DeriveUnion;
 
 impl StrictDerive {
     pub fn derive_type(&self) -> Result<TokenStream2> {
@@ -46,15 +46,14 @@ impl StrictDerive {
             .derive(trait_crate, &ident!(StrictType), &DeriveType(self))?;
 
         let impl_outer = match &self.data.inner {
-            DataInner::Struct(fields) => {
+            DataInner::Struct(_) => {
                 self.data
-                    .derive(trait_crate, &ident!(StrictProduct), &DeriveProduct(fields))?
+                    .derive(trait_crate, &ident!(StrictProduct), &DeriveProduct)?
             }
             DataInner::Enum(variants) => {
                 let enum_attr = EnumAttr::with(self.data.attr.clone(), variants.enum_kind())?;
 
                 let impl_try_from_u8 = if enum_attr.try_from_u8 {
-                    let type_name_str = LitStr::new(&type_name.to_string(), Span::call_site());
                     let variant_name = variants.iter().map(|var| &var.name);
 
                     quote! {
@@ -64,7 +63,7 @@ impl StrictDerive {
                             fn try_from(value: u8) -> Result<Self, Self::Error> {
                                 match value {
                                     #( x if x == Self::#variant_name as u8 => Ok(Self::#variant_name), )*
-                                    wrong => Err(#trait_crate::VariantError(#trait_crate::tn!(#type_name_str), wrong)),
+                                    wrong => Err(#trait_crate::VariantError::with::<Self>(wrong)),
                                 }
                             }
                         }
@@ -87,11 +86,9 @@ impl StrictDerive {
                     TokenStream2::new()
                 };
 
-                let impl_struct_enum = self.data.derive(
-                    trait_crate,
-                    &ident!(StrictSum),
-                    &DeriveSum(variants, &self.conf, enum_attr),
-                )?;
+                let impl_struct_enum =
+                    self.data
+                        .derive(trait_crate, &ident!(StrictSum), &DeriveSum(enum_attr))?;
 
                 quote! {
                     #impl_into_u8
@@ -103,21 +100,21 @@ impl StrictDerive {
         };
 
         let impl_inner = match &self.data.inner {
-            DataInner::Struct(Fields::Named(fields)) => {
+            DataInner::Struct(Fields::Named(_)) => {
                 self.data
-                    .derive(trait_crate, &ident!(StrictStruct), &DeriveStruct(fields))?
+                    .derive(trait_crate, &ident!(StrictStruct), &DeriveStruct)?
             }
-            DataInner::Struct(Fields::Unnamed(fields)) => {
+            DataInner::Struct(Fields::Unnamed(_)) => {
                 self.data
-                    .derive(trait_crate, &ident!(StrictTuple), &DeriveTuple(fields))?
+                    .derive(trait_crate, &ident!(StrictTuple), &DeriveTuple)?
             }
             DataInner::Enum(variants) if variants.enum_kind() == EnumKind::Primitive => {
                 self.data
-                    .derive(trait_crate, &ident!(StrictEnum), &DeriveEnum(variants))?
+                    .derive(trait_crate, &ident!(StrictEnum), &DeriveEnum)?
             }
-            DataInner::Enum(variants) => {
+            DataInner::Enum(_) => {
                 self.data
-                    .derive(trait_crate, &ident!(StrictUnion), &DeriveUnion(variants))?
+                    .derive(trait_crate, &ident!(StrictUnion), &DeriveUnion)?
             }
             _ => TokenStream2::new(),
         };
@@ -165,7 +162,7 @@ impl DeriveInner for DeriveType<'_> {
     }
 }
 
-impl DeriveInner for DeriveProduct<'_> {
+impl DeriveInner for DeriveProduct {
     fn derive_unit_inner(&self) -> Result<TokenStream2> { unreachable!() }
     fn derive_enum_inner(&self, _variants: &Items<Variant>) -> Result<TokenStream2> {
         unreachable!()
@@ -179,7 +176,7 @@ impl DeriveInner for DeriveProduct<'_> {
     }
 }
 
-impl DeriveInner for DeriveSum<'_> {
+impl DeriveInner for DeriveSum {
     fn derive_unit_inner(&self) -> Result<TokenStream2> { unreachable!() }
     fn derive_struct_inner(&self, _fields: &Items<NamedField>) -> Result<TokenStream2> {
         unreachable!()
@@ -195,7 +192,7 @@ impl DeriveInner for DeriveSum<'_> {
             let attr = VariantAttr::try_from(variant.attr.clone())?;
             let name = &variant.name;
             let rename = attr.variant_name(name);
-            let tag = match (&self.2.tags, &attr.tag) {
+            let tag = match (&self.0.tags, &attr.tag) {
                 (_, Some(tag)) => tag.to_token_stream(),
                 (VariantTags::Repr, None) => quote! { Self::#name },
                 (VariantTags::Order, None) => quote! { #index },
@@ -226,7 +223,7 @@ impl DeriveInner for DeriveSum<'_> {
     }
 }
 
-impl DeriveInner for DeriveTuple<'_> {
+impl DeriveInner for DeriveTuple {
     fn derive_unit_inner(&self) -> Result<TokenStream2> { unreachable!() }
     fn derive_struct_inner(&self, _fields: &Items<NamedField>) -> Result<TokenStream2> {
         unreachable!()
@@ -243,7 +240,7 @@ impl DeriveInner for DeriveTuple<'_> {
     }
 }
 
-impl DeriveInner for DeriveStruct<'_> {
+impl DeriveInner for DeriveStruct {
     fn derive_unit_inner(&self) -> Result<TokenStream2> { unreachable!() }
     fn derive_enum_inner(&self, _variants: &Items<Variant>) -> Result<TokenStream2> {
         unreachable!()
@@ -267,7 +264,7 @@ impl DeriveInner for DeriveStruct<'_> {
     }
 }
 
-impl DeriveInner for DeriveEnum<'_> {
+impl DeriveInner for DeriveEnum {
     fn derive_unit_inner(&self) -> Result<TokenStream2> { unreachable!() }
     fn derive_struct_inner(&self, _fields: &Items<NamedField>) -> Result<TokenStream2> {
         unreachable!()
@@ -279,7 +276,7 @@ impl DeriveInner for DeriveEnum<'_> {
     }
 }
 
-impl DeriveInner for DeriveUnion<'_> {
+impl DeriveInner for DeriveUnion {
     fn derive_unit_inner(&self) -> Result<TokenStream2> { unreachable!() }
     fn derive_struct_inner(&self, _fields: &Items<NamedField>) -> Result<TokenStream2> {
         unreachable!()

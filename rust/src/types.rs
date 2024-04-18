@@ -26,12 +26,32 @@ use std::marker::PhantomData;
 
 use crate::{LibName, TypeName, VariantName};
 
+pub fn type_name<T>() -> String {
+    fn get_ident(path: &str) -> &str {
+        path.rsplit_once("::")
+            .map(|(_, n)| n.trim())
+            .unwrap_or(path)
+    }
+
+    let name = any::type_name::<T>().replace('&', "");
+    let mut ident = vec![];
+    for mut arg in name.split([',', '<', '>', '(', ')']) {
+        arg = arg.trim();
+        if arg.is_empty() {
+            continue;
+        }
+        ident.push(get_ident(arg));
+    }
+    ident.join("")
+}
+
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error)]
 #[display("unexpected variant {1} for enum or union {0:?}")]
-pub struct VariantError<V: Debug + Display>(pub Option<TypeName>, pub V);
+pub struct VariantError<V: Debug + Display>(pub Option<String>, pub V);
 
 impl<V: Debug + Display> VariantError<V> {
-    pub fn typed(name: impl Into<TypeName>, val: V) -> Self { VariantError(Some(name.into()), val) }
+    pub fn with<T>(val: V) -> Self { VariantError(Some(type_name::<T>()), val) }
+    pub fn typed(name: impl Into<String>, val: V) -> Self { VariantError(Some(name.into()), val) }
     pub fn untyped(val: V) -> Self { VariantError(None, val) }
 }
 
@@ -47,24 +67,7 @@ where T: StrictType + Default
 
 pub trait StrictType: Sized {
     const STRICT_LIB_NAME: &'static str;
-    fn strict_name() -> Option<TypeName> {
-        fn get_ident(path: &str) -> &str {
-            path.rsplit_once("::")
-                .map(|(_, n)| n.trim())
-                .unwrap_or(path)
-        }
-
-        let name = any::type_name::<Self>().replace('&', "");
-        let mut ident = vec![];
-        for mut arg in name.split([',', '<', '>', '(', ')']) {
-            arg = arg.trim();
-            if arg.is_empty() {
-                continue;
-            }
-            ident.push(get_ident(arg));
-        }
-        Some(tn!(ident.join("")))
-    }
+    fn strict_name() -> Option<TypeName> { Some(tn!(type_name::<Self>())) }
 }
 
 impl<T: StrictType> StrictType for &T {
@@ -172,7 +175,7 @@ pub trait StrictSum: StrictType {
         unreachable!(
             "not all variants are enumerated for {} enum in StrictUnion::all_variants \
              implementation",
-            any::type_name::<Self>()
+            type_name::<Self>()
         )
     }
     fn variant_name(&self) -> &'static str;
@@ -198,10 +201,10 @@ where
     fn from_variant_name(name: &VariantName) -> Result<Self, VariantError<&VariantName>> {
         for (tag, n) in Self::ALL_VARIANTS {
             if *n == name.as_str() {
-                return Self::try_from(*tag).map_err(|_| VariantError(Self::strict_name(), name));
+                return Self::try_from(*tag).map_err(|_| VariantError::with::<Self>(name));
             }
         }
-        Err(VariantError(Self::strict_name(), name))
+        Err(VariantError::with::<Self>(name))
     }
 
     fn strict_type_info() -> TypeInfo<Self> {

@@ -26,8 +26,6 @@ use crate::{
     StrictStruct, StrictSum, StrictTuple, StrictUnion, TypedRead, VariantName,
 };
 
-trait TypedParent: Sized {}
-
 // TODO: Move to amplify crate
 /// A simple way to count bytes read through [`io::Read`].
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default, Debug)]

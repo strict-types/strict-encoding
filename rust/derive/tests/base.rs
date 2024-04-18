@@ -29,7 +29,7 @@ mod common;
 use std::convert::Infallible;
 
 use strict_encoding::{
-    tn, StrictDecode, StrictDumb, StrictEncode, StrictSerialize, StrictSum, VariantError,
+    StrictDecode, StrictDumb, StrictEncode, StrictSerialize, StrictSum, VariantError,
 };
 
 const TEST_LIB: &str = "TestLib";
@@ -117,7 +117,7 @@ fn enum_ord() -> common::Result {
     assert_eq!(Variants::Three as u8, 7);
     assert_eq!(u8::from(Variants::Three), 7);
     assert_eq!(Variants::try_from(6), Ok(Variants::Two));
-    assert_eq!(Variants::try_from(3), Err(VariantError(Some(tn!("Variants")), 3)));
+    assert_eq!(Variants::try_from(3), Err(VariantError(Some(s!("Variants")), 3)));
 
     Ok(())
 }
@@ -137,7 +137,7 @@ fn enum_repr() -> common::Result {
 
     assert_eq!(u8::from(Cls::Three), 3);
     assert_eq!(Cls::try_from(2), Ok(Cls::Two));
-    assert_eq!(Cls::try_from(4), Err(VariantError(Some(tn!("Cls")), 4)));
+    assert_eq!(Cls::try_from(4), Err(VariantError(Some(s!("Cls")), 4)));
 
     Ok(())
 }

@@ -33,10 +33,10 @@ use amplify::{Array, Wrapper};
 
 use crate::stl::AsciiSym;
 use crate::{
-    DecodeError, DefineUnion, Primitive, ReadRaw, ReadTuple, ReadUnion, RestrictedCharacter,
-    RestrictedString, Sizing, StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct,
-    StrictSum, StrictTuple, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteRaw,
-    WriteTuple, WriteUnion, LIB_EMBEDDED,
+    DecodeError, DefineUnion, Primitive, RString, ReadRaw, ReadTuple, ReadUnion, RestrictedCharSet,
+    Sizing, StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct, StrictSum,
+    StrictTuple, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteRaw, WriteTuple,
+    WriteUnion, LIB_EMBEDDED,
 };
 
 pub trait DecodeRawLe: Sized {
@@ -66,6 +66,7 @@ macro_rules! encode_num {
     ($ty:ty, $id:ident) => {
         impl $crate::StrictType for $ty {
             const STRICT_LIB_NAME: &'static str = $crate::LIB_EMBEDDED;
+            fn strict_name() -> Option<TypeName> { Some(tn!(stringify!($id))) }
         }
         impl $crate::StrictEncode for $ty {
             fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
@@ -94,6 +95,7 @@ macro_rules! encode_nonzero {
     ($ty:ty, $p:ty, $id:ident) => {
         impl $crate::StrictType for $ty {
             const STRICT_LIB_NAME: &'static str = $crate::LIB_EMBEDDED;
+            fn strict_name() -> Option<TypeName> { Some(tn!(stringify!($id))) }
         }
         impl $crate::StrictEncode for $ty {
             fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
@@ -125,6 +127,7 @@ macro_rules! encode_float {
         #[cfg(feature = "float")]
         impl $crate::StrictType for $ty {
             const STRICT_LIB_NAME: &'static str = $crate::LIB_EMBEDDED;
+            fn strict_name() -> Option<TypeName> { Some(tn!(stringify!($id))) }
         }
         #[cfg(feature = "float")]
         impl $crate::StrictEncode for $ty {
@@ -447,14 +450,26 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
     }
 }
 
-impl<C: RestrictedCharacter, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
-    for RestrictedString<C, MIN_LEN, MAX_LEN>
+impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
+    StrictType for RString<C, C1, MIN_LEN, MAX_LEN>
 {
     const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
-impl<C: RestrictedCharacter, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
-    for RestrictedString<C, MIN_LEN, MAX_LEN>
+impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
+    StrictDumb for RString<C, C1, MIN_LEN, MAX_LEN>
+{
+    fn strict_dumb() -> Self {
+        Self::try_from(format!(
+            "{}{}",
+            C1::strict_dumb(),
+            String::from_utf8(vec![C::strict_dumb().into(); MIN_LEN]).expect("dumb")
+        ))
+        .expect("dumb")
+    }
+}
+impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
+    StrictEncode for RString<C, C1, MIN_LEN, MAX_LEN>
 {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         let sizing = Sizing::new(MIN_LEN as u64, MAX_LEN as u64);
@@ -465,12 +480,12 @@ impl<C: RestrictedCharacter, const MIN_LEN: usize, const MAX_LEN: usize> StrictE
         }
     }
 }
-impl<C: RestrictedCharacter, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
-    for RestrictedString<C, MIN_LEN, MAX_LEN>
+impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
+    StrictDecode for RString<C, C1, MIN_LEN, MAX_LEN>
 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         let bytes = unsafe { reader.read_string::<MAX_LEN>()? };
-        RestrictedString::from_bytes(bytes)
+        RString::try_from(bytes).map_err(|e| DecodeError::DataIntegrityError(e.to_string()))
     }
 }
 

@@ -21,69 +21,211 @@
 
 #![allow(non_camel_case_types, unused_imports)]
 
-use std::io;
+use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
+use std::ops::Deref;
+use std::str::FromStr;
+use std::{any, io};
 
-use amplify::ascii::AsciiChar;
+use amplify::ascii::{AsAsciiStrError, AsciiChar, AsciiString, FromAsciiError};
+use amplify::confinement;
 use amplify::confinement::Confined;
 use amplify::num::{u1, u2, u3, u4, u5, u6, u7};
 
 use crate::{
-    DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum, StrictType,
-    TypeName, TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
+    type_name, DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum,
+    StrictType, TypeName, TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
 };
 
-pub trait RestrictedCharacter:
-    Copy + Into<u8> + TryFrom<u8, Error = VariantError<u8>> + StrictEncode + StrictDumb
+// TODO: Move RString and related ASCII types to amplify library
+
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
+#[display(doc_comments)]
+pub enum InvalidRString {
+    /// must contain at least one character
+    Empty,
+
+    /// string '{0}' must not start with character '{1}'
+    DisallowedFirst(String, char),
+
+    /// string '{0}' contains invalid character '{1}'
+    InvalidChar(String, char),
+
+    #[from(AsAsciiStrError)]
+    /// string contains non-ASCII character(s)
+    NonAsciiChar,
+
+    /// string has invalid length
+    #[from]
+    Confinement(confinement::Error),
+}
+
+impl<O> From<FromAsciiError<O>> for InvalidRString {
+    fn from(_: FromAsciiError<O>) -> Self { InvalidRString::NonAsciiChar }
+}
+
+pub trait RestrictedCharSet:
+    Copy + Into<u8> + TryFrom<u8, Error = VariantError<u8>> + Display + StrictEncode + StrictDumb
 {
 }
 
-impl<C> RestrictedCharacter for C where C: Copy + Into<u8> + TryFrom<u8, Error = VariantError<u8>> + StrictEncode + StrictDumb
-{}
+#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize), serde(crate = "serde_crate", transparent))]
+pub struct RString<
+    C1: RestrictedCharSet,
+    C: RestrictedCharSet = C1,
+    const MIN: usize = 0,
+    const MAX: usize = 255,
+> {
+    s: Confined<AsciiString, MIN, MAX>,
+    first: PhantomData<C1>,
+    rest: PhantomData<C>,
+}
 
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
-pub struct RestrictedString<C: RestrictedCharacter, const MIN: usize, const MAX: usize>(
-    Confined<Vec<u8>, MIN, MAX>,
-    PhantomData<C>,
-);
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> Deref
+    for RString<C1, C, MIN, MAX>
+{
+    type Target = AsciiString;
+    fn deref(&self) -> &Self::Target { self.s.as_inner() }
+}
 
-impl<C: RestrictedCharacter, const MIN: usize, const MAX: usize> RestrictedString<C, MIN, MAX> {
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> AsRef<[u8]>
+    for RString<C1, C, MIN, MAX>
+{
+    fn as_ref(&self) -> &[u8] { self.s.as_bytes() }
+}
+
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> AsRef<str>
+    for RString<C1, C, MIN, MAX>
+{
+    #[inline]
+    fn as_ref(&self) -> &str { self.s.as_str() }
+}
+
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> FromStr
+    for RString<C1, C, MIN, MAX>
+{
+    type Err = InvalidRString;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> { Self::try_from(s.as_bytes()) }
+}
+
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+    From<&'static str> for RString<C1, C, MIN, MAX>
+{
     /// # Safety
     ///
     /// Panics if the string contains invalid characters not matching
-    /// [`RestrictedCharacter`] requirements or the string length exceeds `MAX`.
-    pub fn with(s: &'static str) -> Self {
-        let bytes = s.as_bytes();
-        for (index, b) in bytes.iter().enumerate() {
-            if C::try_from(*b).is_err() {
-                panic!(
-                    "static string {s} provided to RestrictedString::with constructor contains an \
-                     invalid character {} in position {index}",
-                    bytes[index] as char
-                );
-            }
+    /// [`RestrictedCharSet`] requirements or the string length exceeds `MAX`.
+    fn from(s: &'static str) -> Self {
+        Self::try_from(s.as_bytes()).expect("invalid static string")
+    }
+}
+
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+    TryFrom<String> for RString<C1, C, MIN, MAX>
+{
+    type Error = InvalidRString;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> { Self::try_from(s.as_bytes()) }
+}
+
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+    TryFrom<AsciiString> for RString<C1, C, MIN, MAX>
+{
+    type Error = InvalidRString;
+
+    fn try_from(ascii: AsciiString) -> Result<Self, InvalidRString> { ascii.as_bytes().try_into() }
+}
+
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+    TryFrom<Vec<u8>> for RString<C1, C, MIN, MAX>
+{
+    type Error = InvalidRString;
+
+    fn try_from(vec: Vec<u8>) -> Result<Self, InvalidRString> { vec.as_slice().try_into() }
+}
+
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> TryFrom<&[u8]>
+    for RString<C1, C, MIN, MAX>
+{
+    type Error = InvalidRString;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, InvalidRString> {
+        if bytes.is_empty() && MIN == 0 {
+            return Ok(Self {
+                s: Confined::from_collection_unsafe(AsciiString::new()),
+                first: PhantomData,
+                rest: PhantomData,
+            });
         }
-        let Ok(inner) = Confined::try_from_iter(bytes.iter().copied()) else {
-            panic!("length of the string {s} exceeds maximal length {MAX} required by the type")
+        let err = String::from_utf8_lossy(bytes);
+        let mut iter = bytes.iter();
+        let Some(first) = iter.next() else {
+            return Err(InvalidRString::Empty);
         };
-        Self(inner, default!())
-    }
-
-    pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Self, DecodeError> {
-        let bytes = bytes.as_ref();
-        for (index, b) in bytes.iter().enumerate() {
-            if C::try_from(*b).is_err() {
-                return Err(DecodeError::DataIntegrityError(format!(
-                    "restricted character string contains invalid value {} in position {index}",
-                    *b as char
-                )));
-            }
+        if C1::try_from(*first).is_err() {
+            return Err(InvalidRString::DisallowedFirst(err.to_string(), char::from(*first)));
         }
-        let col = Confined::try_from_iter(bytes.iter().copied())?;
-        Ok(RestrictedString(col, default!()))
+        if let Some(ch) = iter.find(|ch| C::try_from(**ch).is_err()) {
+            return Err(InvalidRString::InvalidChar(err.to_string(), char::from(*ch)));
+        }
+        let s = Confined::try_from(
+            AsciiString::from_ascii(bytes).expect("not an ASCII characted subset"),
+        )?;
+        Ok(Self {
+            s,
+            first: PhantomData,
+            rest: PhantomData,
+        })
     }
+}
 
-    pub fn as_bytes(&self) -> &[u8] { self.0.as_slice() }
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+    From<RString<C1, C, MIN, MAX>> for String
+{
+    fn from(s: RString<C1, C, MIN, MAX>) -> Self { s.s.into_inner().into() }
+}
+
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> Debug
+    for RString<C1, C, MIN, MAX>
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let c = type_name::<C>();
+        let c1 = type_name::<C>();
+        let c = if c == c1 {
+            c.to_owned()
+        } else {
+            format!("{c1}, {c}")
+        };
+        f.debug_tuple(&format!("RString<{c}[{MIN}..{MAX}]>"))
+            .field(&self.as_str())
+            .finish()
+    }
+}
+
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> Display
+    for RString<C1, C, MIN, MAX>
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { Display::fmt(&self.s, f) }
+}
+
+#[cfg(feature = "serde")]
+mod _serde {
+    use serde_crate::de::Error;
+    use serde_crate::{Deserialize, Deserializer};
+
+    use super::*;
+
+    impl<'de, C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
+        Deserialize<'de> for RString<C1, C, MIN, MAX>
+    {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de> {
+            let ascii = AsciiString::deserialize(deserializer)?;
+            Self::try_from(ascii).map_err(D::Error::custom)
+        }
+    }
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Default)]
@@ -121,6 +263,7 @@ impl From<Bool> for bool {
 
 impl StrictType for bool {
     const STRICT_LIB_NAME: &'static str = LIB_NAME_STD;
+    fn strict_name() -> Option<TypeName> { Some(tn!("Bool")) }
 }
 impl StrictEncode for bool {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
@@ -209,7 +352,7 @@ impl TryFrom<u8> for AsciiSym {
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         AsciiChar::from_ascii(value)
-            .map_err(|_| VariantError(AsciiSym::strict_name(), value))
+            .map_err(|_| VariantError::with::<AsciiSym>(value))
             .map(Self)
     }
 }
@@ -284,32 +427,32 @@ impl StrictSum for AsciiSym {
         (b'>', "greater"),
         (b'?', "question"),
         (b'@', "at"),
-        (b'A', "A"),
-        (b'B', "B"),
-        (b'C', "C"),
-        (b'D', "D"),
-        (b'E', "E"),
-        (b'F', "F"),
-        (b'G', "G"),
-        (b'H', "H"),
-        (b'I', "I"),
-        (b'J', "J"),
-        (b'K', "K"),
-        (b'L', "L"),
-        (b'M', "M"),
-        (b'N', "N"),
-        (b'O', "O"),
-        (b'P', "P"),
-        (b'Q', "Q"),
-        (b'R', "R"),
-        (b'S', "S"),
-        (b'T', "T"),
-        (b'U', "U"),
-        (b'V', "V"),
-        (b'W', "W"),
-        (b'X', "X"),
-        (b'Y', "Y"),
-        (b'Z', "Z"),
+        (b'A', "_A"),
+        (b'B', "_B"),
+        (b'C', "_C"),
+        (b'D', "_D"),
+        (b'E', "_E"),
+        (b'F', "_F"),
+        (b'G', "_G"),
+        (b'H', "_H"),
+        (b'I', "_I"),
+        (b'J', "_J"),
+        (b'K', "_K"),
+        (b'L', "_L"),
+        (b'M', "_M"),
+        (b'N', "_N"),
+        (b'O', "_O"),
+        (b'P', "_P"),
+        (b'Q', "_Q"),
+        (b'R', "_R"),
+        (b'S', "_S"),
+        (b'T', "_T"),
+        (b'U', "_U"),
+        (b'V', "_V"),
+        (b'W', "_W"),
+        (b'X', "_X"),
+        (b'Y', "_Y"),
+        (b'Z', "_Z"),
         (b'[', "sqBracketL"),
         (b'\\', "backSlash"),
         (b']', "sqBracketR"),
@@ -382,7 +525,7 @@ impl TryFrom<u8> for AsciiPrintable {
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         AsciiChar::from_ascii(value)
-            .map_err(|_| VariantError(AsciiPrintable::strict_name(), value))
+            .map_err(|_| VariantError::with::<AsciiPrintable>(value))
             .map(Self)
     }
 }
@@ -426,32 +569,32 @@ impl StrictSum for AsciiPrintable {
         (b'>', "greater"),
         (b'?', "question"),
         (b'@', "at"),
-        (b'A', "A"),
-        (b'B', "B"),
-        (b'C', "C"),
-        (b'D', "D"),
-        (b'E', "E"),
-        (b'F', "F"),
-        (b'G', "G"),
-        (b'H', "H"),
-        (b'I', "I"),
-        (b'J', "J"),
-        (b'K', "K"),
-        (b'L', "L"),
-        (b'M', "M"),
-        (b'N', "N"),
-        (b'O', "O"),
-        (b'P', "P"),
-        (b'Q', "Q"),
-        (b'R', "R"),
-        (b'S', "S"),
-        (b'T', "T"),
-        (b'U', "U"),
-        (b'V', "V"),
-        (b'W', "W"),
-        (b'X', "X"),
-        (b'Y', "Y"),
-        (b'Z', "Z"),
+        (b'A', "_A"),
+        (b'B', "_B"),
+        (b'C', "_C"),
+        (b'D', "_D"),
+        (b'E', "_E"),
+        (b'F', "_F"),
+        (b'G', "_G"),
+        (b'H', "_H"),
+        (b'I', "_I"),
+        (b'J', "_J"),
+        (b'K', "_K"),
+        (b'L', "_L"),
+        (b'M', "_M"),
+        (b'N', "_N"),
+        (b'O', "_O"),
+        (b'P', "_P"),
+        (b'Q', "_Q"),
+        (b'R', "_R"),
+        (b'S', "_S"),
+        (b'T', "_T"),
+        (b'U', "_U"),
+        (b'V', "_V"),
+        (b'W', "_W"),
+        (b'X', "_X"),
+        (b'Y', "_Y"),
+        (b'Z', "_Z"),
         (b'[', "sqBracketL"),
         (b'\\', "backSlash"),
         (b']', "sqBracketR"),
@@ -513,58 +656,121 @@ impl StrictDecode for AsciiPrintable {
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaCaps {
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(dumb, rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[display(inner)]
+#[repr(u8)]
+pub enum AlphaCapsLodash {
+    #[strict_type(rename = "_A")]
+    A = b'A',
+    #[strict_type(rename = "_B")]
+    B = b'B',
+    #[strict_type(rename = "_C")]
+    C = b'C',
+    #[strict_type(rename = "_D")]
+    D = b'D',
+    #[strict_type(rename = "_E")]
+    E = b'E',
+    #[strict_type(rename = "_F")]
+    F = b'F',
+    #[strict_type(rename = "_G")]
+    G = b'G',
+    #[strict_type(rename = "_H")]
+    H = b'H',
+    #[strict_type(rename = "_I")]
+    I = b'I',
+    #[strict_type(rename = "_J")]
+    J = b'J',
+    #[strict_type(rename = "_K")]
+    K = b'K',
+    #[strict_type(rename = "_L")]
+    L = b'L',
+    #[strict_type(rename = "_M")]
+    M = b'M',
+    #[strict_type(rename = "_N")]
+    N = b'N',
+    #[strict_type(rename = "_O")]
+    O = b'O',
+    #[strict_type(rename = "_P")]
+    P = b'P',
+    #[strict_type(rename = "_Q")]
+    Q = b'Q',
+    #[strict_type(rename = "_R")]
+    R = b'R',
+    #[strict_type(rename = "_S")]
+    S = b'S',
+    #[strict_type(rename = "_T")]
+    T = b'T',
+    #[strict_type(rename = "_U")]
+    U = b'U',
+    #[strict_type(rename = "_V")]
+    V = b'V',
+    #[strict_type(rename = "_W")]
+    W = b'W',
+    #[strict_type(rename = "_X")]
+    X = b'X',
+    #[strict_type(rename = "_Y")]
+    Y = b'Y',
+    #[strict_type(rename = "_Z")]
+    Z = b'Z',
+    #[strict_type(dumb)]
+    #[display("_")]
+    Lodash = b'_',
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
@@ -630,61 +836,238 @@ pub enum AlphaSmall {
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[repr(u8)]
+pub enum AlphaSmallLodash {
+    #[strict_type(dumb)]
+    #[display("_")]
+    Lodash = b'_',
+    #[display("a")]
+    A = b'a',
+    #[display("b")]
+    B = b'b',
+    #[display("c")]
+    C = b'c',
+    #[display("d")]
+    D = b'd',
+    #[display("e")]
+    E = b'e',
+    #[display("f")]
+    F = b'f',
+    #[display("g")]
+    G = b'g',
+    #[display("h")]
+    H = b'h',
+    #[display("i")]
+    I = b'i',
+    #[display("j")]
+    J = b'j',
+    #[display("k")]
+    K = b'k',
+    #[display("l")]
+    L = b'l',
+    #[display("m")]
+    M = b'm',
+    #[display("n")]
+    N = b'n',
+    #[display("o")]
+    O = b'o',
+    #[display("p")]
+    P = b'p',
+    #[display("q")]
+    Q = b'q',
+    #[display("r")]
+    R = b'r',
+    #[display("s")]
+    S = b's',
+    #[display("t")]
+    T = b't',
+    #[display("u")]
+    U = b'u',
+    #[display("v")]
+    V = b'v',
+    #[display("w")]
+    W = b'w',
+    #[display("x")]
+    X = b'x',
+    #[display("y")]
+    Y = b'y',
+    #[display("z")]
+    Z = b'z',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum Alpha {
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(dumb, rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
+    #[display("a")]
+    a = b'a',
+    #[display("b")]
+    b = b'b',
+    #[display("c")]
+    c = b'c',
+    #[display("d")]
+    d = b'd',
+    #[display("e")]
+    e = b'e',
+    #[display("f")]
+    f = b'f',
+    #[display("g")]
+    g = b'g',
+    #[display("h")]
+    h = b'h',
+    #[display("i")]
+    i = b'i',
+    #[display("j")]
+    j = b'j',
+    #[display("k")]
+    k = b'k',
+    #[display("l")]
+    l = b'l',
+    #[display("m")]
+    m = b'm',
+    #[display("n")]
+    n = b'n',
+    #[display("o")]
+    o = b'o',
+    #[display("p")]
+    p = b'p',
+    #[display("q")]
+    q = b'q',
+    #[display("r")]
+    r = b'r',
+    #[display("s")]
+    s = b's',
+    #[display("t")]
+    t = b't',
+    #[display("u")]
+    u = b'u',
+    #[display("v")]
+    v = b'v',
+    #[display("w")]
+    w = b'w',
+    #[display("x")]
+    x = b'x',
+    #[display("y")]
+    y = b'y',
+    #[display("z")]
+    z = b'z',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[display(inner)]
+#[repr(u8)]
+pub enum AlphaLodash {
+    #[strict_type(dumb, rename = "_A")]
+    A = b'A',
+    #[strict_type(rename = "_B")]
+    B = b'B',
+    #[strict_type(rename = "_C")]
+    C = b'C',
+    #[strict_type(rename = "_D")]
+    D = b'D',
+    #[strict_type(rename = "_E")]
+    E = b'E',
+    #[strict_type(rename = "_F")]
+    F = b'F',
+    #[strict_type(rename = "_G")]
+    G = b'G',
+    #[strict_type(rename = "_H")]
+    H = b'H',
+    #[strict_type(rename = "_I")]
+    I = b'I',
+    #[strict_type(rename = "_J")]
+    J = b'J',
+    #[strict_type(rename = "_K")]
+    K = b'K',
+    #[strict_type(rename = "_L")]
+    L = b'L',
+    #[strict_type(rename = "_M")]
+    M = b'M',
+    #[strict_type(rename = "_N")]
+    N = b'N',
+    #[strict_type(rename = "_O")]
+    O = b'O',
+    #[strict_type(rename = "_P")]
+    P = b'P',
+    #[strict_type(rename = "_Q")]
+    Q = b'Q',
+    #[strict_type(rename = "_R")]
+    R = b'R',
+    #[strict_type(rename = "_S")]
+    S = b'S',
+    #[strict_type(rename = "_T")]
+    T = b'T',
+    #[strict_type(rename = "_U")]
+    U = b'U',
+    #[strict_type(rename = "_V")]
+    V = b'V',
+    #[strict_type(rename = "_W")]
+    W = b'W',
+    #[strict_type(rename = "_X")]
+    X = b'X',
+    #[strict_type(rename = "_Y")]
+    Y = b'Y',
+    #[strict_type(rename = "_Z")]
+    Z = b'Z',
+    #[strict_type(dumb)]
+    #[display("_")]
+    Lodash = b'_',
     #[display("a")]
     a = b'a',
     #[display("b")]
@@ -875,57 +1258,57 @@ pub enum AlphaCapsNum {
     Eight = b'8',
     #[display("9")]
     Nine = b'9',
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(dumb, rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
 }
 
@@ -955,57 +1338,57 @@ pub enum AlphaNum {
     Eight = b'8',
     #[display("9")]
     Nine = b'9',
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(dumb, rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
     #[display("a")]
     a = b'a',
@@ -1090,57 +1473,57 @@ pub enum AlphaNumDash {
     Eight = b'8',
     #[display("9")]
     Nine = b'9',
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(dumb, rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
     #[display("a")]
     a = b'a',
@@ -1222,57 +1605,57 @@ pub enum AlphaNumLodash {
     Eight = b'8',
     #[display("9")]
     Nine = b'9',
-    #[strict_type(dumb, rename = "A")]
+    #[strict_type(rename = "_A")]
     A = b'A',
-    #[strict_type(rename = "B")]
+    #[strict_type(rename = "_B")]
     B = b'B',
-    #[strict_type(rename = "C")]
+    #[strict_type(rename = "_C")]
     C = b'C',
-    #[strict_type(rename = "D")]
+    #[strict_type(rename = "_D")]
     D = b'D',
-    #[strict_type(rename = "E")]
+    #[strict_type(rename = "_E")]
     E = b'E',
-    #[strict_type(rename = "F")]
+    #[strict_type(rename = "_F")]
     F = b'F',
-    #[strict_type(rename = "G")]
+    #[strict_type(rename = "_G")]
     G = b'G',
-    #[strict_type(rename = "H")]
+    #[strict_type(rename = "_H")]
     H = b'H',
-    #[strict_type(rename = "I")]
+    #[strict_type(rename = "_I")]
     I = b'I',
-    #[strict_type(rename = "J")]
+    #[strict_type(rename = "_J")]
     J = b'J',
-    #[strict_type(rename = "K")]
+    #[strict_type(rename = "_K")]
     K = b'K',
-    #[strict_type(rename = "L")]
+    #[strict_type(rename = "_L")]
     L = b'L',
-    #[strict_type(rename = "M")]
+    #[strict_type(rename = "_M")]
     M = b'M',
-    #[strict_type(rename = "N")]
+    #[strict_type(rename = "_N")]
     N = b'N',
-    #[strict_type(rename = "O")]
+    #[strict_type(rename = "_O")]
     O = b'O',
-    #[strict_type(rename = "P")]
+    #[strict_type(rename = "_P")]
     P = b'P',
-    #[strict_type(rename = "Q")]
+    #[strict_type(rename = "_Q")]
     Q = b'Q',
-    #[strict_type(rename = "R")]
+    #[strict_type(rename = "_R")]
     R = b'R',
-    #[strict_type(rename = "S")]
+    #[strict_type(rename = "_S")]
     S = b'S',
-    #[strict_type(rename = "T")]
+    #[strict_type(rename = "_T")]
     T = b'T',
-    #[strict_type(rename = "U")]
+    #[strict_type(rename = "_U")]
     U = b'U',
-    #[strict_type(rename = "V")]
+    #[strict_type(rename = "_V")]
     V = b'V',
-    #[strict_type(rename = "W")]
+    #[strict_type(rename = "_W")]
     W = b'W',
-    #[strict_type(rename = "X")]
+    #[strict_type(rename = "_X")]
     X = b'X',
-    #[strict_type(rename = "Y")]
+    #[strict_type(rename = "_Y")]
     Y = b'Y',
-    #[strict_type(rename = "Z")]
+    #[strict_type(rename = "_Z")]
     Z = b'Z',
     #[strict_type(dumb)]
     #[display("_")]
@@ -1330,3 +1713,19 @@ pub enum AlphaNumLodash {
     #[display("z")]
     z = b'z',
 }
+
+impl RestrictedCharSet for AsciiPrintable {}
+impl RestrictedCharSet for AsciiSym {}
+impl RestrictedCharSet for Alpha {}
+impl RestrictedCharSet for AlphaLodash {}
+impl RestrictedCharSet for AlphaCaps {}
+impl RestrictedCharSet for AlphaCapsLodash {}
+impl RestrictedCharSet for AlphaSmall {}
+impl RestrictedCharSet for AlphaSmallLodash {}
+impl RestrictedCharSet for AlphaNum {}
+impl RestrictedCharSet for AlphaNumDash {}
+impl RestrictedCharSet for AlphaNumLodash {}
+impl RestrictedCharSet for AlphaCapsNum {}
+impl RestrictedCharSet for Dec {}
+impl RestrictedCharSet for HexDecCaps {}
+impl RestrictedCharSet for HexDecSmall {}
