@@ -97,9 +97,18 @@ pub trait TypedWrite: Sized {
     #[doc(hidden)]
     unsafe fn register_unicode(self, sizing: Sizing) -> Self { self }
     #[doc(hidden)]
-    #[deprecated(since = "2.3.1", note = "use register_list with AsciiSym type")]
+    #[deprecated(since = "2.3.1", note = "use register_rstring")]
     unsafe fn register_ascii(self, sizing: Sizing) -> Self {
         panic!("TypedWrite::register_ascii must not be called; pls see compilation warnings")
+    }
+    #[doc(hidden)]
+    unsafe fn register_rstring(
+        self,
+        c: &impl StrictEncode,
+        c1: &impl StrictEncode,
+        sizing: Sizing,
+    ) -> Self {
+        self
     }
     #[doc(hidden)]
     unsafe fn register_list(self, ty: &impl StrictEncode, sizing: Sizing) -> Self { self }

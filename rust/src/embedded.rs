@@ -475,7 +475,7 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MA
         let sizing = Sizing::new(MIN_LEN as u64, MAX_LEN as u64);
         unsafe {
             writer
-                .register_list(&C::strict_dumb(), sizing)
+                .register_rstring(&C::strict_dumb(), &C1::strict_dumb(), sizing)
                 .write_string::<MAX_LEN>(self.as_bytes())
         }
     }
