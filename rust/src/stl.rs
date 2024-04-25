@@ -74,7 +74,7 @@ pub trait RestrictedCharSet:
 pub struct RString<
     C1: RestrictedCharSet,
     C: RestrictedCharSet = C1,
-    const MIN: usize = 0,
+    const MIN: usize = 1,
     const MAX: usize = 255,
 > {
     s: Confined<AsciiString, MIN, MAX>,
