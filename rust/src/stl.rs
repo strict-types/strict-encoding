@@ -21,6 +21,7 @@
 
 #![allow(non_camel_case_types, unused_imports)]
 
+use std::borrow::Borrow;
 use std::fmt::{Debug, Display, Formatter};
 use std::marker::PhantomData;
 use std::ops::Deref;
@@ -100,6 +101,12 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
 {
     #[inline]
     fn as_ref(&self) -> &str { self.s.as_str() }
+}
+
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> Borrow<str>
+    for RString<C1, C, MIN, MAX>
+{
+    fn borrow(&self) -> &str { self.s.as_str() }
 }
 
 impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> FromStr
