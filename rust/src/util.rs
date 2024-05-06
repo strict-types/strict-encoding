@@ -82,7 +82,7 @@ impl Display for Sizing {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Eq, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Variant {
     pub name: VariantName,
@@ -104,6 +104,12 @@ impl Variant {
             name: vname!("some"),
             tag: 1,
         }
+    }
+}
+
+impl PartialEq for Variant {
+    fn eq(&self, other: &Self) -> bool {
+        self.tag == other.tag || self.name == other.name
     }
 }
 
