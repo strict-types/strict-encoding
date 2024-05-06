@@ -19,7 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::{self, Debug, Formatter};
 use std::str::FromStr;
 
 use amplify::Wrapper;
@@ -46,12 +45,16 @@ macro_rules! impl_ident_type {
             fn try_from(s: String) -> Result<Self, Self::Error> { Self::from_str(&s) }
         }
 
-        impl Debug for $ty {
-            fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        impl ::core::fmt::Debug for $ty {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                 f.debug_tuple(&$crate::type_name::<Self>())
                     .field(&self.as_str())
                     .finish()
             }
+        }
+
+        impl ::core::borrow::Borrow<str> for $ty {
+            fn borrow(&self) -> &str { self.as_str() }
         }
 
         impl $ty {

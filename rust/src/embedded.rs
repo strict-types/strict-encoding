@@ -472,10 +472,14 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MA
     StrictEncode for RString<C, C1, MIN_LEN, MAX_LEN>
 {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        debug_assert_ne!(
+            MIN_LEN, 0,
+            "Restricted string type can't have minimum length equal to zero"
+        );
         let sizing = Sizing::new(MIN_LEN as u64, MAX_LEN as u64);
         unsafe {
             writer
-                .register_list(&C::strict_dumb(), sizing)
+                .register_rstring(&C::strict_dumb(), &C1::strict_dumb(), sizing)
                 .write_string::<MAX_LEN>(self.as_bytes())
         }
     }
