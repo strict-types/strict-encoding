@@ -460,7 +460,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding"
-version = "2.7.0-beta.3"
+version = "2.7.0-beta.4"
 dependencies = [
  "amplify",
  "half",
