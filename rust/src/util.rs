@@ -21,6 +21,7 @@
 
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
+use std::hash::{Hash, Hasher};
 use std::io;
 
 use crate::{ReadStruct, VariantName, WriteStruct, STRICT_TYPES_LIB};
@@ -82,7 +83,7 @@ impl Display for Sizing {
     }
 }
 
-#[derive(Clone, Eq, Hash, Debug)]
+#[derive(Clone, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Variant {
     pub name: VariantName,
@@ -108,13 +109,18 @@ impl Variant {
 }
 
 impl PartialEq for Variant {
-    fn eq(&self, other: &Self) -> bool {
-        self.tag == other.tag || self.name == other.name
-    }
+    fn eq(&self, other: &Self) -> bool { self.tag == other.tag || self.name == other.name }
 }
 
 impl PartialOrd for Variant {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
+}
+
+impl Hash for Variant {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.tag.hash(state);
+        self.name.hash(state);
+    }
 }
 
 impl Ord for Variant {
