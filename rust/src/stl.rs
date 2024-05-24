@@ -43,20 +43,20 @@ use crate::{
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum InvalidRString {
-    /// must contain at least one character
+    /// must contain at least one character.
     Empty,
 
-    /// string '{0}' must not start with character '{1}'
+    /// string '{0}' must not start with character '{1}'.
     DisallowedFirst(String, char),
 
-    /// string '{0}' contains invalid character '{1}'
-    InvalidChar(String, char),
+    /// string '{0}' contains invalid character '{1}' at position {2}.
+    InvalidChar(String, char, usize),
 
     #[from(AsAsciiStrError)]
-    /// string contains non-ASCII character(s)
+    /// string contains non-ASCII character(s).
     NonAsciiChar,
 
-    /// string has invalid length
+    /// string has invalid length.
     #[from]
     Confinement(confinement::Error),
 }
@@ -166,16 +166,23 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
                 rest: PhantomData,
             });
         }
-        let err = String::from_utf8_lossy(bytes);
+        let utf8 = String::from_utf8_lossy(bytes);
         let mut iter = bytes.iter();
         let Some(first) = iter.next() else {
             return Err(InvalidRString::Empty);
         };
         if C1::try_from(*first).is_err() {
-            return Err(InvalidRString::DisallowedFirst(err.to_string(), char::from(*first)));
+            return Err(InvalidRString::DisallowedFirst(
+                utf8.to_string(),
+                utf8.chars().next().unwrap_or('?'),
+            ));
         }
-        if let Some(ch) = iter.find(|ch| C::try_from(**ch).is_err()) {
-            return Err(InvalidRString::InvalidChar(err.to_string(), char::from(*ch)));
+        if let Some(pos) = iter.position(|ch| C::try_from(*ch).is_err()) {
+            return Err(InvalidRString::InvalidChar(
+                utf8.to_string(),
+                utf8.chars().nth(pos + 1).unwrap_or('?'),
+                pos + 1,
+            ));
         }
         let s = Confined::try_from(
             AsciiString::from_ascii(bytes).expect("not an ASCII characted subset"),
@@ -1736,3 +1743,23 @@ impl RestrictedCharSet for AlphaCapsNum {}
 impl RestrictedCharSet for Dec {}
 impl RestrictedCharSet for HexDecCaps {}
 impl RestrictedCharSet for HexDecSmall {}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn rstring_utf8() {
+        let s = "Юникод";
+        assert_eq!(
+            RString::<AlphaCaps, Alpha, 1, 8>::from_str(s).unwrap_err(),
+            InvalidRString::DisallowedFirst(s.to_owned(), 'Ю')
+        );
+
+        let s = "Uникод";
+        assert_eq!(
+            RString::<AlphaCaps, Alpha, 1, 8>::from_str(s).unwrap_err(),
+            InvalidRString::InvalidChar(s.to_owned(), 'н', 1)
+        );
+    }
+}
