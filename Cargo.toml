@@ -7,7 +7,7 @@ resolver = "2"
 authors = ["Dr Maxim Orlovsky <orlovsky@ubideco.org>"]
 homepage = "https://strict-types.org"
 repository = "https://github.com/strict-types/strict-encoding"
-rust-version = "1.69.0" # Due to amplify crate
+rust-version = "1.70.0" # Due to amplify crate
 edition = "2021"
 license = "Apache-2.0"
 
