@@ -15,13 +15,13 @@ exclude = ["derive", "test_helpers"]
 
 [dependencies]
 amplify = { workspace = true, features = ["proc_attr"] }
-strict_encoding_derive = { version = "2.7.0-beta.3", path = "derive" }
+strict_encoding_derive = { version = "2.7.0-rc.1", path = "derive" }
 half = { version = "2.4.1", optional = true }
 serde_crate = { workspace = true, optional = true }
 
 [dev-dependencies]
 amplify = { workspace = true, features = ["proc_attr", "hex"] }
-strict_encoding_test = { version = "2.7.0-beta.1", path = "./test_helpers" }
+strict_encoding_test = { path = "./test_helpers" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2"
