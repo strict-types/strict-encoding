@@ -167,7 +167,7 @@ fn dumb_enum_associated() -> common::Result {
 fn dumb_ultra_complex() -> common::Result {
     #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, From)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(lib = TEST_LIB, dumb = NamedFields(confined_vec!(T::strict_dumb())))]
+    #[strict_type(lib = TEST_LIB, dumb = NamedFields(Confined::with(T::strict_dumb())))]
     pub struct NamedFields<T: StrictDumb + StrictEncode + StrictDecode>(
         Confined<Vec<T>, 1, { u8::MAX as usize }>,
     );
