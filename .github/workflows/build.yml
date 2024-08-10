@@ -2,9 +2,15 @@ name: Build
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - develop
+      - 'v[0-9]+.[0-9]+'
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+      - develop
+      - 'v[0-9]+.[0-9]+'
 
 env:
   CARGO_TERM_COLOR: always
@@ -14,14 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo check
+      - uses: cachix/install-nix-action@v26
+      - run: nix develop ".#stable" -c cargo check --workspace
   no-default:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo check --no-default-features
+      - uses: cachix/install-nix-action@v26
+      - run: nix develop ".#stable" -c cargo check --workspace --no-default-features
   features:
     runs-on: ubuntu-latest
     strategy:
@@ -33,12 +39,14 @@ jobs:
           - serde
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
       - name: Feature ${{matrix.feature}}
-        run: cargo check --no-default-features --features=${{matrix.feature}}
+        run: nix develop ".#stable" -c cargo check --no-default-features --features=${{matrix.feature}}
       - name: Feature ${{matrix.feature}}
-        run: cargo check --features=${{matrix.feature}}
+        run: nix develop ".#stable" -c cargo check --features=${{matrix.feature}}
   platforms:
+    # NOTE: Don't use nix in platform checks everything should be based on the host system
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -47,18 +55,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Platform ${{matrix.os}}
+      - name: Check ${{matrix.os}}
         run: cargo check --workspace --all-features # we skip test targets here to be sure that the main library can be built
   toolchains:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        toolchain: [ nightly, beta, stable, 1.75.0 ]
+        toolchain: [ nightly, beta, stable, msrv ]
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{matrix.toolchain}}
-      - name: Toolchain ${{matrix.toolchain}}
-        run: cargo +${{matrix.toolchain}} check --workspace --all-targets --all-features
+      - uses: cachix/install-nix-action@v26
+      - name: Check ${{matrix.toolchain}}
+        run: nix develop ".#${{ matrix.toolchain }}" -c cargo check --workspace --all-targets --all-features
