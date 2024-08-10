@@ -14,34 +14,30 @@ Derivation macros for strict encoding. To learn more about the strict encoding
 please check [`strict_encoding`] crate.
 
 The development of the library is supported by
-[UBIDECO Institute](https://ubideco.org).
-
+[UBIDECO Labs](https://ubideco.org).
 
 ## Documentation
 
 Detailed developer & API documentation for the library can be accessed
 at <https://docs.rs/strict_encoding_derive/>
 
-
 ## Usage
 
-To use the library, you need to reference the latest version of the 
-[`strict_encoding`] crate in`[dependencies]` section of your project 
-`Cargo.toml`. This crate includes derivation macros from the present library by 
+To use the library, you need to reference the latest version of the
+[`strict_encoding`] crate in`[dependencies]` section of your project
+`Cargo.toml`. This crate includes derivation macros from the present library by
 default.
 
 ```toml
 strict_encoding = "2.0"
 ```
 
-Library exports derivation macros `StrictType`, `StrictDumb`, `StrictEncode`, 
+Library exports derivation macros `StrictType`, `StrictDumb`, `StrictEncode`,
 `StrictDecode`.
-
 
 ## Contributing
 
 Contribution guidelines can be found in [CONTRIBUTING](../../CONTRIBUTING.md)
-
 
 ## Licensing
 
