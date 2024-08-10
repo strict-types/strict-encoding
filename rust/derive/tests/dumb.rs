@@ -5,7 +5,7 @@
 // Written in 2019-2024 by
 //     Dr. Maxim Orlovsky <orlovsky@ubideco.org>
 //
-// Copyright 2022-2024 UBIDECO Institute
+// Copyright 2022-2024 UBIDECO Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -167,7 +167,7 @@ fn dumb_enum_associated() -> common::Result {
 fn dumb_ultra_complex() -> common::Result {
     #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, From)]
     #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
-    #[strict_type(lib = TEST_LIB, dumb = NamedFields(confined_vec!(T::strict_dumb())))]
+    #[strict_type(lib = TEST_LIB, dumb = NamedFields(Confined::with(T::strict_dumb())))]
     pub struct NamedFields<T: StrictDumb + StrictEncode + StrictDecode>(
         Confined<Vec<T>, 1, { u8::MAX as usize }>,
     );

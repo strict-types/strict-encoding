@@ -5,7 +5,7 @@
 // Written in 2019-2024 by
 //     Dr. Maxim Orlovsky <orlovsky@ubideco.org>
 //
-// Copyright 2022-2024 UBIDECO Institute
+// Copyright 2022-2024 UBIDECO Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
     for RString<C1, C, MIN, MAX>
 {
     type Target = AsciiString;
-    fn deref(&self) -> &Self::Target { self.s.as_inner() }
+    fn deref(&self) -> &Self::Target { self.s.as_unconfined() }
 }
 
 impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> AsRef<[u8]>
@@ -161,7 +161,7 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
     fn try_from(bytes: &[u8]) -> Result<Self, InvalidRString> {
         if bytes.is_empty() && MIN == 0 {
             return Ok(Self {
-                s: Confined::from_collection_unsafe(AsciiString::new()),
+                s: Confined::from_checked(AsciiString::new()),
                 first: PhantomData,
                 rest: PhantomData,
             });
@@ -198,7 +198,7 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
 impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize>
     From<RString<C1, C, MIN, MAX>> for String
 {
-    fn from(s: RString<C1, C, MIN, MAX>) -> Self { s.s.into_inner().into() }
+    fn from(s: RString<C1, C, MIN, MAX>) -> Self { s.s.release().into() }
 }
 
 impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> Debug

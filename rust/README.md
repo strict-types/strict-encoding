@@ -7,7 +7,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/strict_encoding)](https://crates.io/crates/strict_encoding)
 [![Docs](https://docs.rs/strict_encoding/badge.svg)](https://docs.rs/strict_encoding)
-[![Apache-2 licensed](https://img.shields.io/crates/l/strict_encoding)](./LICENSE)
+[![Apache-2 licensed](https://img.shields.io/crates/l/strict_encoding)](../LICENSE)
 
 Deterministic binary serialization for client-side-validation.
 
@@ -29,14 +29,13 @@ Client-side-validation is a paradigm for distributed computing, based on top of
 proof-of-publication/commitment medium layer, which may be a bitcoin blockchain
 or other type of distributed consensus system.
 
-The development of the library is supported by 
+The development of the library is supported by
 [LNP/BP Standards Association](https://lnp-bp.org).
 
-The library is designed after Peter Todd concepts of proofmarshall and 
-serialization principles for client-side-validated data and Dr Maxim Orlovsky 
-idea of universal network encodings. Both were shaped into the standards and 
+The library is designed after Peter Todd concepts of proofmarshall and
+serialization principles for client-side-validated data and Dr Maxim Orlovsky
+idea of universal network encodings. Both were shaped into the standards and
 implemented as a part of this library by Dr Maxim Orlovsky.
-
 
 ## Documentation
 
@@ -46,7 +45,6 @@ at <https://docs.rs/strict_encoding/>
 To learn about the technologies enabled by the library please check
 [slides from our tech presentations](https://github.com/LNP-BP/FAQ/blob/master/Presentation%20slides/)
 and [LNP/BP tech talks videos](https://www.youtube.com/channel/UCK_Q3xcQ-H3ERwArGaMKsxg)
-
 
 ## Usage
 
@@ -63,14 +61,15 @@ including the current one.
 
 Library defines two main traits, [`StrictEncode`] and [`StrictDecode`],
 which should be implemented on each type that requires to be represented
-for client-side-validation. 
+for client-side-validation.
 
-Library exports derivation macros `#[derive(StrictEncode, StrictDecode)]`, 
-which are a part of [`strict_encoding_derive`] sub-crate and controlled by a 
+Library exports derivation macros `#[derive(StrictEncode, StrictDecode)]`,
+which are a part of [`strict_encoding_derive`] sub-crate and controlled by a
 default feature `derive`. Finally, it implements strict encoding traits for main
 data types defined by rust standard library and frequently used crates; the
 latter increases the number of dependencies and thus can be controlled with
 feature flags:
+
 - `chrono` (used by default): date & time types from `chrono` crate
 - `miniscript`: types defined in bitcoin Miniscript
 - `crypto`: non-bitcoin cryptographic primitives, which include Ed25519
@@ -83,11 +82,9 @@ This crate requires `bitcoin` as an upstream dependency since many of
 strict-encoded formats are standardized as using *bitcoin consensus
 encoding*.
 
-
 ## Contributing
 
 Contribution guidelines can be found in [CONTRIBUTING](../CONTRIBUTING.md)
-
 
 ## Licensing
 
@@ -95,4 +92,5 @@ The libraries are distributed on the terms of Apache 2.0 opensource license.
 See [LICENCE](LICENSE) file for the license details.
 
 [`client_side_validation`]: https://crates.io/crates/client_side_validation
+
 [`strict_encoding_derive`]: https://crates.io/crates/strict_encoding_derive

@@ -5,7 +5,7 @@
 // Written in 2019-2024 by
 //     Dr. Maxim Orlovsky <orlovsky@ubideco.org>
 //
-// Copyright 2022-2024 UBIDECO Institute
+// Copyright 2022-2024 UBIDECO Labs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ pub fn encode<T: StrictEncode + Debug + Eq>(val: &T) -> Vec<u8> {
     let data = val.strict_encode(ast_data).unwrap().unbox().unconfine();
     Confined::<Vec<u8>, 0, MAX>::try_from(data)
         .unwrap()
-        .into_inner()
+        .release()
 }
 
 pub fn decode<T: StrictDecode + Debug + Eq>(data: impl AsRef<[u8]>) -> T {
