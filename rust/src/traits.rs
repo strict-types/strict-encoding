@@ -130,8 +130,7 @@ pub trait TypedWrite: Sized {
         mut self,
         bytes: impl AsRef<[u8]>,
     ) -> io::Result<Self> {
-        self.raw_writer()
-            .write_raw_len::<MAX_LEN>(bytes.as_ref().len())?;
+        self.raw_writer().write_raw_len::<MAX_LEN>(bytes.as_ref().len())?;
         self.raw_writer().write_raw::<MAX_LEN>(bytes)?;
         Ok(self)
     }
@@ -226,9 +225,7 @@ pub trait TypedRead {
     #[doc(hidden)]
     unsafe fn read_string<const MAX_LEN: usize>(&mut self) -> Result<Vec<u8>, DecodeError> {
         let len = self.raw_reader().read_raw_len::<MAX_LEN>()?;
-        self.raw_reader()
-            .read_raw::<MAX_LEN>(len)
-            .map_err(DecodeError::from)
+        self.raw_reader().read_raw::<MAX_LEN>(len).map_err(DecodeError::from)
     }
 }
 

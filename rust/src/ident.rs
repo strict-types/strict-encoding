@@ -50,9 +50,7 @@ macro_rules! impl_ident_type {
 
         impl ::core::fmt::Debug for $ty {
             fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-                f.debug_tuple(&$crate::type_name::<Self>())
-                    .field(&self.as_str())
-                    .finish()
+                f.debug_tuple(&$crate::type_name::<Self>()).field(&self.as_str()).finish()
             }
         }
 

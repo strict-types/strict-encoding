@@ -101,20 +101,15 @@ macro_rules! encode_nonzero {
             fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
                 unsafe {
                     writer = writer.register_primitive(Primitive::$id);
-                    writer
-                        .raw_writer()
-                        .write_raw_array(self.get().to_le_bytes())?;
+                    writer.raw_writer().write_raw_array(self.get().to_le_bytes())?;
                 }
                 Ok(writer)
             }
         }
         impl $crate::StrictDecode for $ty {
             fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
-                let buf = unsafe {
-                    reader
-                        .raw_reader()
-                        .read_raw_array::<{ Self::BITS as usize / 8 }>()?
-                };
+                let buf =
+                    unsafe { reader.raw_reader().read_raw_array::<{ Self::BITS as usize / 8 }>()? };
                 let v = <$p>::from_le_bytes(buf);
                 Self::new(v).ok_or(DecodeError::ZeroNatural)
             }
@@ -249,10 +244,7 @@ impl<T> StrictUnion for Option<T> where T: StrictType {}
 impl<T: StrictEncode + StrictDumb> StrictEncode for Option<T> {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_union::<Self>(|u| {
-            let u = u
-                .define_unit(vname!("none"))
-                .define_newtype::<T>(vname!("some"))
-                .complete();
+            let u = u.define_unit(vname!("none")).define_newtype::<T>(vname!("some")).complete();
 
             Ok(match self {
                 None => u.write_unit(vname!("none")),
@@ -326,10 +318,7 @@ impl<A: StrictEncode + Default, B: StrictEncode + Default, C: StrictEncode + Def
 {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         writer.write_tuple::<Self>(|w| {
-            Ok(w.write_field(&self.0)?
-                .write_field(&self.1)?
-                .write_field(&self.2)?
-                .complete())
+            Ok(w.write_field(&self.0)?.write_field(&self.1)?.write_field(&self.2)?.complete())
         })
     }
 }

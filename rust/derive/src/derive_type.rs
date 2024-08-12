@@ -41,14 +41,11 @@ impl StrictDerive {
         let trait_crate = &self.conf.strict_crate;
         let type_name = &self.data.name;
 
-        let impl_type = self
-            .data
-            .derive(trait_crate, &ident!(StrictType), &DeriveType(self))?;
+        let impl_type = self.data.derive(trait_crate, &ident!(StrictType), &DeriveType(self))?;
 
         let impl_outer = match &self.data.inner {
             DataInner::Struct(_) => {
-                self.data
-                    .derive(trait_crate, &ident!(StrictProduct), &DeriveProduct)?
+                self.data.derive(trait_crate, &ident!(StrictProduct), &DeriveProduct)?
             }
             DataInner::Enum(variants) => {
                 let enum_attr = EnumAttr::with(self.data.attr.clone(), variants.enum_kind())?;
@@ -87,8 +84,7 @@ impl StrictDerive {
                 };
 
                 let impl_struct_enum =
-                    self.data
-                        .derive(trait_crate, &ident!(StrictSum), &DeriveSum(enum_attr))?;
+                    self.data.derive(trait_crate, &ident!(StrictSum), &DeriveSum(enum_attr))?;
 
                 quote! {
                     #impl_into_u8
@@ -101,20 +97,16 @@ impl StrictDerive {
 
         let impl_inner = match &self.data.inner {
             DataInner::Struct(Fields::Named(_)) => {
-                self.data
-                    .derive(trait_crate, &ident!(StrictStruct), &DeriveStruct)?
+                self.data.derive(trait_crate, &ident!(StrictStruct), &DeriveStruct)?
             }
             DataInner::Struct(Fields::Unnamed(_)) => {
-                self.data
-                    .derive(trait_crate, &ident!(StrictTuple), &DeriveTuple)?
+                self.data.derive(trait_crate, &ident!(StrictTuple), &DeriveTuple)?
             }
             DataInner::Enum(variants) if variants.enum_kind() == EnumKind::Primitive => {
-                self.data
-                    .derive(trait_crate, &ident!(StrictEnum), &DeriveEnum)?
+                self.data.derive(trait_crate, &ident!(StrictEnum), &DeriveEnum)?
             }
             DataInner::Enum(_) => {
-                self.data
-                    .derive(trait_crate, &ident!(StrictUnion), &DeriveUnion)?
+                self.data.derive(trait_crate, &ident!(StrictUnion), &DeriveUnion)?
             }
             _ => TokenStream2::new(),
         };

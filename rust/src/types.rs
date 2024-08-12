@@ -28,9 +28,7 @@ use crate::{LibName, TypeName, VariantName};
 
 pub fn type_name<T>() -> String {
     fn get_ident(path: &str) -> &str {
-        path.rsplit_once("::")
-            .map(|(_, n)| n.trim())
-            .unwrap_or(path)
+        path.rsplit_once("::").map(|(_, n)| n.trim()).unwrap_or(path)
     }
 
     let name = any::type_name::<T>().replace('&', "");

@@ -207,14 +207,8 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let c = type_name::<C>();
         let c1 = type_name::<C>();
-        let c = if c == c1 {
-            c.to_owned()
-        } else {
-            format!("{c1}, {c}")
-        };
-        f.debug_tuple(&format!("RString<{c}[{MIN}..{MAX}]>"))
-            .field(&self.as_str())
-            .finish()
+        let c = if c == c1 { c.to_owned() } else { format!("{c1}, {c}") };
+        f.debug_tuple(&format!("RString<{c}[{MIN}..{MAX}]>")).field(&self.as_str()).finish()
     }
 }
 
@@ -365,9 +359,7 @@ impl TryFrom<u8> for AsciiSym {
     type Error = VariantError<u8>;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
-        AsciiChar::from_ascii(value)
-            .map_err(|_| VariantError::with::<AsciiSym>(value))
-            .map(Self)
+        AsciiChar::from_ascii(value).map_err(|_| VariantError::with::<AsciiSym>(value)).map(Self)
     }
 }
 impl StrictType for AsciiSym {

@@ -29,8 +29,7 @@ struct DeriveDumb<'a>(&'a StrictDerive);
 
 impl StrictDerive {
     pub fn derive_dumb(&self) -> Result<TokenStream2> {
-        self.data
-            .derive(&self.conf.strict_crate, &ident!(StrictDumb), &DeriveDumb(self))
+        self.data.derive(&self.conf.strict_crate, &ident!(StrictDumb), &DeriveDumb(self))
     }
 }
 

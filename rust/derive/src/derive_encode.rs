@@ -29,8 +29,7 @@ struct DeriveEncode<'a>(&'a StrictDerive);
 
 impl StrictDerive {
     pub fn derive_encode(&self) -> Result<TokenStream2> {
-        self.data
-            .derive(&self.conf.strict_crate, &ident!(StrictEncode), &DeriveEncode(self))
+        self.data.derive(&self.conf.strict_crate, &ident!(StrictEncode), &DeriveEncode(self))
     }
 }
 
@@ -73,11 +72,7 @@ impl DeriveInner for DeriveEncode<'_> {
 
         let no = fields.iter().enumerate().filter_map(|(index, field)| {
             let attr = FieldAttr::with(field.attr.clone(), FieldKind::Unnamed).ok()?;
-            if attr.skip {
-                None
-            } else {
-                Some(Index::from(index))
-            }
+            if attr.skip { None } else { Some(Index::from(index)) }
         });
 
         Ok(quote! {
