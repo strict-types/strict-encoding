@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - master
-      - develop
-      - 'v[0-9]+.[0-9]+'
+    tags:
+      - 'v[0-9]+\.*'
   pull_request:
     branches:
       - master
@@ -17,7 +17,6 @@ env:
 
 jobs:
   testing:
-    # NOTE: Don't use nix in platform checks everything should be based on the host system
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -32,8 +31,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v26
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: jetli/wasm-pack-action@v0.4.0
+      - name: Add wasm32 target
+        run: rustup target add wasm32-unknown-unknown
       - name: Test main lib in headless Chrome
-        run: nix develop .#wasm -c wasm-pack test --headless --chrome rust
+        run: wasm-pack test --headless --chrome rust
       - name: Test derive lib in headless Chrome
-        run: nix develop .#wasm -c wasm-pack test --headless --chrome rust/derive
+        run: wasm-pack test --headless --chrome rust/derive
