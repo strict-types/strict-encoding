@@ -4,7 +4,7 @@ default-members = ["rust", "rust/derive", "rust/test_helpers"]
 resolver = "2"
 
 [workspace.package]
-version = "2.7.0-rc.1"
+version = "2.7.0"
 authors = ["Dr Maxim Orlovsky <orlovsky@ubideco.org>"]
 homepage = "https://strict-types.org"
 repository = "https://github.com/strict-types/strict-encoding"

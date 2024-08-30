@@ -492,7 +492,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding"
-version = "2.7.0-rc.1"
+version = "2.7.0"
 dependencies = [
  "amplify",
  "getrandom",
@@ -507,7 +507,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_derive"
-version = "2.7.0-rc.1"
+version = "2.7.0"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -522,7 +522,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_test"
-version = "2.7.0-rc.1"
+version = "2.7.0"
 dependencies = [
  "amplify",
  "strict_encoding",

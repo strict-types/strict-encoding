@@ -15,7 +15,7 @@ exclude = ["derive", "test_helpers"]
 
 [dependencies]
 amplify = { workspace = true, features = ["proc_attr"] }
-strict_encoding_derive = { version = "2.7.0-rc.1", path = "derive" }
+strict_encoding_derive = { version = "2.7.0", path = "derive" }
 half = { version = "2.4.1", optional = true }
 serde_crate = { workspace = true, optional = true }
 
