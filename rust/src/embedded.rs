@@ -19,24 +19,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::hash::Hash;
 use std::io;
-use std::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8};
+use std::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU128};
 
 use amplify::ascii::AsciiString;
 use amplify::confinement::Confined;
 #[cfg(feature = "float")]
-use amplify::num::apfloat::{ieee, Float};
-use amplify::num::{i1024, i256, i512, u1024, u24, u256, u40, u48, u512, u56};
+use amplify::num::apfloat::{Float, ieee};
+use amplify::num::{i256, i512, i1024, u24, u40, u48, u56, u256, u512, u1024};
 use amplify::{Array, Wrapper};
 
 use crate::stl::AsciiSym;
 use crate::{
-    DecodeError, DefineUnion, Primitive, RString, ReadRaw, ReadTuple, ReadUnion, RestrictedCharSet,
-    Sizing, StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct, StrictSum,
-    StrictTuple, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteRaw, WriteTuple,
-    WriteUnion, LIB_EMBEDDED,
+    DecodeError, DefineUnion, LIB_EMBEDDED, Primitive, RString, ReadRaw, ReadTuple, ReadUnion,
+    RestrictedCharSet, Sizing, StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct,
+    StrictSum, StrictTuple, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteRaw,
+    WriteTuple, WriteUnion,
 };
 
 pub trait DecodeRawLe: Sized {
@@ -512,6 +512,41 @@ impl<T: StrictDecode, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
         let mut col = Vec::<T>::with_capacity(len);
         for _ in 0..len {
             col.push(StrictDecode::strict_decode(reader)?);
+        }
+        Confined::try_from(col).map_err(DecodeError::from)
+    }
+}
+
+impl<T: StrictType, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
+    for Confined<VecDeque<T>, MIN_LEN, MAX_LEN>
+{
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
+    fn strict_name() -> Option<TypeName> { None }
+}
+impl<T: StrictEncode + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
+    for Confined<VecDeque<T>, MIN_LEN, MAX_LEN>
+{
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+        let sizing = Sizing::new(MIN_LEN as u64, MAX_LEN as u64);
+        writer = unsafe {
+            writer = writer.write_collection::<VecDeque<T>, MIN_LEN, MAX_LEN>(self)?;
+            if T::strict_name() == u8::strict_name() {
+                writer.register_list(&Byte::strict_dumb(), sizing)
+            } else {
+                writer.register_list(&T::strict_dumb(), sizing)
+            }
+        };
+        Ok(writer)
+    }
+}
+impl<T: StrictDecode, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
+    for Confined<VecDeque<T>, MIN_LEN, MAX_LEN>
+{
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let len = unsafe { reader.raw_reader().read_raw_len::<MAX_LEN>()? };
+        let mut col = VecDeque::<T>::with_capacity(len);
+        for _ in 0..len {
+            col.push_back(StrictDecode::strict_decode(reader)?);
         }
         Confined::try_from(col).map_err(DecodeError::from)
     }
