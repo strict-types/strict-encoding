@@ -72,7 +72,11 @@ impl DeriveInner for DeriveEncode<'_> {
 
         let no = fields.iter().enumerate().filter_map(|(index, field)| {
             let attr = FieldAttr::with(field.attr.clone(), FieldKind::Unnamed).ok()?;
-            if attr.skip { None } else { Some(Index::from(index)) }
+            if attr.skip {
+                None
+            } else {
+                Some(Index::from(index))
+            }
         });
 
         Ok(quote! {

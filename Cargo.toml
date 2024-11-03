@@ -4,11 +4,11 @@ default-members = ["rust", "rust/derive", "rust/test_helpers"]
 resolver = "2"
 
 [workspace.package]
-version = "2.7.0"
+version = "2.7.1"
 authors = ["Dr Maxim Orlovsky <orlovsky@ubideco.org>"]
 homepage = "https://strict-types.org"
 repository = "https://github.com/strict-types/strict-encoding"
-rust-version = "1.75.0" # Due to amplify crate
+rust-version = "1.77.0"
 edition = "2021"
 license = "Apache-2.0"
 
