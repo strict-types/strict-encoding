@@ -22,21 +22,21 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::hash::Hash;
 use std::io;
-use std::num::{NonZeroU8, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU128};
+use std::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8};
 
 use amplify::ascii::AsciiString;
 use amplify::confinement::Confined;
 #[cfg(feature = "float")]
-use amplify::num::apfloat::{Float, ieee};
-use amplify::num::{i256, i512, i1024, u24, u40, u48, u56, u256, u512, u1024};
+use amplify::num::apfloat::{ieee, Float};
+use amplify::num::{i1024, i256, i512, u1024, u24, u256, u40, u48, u512, u56};
 use amplify::{Array, Wrapper};
 
 use crate::stl::AsciiSym;
 use crate::{
-    DecodeError, DefineUnion, LIB_EMBEDDED, Primitive, RString, ReadRaw, ReadTuple, ReadUnion,
-    RestrictedCharSet, Sizing, StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct,
-    StrictSum, StrictTuple, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteRaw,
-    WriteTuple, WriteUnion,
+    DecodeError, DefineUnion, Primitive, RString, ReadRaw, ReadTuple, ReadUnion, RestrictedCharSet,
+    Sizing, StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct, StrictSum,
+    StrictTuple, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteRaw, WriteTuple,
+    WriteUnion, LIB_EMBEDDED,
 };
 
 pub trait DecodeRawLe: Sized {
@@ -596,11 +596,11 @@ impl<K: StrictType + Ord + Hash, V: StrictType, const MIN_LEN: usize, const MAX_
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<
-    K: StrictEncode + Ord + Hash + StrictDumb,
-    V: StrictEncode + StrictDumb,
-    const MIN_LEN: usize,
-    const MAX_LEN: usize,
-> StrictEncode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
+        K: StrictEncode + Ord + Hash + StrictDumb,
+        V: StrictEncode + StrictDumb,
+        const MIN_LEN: usize,
+        const MAX_LEN: usize,
+    > StrictEncode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
 {
     fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
         unsafe {
@@ -620,11 +620,11 @@ impl<
     }
 }
 impl<
-    K: StrictDecode + Ord + Hash + StrictDumb,
-    V: StrictDecode + StrictDumb,
-    const MIN_LEN: usize,
-    const MAX_LEN: usize,
-> StrictDecode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
+        K: StrictDecode + Ord + Hash + StrictDumb,
+        V: StrictDecode + StrictDumb,
+        const MIN_LEN: usize,
+        const MAX_LEN: usize,
+    > StrictDecode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         let len = unsafe { reader.raw_reader().read_raw_len::<MAX_LEN>()? };

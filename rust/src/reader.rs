@@ -146,8 +146,12 @@ impl<R: ReadRaw> StrictReader<R> {
 }
 
 impl<R: ReadRaw> TypedRead for StrictReader<R> {
-    type TupleReader<'parent> = TupleReader<'parent, R> where Self: 'parent;
-    type StructReader<'parent> = StructReader<'parent, R> where Self: 'parent;
+    type TupleReader<'parent>
+        = TupleReader<'parent, R>
+    where Self: 'parent;
+    type StructReader<'parent>
+        = StructReader<'parent, R>
+    where Self: 'parent;
     type UnionReader = Self;
     type RawReader = R;
 
@@ -251,8 +255,12 @@ impl<'parent, R: ReadRaw> ReadStruct for StructReader<'parent, R> {
 }
 
 impl<R: ReadRaw> ReadUnion for StrictReader<R> {
-    type TupleReader<'parent> = TupleReader<'parent, R> where Self: 'parent;
-    type StructReader<'parent> = StructReader<'parent, R> where Self: 'parent;
+    type TupleReader<'parent>
+        = TupleReader<'parent, R>
+    where Self: 'parent;
+    type StructReader<'parent>
+        = StructReader<'parent, R>
+    where Self: 'parent;
 
     fn read_tuple<'parent, 'me, T: StrictSum>(
         &'me mut self,
