@@ -26,4 +26,3 @@ heck = "0.5.0"
 strict_encoding = { path = ".." }
 strict_encoding_test = { path = "../test_helpers" }
 amplify = { workspace = true }
-compiletest_rs = "0.11.0"
