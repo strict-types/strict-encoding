@@ -439,26 +439,26 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
     }
 }
 
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
-    StrictType for RString<C, C1, MIN_LEN, MAX_LEN>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
+    StrictType for RString<C1, C, MIN_LEN, MAX_LEN>
 {
     const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
 }
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
-    StrictDumb for RString<C, C1, MIN_LEN, MAX_LEN>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
+    StrictDumb for RString<C1, C, MIN_LEN, MAX_LEN>
 {
     fn strict_dumb() -> Self {
         Self::try_from(format!(
             "{}{}",
             C1::strict_dumb(),
-            String::from_utf8(vec![C::strict_dumb().into(); MIN_LEN]).expect("dumb")
+            String::from_utf8(vec![C::strict_dumb().into(); MIN_LEN - 1]).expect("dumb")
         ))
         .expect("dumb")
     }
 }
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
-    StrictEncode for RString<C, C1, MIN_LEN, MAX_LEN>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
+    StrictEncode for RString<C1, C, MIN_LEN, MAX_LEN>
 {
     fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
         debug_assert_ne!(
@@ -473,8 +473,8 @@ impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MA
         }
     }
 }
-impl<C: RestrictedCharSet, C1: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
-    StrictDecode for RString<C, C1, MIN_LEN, MAX_LEN>
+impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
+    StrictDecode for RString<C1, C, MIN_LEN, MAX_LEN>
 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         let bytes = unsafe { reader.read_string::<MAX_LEN>()? };
