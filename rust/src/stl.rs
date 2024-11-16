@@ -721,6 +721,69 @@ pub enum AlphaCaps {
 #[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
+pub enum AlphaCapsDot {
+    #[strict_type(dumb)]
+    #[display(".")]
+    Dot = b'.',
+    #[strict_type(rename = "_A")]
+    A = b'A',
+    #[strict_type(rename = "_B")]
+    B = b'B',
+    #[strict_type(rename = "_C")]
+    C = b'C',
+    #[strict_type(rename = "_D")]
+    D = b'D',
+    #[strict_type(rename = "_E")]
+    E = b'E',
+    #[strict_type(rename = "_F")]
+    F = b'F',
+    #[strict_type(rename = "_G")]
+    G = b'G',
+    #[strict_type(rename = "_H")]
+    H = b'H',
+    #[strict_type(rename = "_I")]
+    I = b'I',
+    #[strict_type(rename = "_J")]
+    J = b'J',
+    #[strict_type(rename = "_K")]
+    K = b'K',
+    #[strict_type(rename = "_L")]
+    L = b'L',
+    #[strict_type(rename = "_M")]
+    M = b'M',
+    #[strict_type(rename = "_N")]
+    N = b'N',
+    #[strict_type(rename = "_O")]
+    O = b'O',
+    #[strict_type(rename = "_P")]
+    P = b'P',
+    #[strict_type(rename = "_Q")]
+    Q = b'Q',
+    #[strict_type(rename = "_R")]
+    R = b'R',
+    #[strict_type(rename = "_S")]
+    S = b'S',
+    #[strict_type(rename = "_T")]
+    T = b'T',
+    #[strict_type(rename = "_U")]
+    U = b'U',
+    #[strict_type(rename = "_V")]
+    V = b'V',
+    #[strict_type(rename = "_W")]
+    W = b'W',
+    #[strict_type(rename = "_X")]
+    X = b'X',
+    #[strict_type(rename = "_Y")]
+    Y = b'Y',
+    #[strict_type(rename = "_Z")]
+    Z = b'Z',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[display(inner)]
+#[repr(u8)]
 pub enum AlphaCapsDash {
     #[strict_type(dumb)]
     #[display("-")]
@@ -906,6 +969,68 @@ pub enum AlphaSmall {
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[repr(u8)]
+pub enum AlphaSmallDot {
+    #[strict_type(dumb)]
+    #[display(".")]
+    Dot = b'.',
+    #[display("a")]
+    A = b'a',
+    #[display("b")]
+    B = b'b',
+    #[display("c")]
+    C = b'c',
+    #[display("d")]
+    D = b'd',
+    #[display("e")]
+    E = b'e',
+    #[display("f")]
+    F = b'f',
+    #[display("g")]
+    G = b'g',
+    #[display("h")]
+    H = b'h',
+    #[display("i")]
+    I = b'i',
+    #[display("j")]
+    J = b'j',
+    #[display("k")]
+    K = b'k',
+    #[display("l")]
+    L = b'l',
+    #[display("m")]
+    M = b'm',
+    #[display("n")]
+    N = b'n',
+    #[display("o")]
+    O = b'o',
+    #[display("p")]
+    P = b'p',
+    #[display("q")]
+    Q = b'q',
+    #[display("r")]
+    R = b'r',
+    #[display("s")]
+    S = b's',
+    #[display("t")]
+    T = b't',
+    #[display("u")]
+    U = b'u',
+    #[display("v")]
+    V = b'v',
+    #[display("w")]
+    W = b'w',
+    #[display("x")]
+    X = b'x',
+    #[display("y")]
+    Y = b'y',
+    #[display("z")]
+    Z = b'z',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[repr(u8)]
 pub enum AlphaSmallDash {
     #[strict_type(dumb)]
     #[display("-")]
@@ -1032,6 +1157,121 @@ pub enum AlphaSmallLodash {
 #[display(inner)]
 #[repr(u8)]
 pub enum Alpha {
+    #[strict_type(dumb, rename = "_A")]
+    A = b'A',
+    #[strict_type(rename = "_B")]
+    B = b'B',
+    #[strict_type(rename = "_C")]
+    C = b'C',
+    #[strict_type(rename = "_D")]
+    D = b'D',
+    #[strict_type(rename = "_E")]
+    E = b'E',
+    #[strict_type(rename = "_F")]
+    F = b'F',
+    #[strict_type(rename = "_G")]
+    G = b'G',
+    #[strict_type(rename = "_H")]
+    H = b'H',
+    #[strict_type(rename = "_I")]
+    I = b'I',
+    #[strict_type(rename = "_J")]
+    J = b'J',
+    #[strict_type(rename = "_K")]
+    K = b'K',
+    #[strict_type(rename = "_L")]
+    L = b'L',
+    #[strict_type(rename = "_M")]
+    M = b'M',
+    #[strict_type(rename = "_N")]
+    N = b'N',
+    #[strict_type(rename = "_O")]
+    O = b'O',
+    #[strict_type(rename = "_P")]
+    P = b'P',
+    #[strict_type(rename = "_Q")]
+    Q = b'Q',
+    #[strict_type(rename = "_R")]
+    R = b'R',
+    #[strict_type(rename = "_S")]
+    S = b'S',
+    #[strict_type(rename = "_T")]
+    T = b'T',
+    #[strict_type(rename = "_U")]
+    U = b'U',
+    #[strict_type(rename = "_V")]
+    V = b'V',
+    #[strict_type(rename = "_W")]
+    W = b'W',
+    #[strict_type(rename = "_X")]
+    X = b'X',
+    #[strict_type(rename = "_Y")]
+    Y = b'Y',
+    #[strict_type(rename = "_Z")]
+    Z = b'Z',
+    #[display("a")]
+    a = b'a',
+    #[display("b")]
+    b = b'b',
+    #[display("c")]
+    c = b'c',
+    #[display("d")]
+    d = b'd',
+    #[display("e")]
+    e = b'e',
+    #[display("f")]
+    f = b'f',
+    #[display("g")]
+    g = b'g',
+    #[display("h")]
+    h = b'h',
+    #[display("i")]
+    i = b'i',
+    #[display("j")]
+    j = b'j',
+    #[display("k")]
+    k = b'k',
+    #[display("l")]
+    l = b'l',
+    #[display("m")]
+    m = b'm',
+    #[display("n")]
+    n = b'n',
+    #[display("o")]
+    o = b'o',
+    #[display("p")]
+    p = b'p',
+    #[display("q")]
+    q = b'q',
+    #[display("r")]
+    r = b'r',
+    #[display("s")]
+    s = b's',
+    #[display("t")]
+    t = b't',
+    #[display("u")]
+    u = b'u',
+    #[display("v")]
+    v = b'v',
+    #[display("w")]
+    w = b'w',
+    #[display("x")]
+    x = b'x',
+    #[display("y")]
+    y = b'y',
+    #[display("z")]
+    z = b'z',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[display(inner)]
+#[repr(u8)]
+pub enum AlphaDot {
+    #[strict_type(dumb)]
+    #[display(".")]
+    Dot = b'.',
     #[strict_type(dumb, rename = "_A")]
     A = b'A',
     #[strict_type(rename = "_B")]
@@ -1399,6 +1639,36 @@ pub enum Dec {
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
 #[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
 #[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[repr(u8)]
+pub enum DecDot {
+    #[strict_type(dumb)]
+    #[display(".")]
+    Dot = b'.',
+    #[display("0")]
+    Zero = b'0',
+    #[display("1")]
+    One = b'1',
+    #[display("2")]
+    Two = b'2',
+    #[display("3")]
+    Three = b'3',
+    #[display("4")]
+    Four = b'4',
+    #[display("5")]
+    Five = b'5',
+    #[display("6")]
+    Six = b'6',
+    #[display("7")]
+    Seven = b'7',
+    #[display("8")]
+    Eight = b'8',
+    #[display("9")]
+    Nine = b'9',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
 #[display(inner)]
 #[repr(u8)]
 pub enum HexDecCaps {
@@ -1564,6 +1834,141 @@ pub enum AlphaCapsNum {
 #[display(inner)]
 #[repr(u8)]
 pub enum AlphaNum {
+    #[display("0")]
+    Zero = b'0',
+    #[display("1")]
+    One = b'1',
+    #[display("2")]
+    Two = b'2',
+    #[display("3")]
+    Three = b'3',
+    #[display("4")]
+    Four = b'4',
+    #[display("5")]
+    Five = b'5',
+    #[display("6")]
+    Six = b'6',
+    #[display("7")]
+    Seven = b'7',
+    #[display("8")]
+    Eight = b'8',
+    #[display("9")]
+    Nine = b'9',
+    #[strict_type(dumb, rename = "_A")]
+    A = b'A',
+    #[strict_type(rename = "_B")]
+    B = b'B',
+    #[strict_type(rename = "_C")]
+    C = b'C',
+    #[strict_type(rename = "_D")]
+    D = b'D',
+    #[strict_type(rename = "_E")]
+    E = b'E',
+    #[strict_type(rename = "_F")]
+    F = b'F',
+    #[strict_type(rename = "_G")]
+    G = b'G',
+    #[strict_type(rename = "_H")]
+    H = b'H',
+    #[strict_type(rename = "_I")]
+    I = b'I',
+    #[strict_type(rename = "_J")]
+    J = b'J',
+    #[strict_type(rename = "_K")]
+    K = b'K',
+    #[strict_type(rename = "_L")]
+    L = b'L',
+    #[strict_type(rename = "_M")]
+    M = b'M',
+    #[strict_type(rename = "_N")]
+    N = b'N',
+    #[strict_type(rename = "_O")]
+    O = b'O',
+    #[strict_type(rename = "_P")]
+    P = b'P',
+    #[strict_type(rename = "_Q")]
+    Q = b'Q',
+    #[strict_type(rename = "_R")]
+    R = b'R',
+    #[strict_type(rename = "_S")]
+    S = b'S',
+    #[strict_type(rename = "_T")]
+    T = b'T',
+    #[strict_type(rename = "_U")]
+    U = b'U',
+    #[strict_type(rename = "_V")]
+    V = b'V',
+    #[strict_type(rename = "_W")]
+    W = b'W',
+    #[strict_type(rename = "_X")]
+    X = b'X',
+    #[strict_type(rename = "_Y")]
+    Y = b'Y',
+    #[strict_type(rename = "_Z")]
+    Z = b'Z',
+    #[display("a")]
+    a = b'a',
+    #[display("b")]
+    b = b'b',
+    #[display("c")]
+    c = b'c',
+    #[display("d")]
+    d = b'd',
+    #[display("e")]
+    e = b'e',
+    #[display("f")]
+    f = b'f',
+    #[display("g")]
+    g = b'g',
+    #[display("h")]
+    h = b'h',
+    #[display("i")]
+    i = b'i',
+    #[display("j")]
+    j = b'j',
+    #[display("k")]
+    k = b'k',
+    #[display("l")]
+    l = b'l',
+    #[display("m")]
+    m = b'm',
+    #[display("n")]
+    n = b'n',
+    #[display("o")]
+    o = b'o',
+    #[display("p")]
+    p = b'p',
+    #[display("q")]
+    q = b'q',
+    #[display("r")]
+    r = b'r',
+    #[display("s")]
+    s = b's',
+    #[display("t")]
+    t = b't',
+    #[display("u")]
+    u = b'u',
+    #[display("v")]
+    v = b'v',
+    #[display("w")]
+    w = b'w',
+    #[display("x")]
+    x = b'x',
+    #[display("y")]
+    y = b'y',
+    #[display("z")]
+    z = b'z',
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, Display)]
+#[derive(StrictDumb, StrictType, StrictEncode, StrictDecode)]
+#[strict_type(lib = LIB_NAME_STD, tags = repr, into_u8, try_from_u8, crate = crate)]
+#[display(inner)]
+#[repr(u8)]
+pub enum AlphaNumDot {
+    #[strict_type(dumb)]
+    #[display(".")]
+    Dot = b'.',
     #[display("0")]
     Zero = b'0',
     #[display("1")]
@@ -1963,19 +2368,24 @@ pub enum AlphaNumLodash {
 impl RestrictedCharSet for AsciiPrintable {}
 impl RestrictedCharSet for AsciiSym {}
 impl RestrictedCharSet for Alpha {}
+impl RestrictedCharSet for AlphaDot {}
 impl RestrictedCharSet for AlphaDash {}
 impl RestrictedCharSet for AlphaLodash {}
 impl RestrictedCharSet for AlphaCaps {}
+impl RestrictedCharSet for AlphaCapsDot {}
 impl RestrictedCharSet for AlphaCapsDash {}
 impl RestrictedCharSet for AlphaCapsLodash {}
 impl RestrictedCharSet for AlphaSmall {}
+impl RestrictedCharSet for AlphaSmallDot {}
 impl RestrictedCharSet for AlphaSmallDash {}
 impl RestrictedCharSet for AlphaSmallLodash {}
 impl RestrictedCharSet for AlphaNum {}
+impl RestrictedCharSet for AlphaNumDot {}
 impl RestrictedCharSet for AlphaNumDash {}
 impl RestrictedCharSet for AlphaNumLodash {}
 impl RestrictedCharSet for AlphaCapsNum {}
 impl RestrictedCharSet for Dec {}
+impl RestrictedCharSet for DecDot {}
 impl RestrictedCharSet for HexDecCaps {}
 impl RestrictedCharSet for HexDecSmall {}
 
