@@ -87,8 +87,9 @@ extern crate amplify;
 use std::fmt::Debug;
 use std::io;
 
-use amplify::IoError;
-use strict_encoding::{DecodeError, StrictDecode, StrictEncode, StrictReader, StrictWriter};
+use strict_encoding::{
+    DecodeError, StrictDecode, StrictEncode, StrictReader, StrictWriter, WriteError,
+};
 
 /// Failures happening during strict encoding tests of enum encodings.
 ///
@@ -462,8 +463,9 @@ where T: StrictEncode + StrictDecode + PartialEq + Debug + Clone
 {
     /// Failure during encoding enum variant
     #[display("Failure during encoding: {0:?}")]
+    #[from]
     #[from(io::Error)]
-    EncoderFailure(#[doc = "Encoder error"] IoError),
+    EncoderFailure(#[doc = "Encoder error"] WriteError),
 
     /// Failure during decoding binary representation of enum variant
     #[display(

@@ -24,6 +24,8 @@ use std::ops::Range;
 
 use amplify::{confinement, IoError};
 
+use crate::WriteError;
+
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum DecodeError {
@@ -77,9 +79,9 @@ pub enum DecodeError {
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum SerializeError {
+    #[from]
     #[display(inner)]
-    #[from(io::Error)]
-    Io(IoError),
+    Write(WriteError),
 
     /// confinement requirements are not satisfied. Specifically, {0}
     #[from]

@@ -71,7 +71,7 @@ pub use traits::*;
 pub use types::*;
 pub use util::{Sizing, Variant};
 pub use writer::{
-    SplitParent, StreamWriter, StrictParent, StrictWriter, StructWriter, UnionWriter,
+    SplitParent, StreamWriter, StrictParent, StrictWriter, StructWriter, UnionWriter, WriteError,
 };
 
 #[deprecated(since = "2.2.0", note = "use LIB_EMBEDDED")]

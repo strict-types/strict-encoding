@@ -56,7 +56,7 @@ impl DeriveInner for DeriveEncode<'_> {
         }
 
         Ok(quote! {
-            fn strict_encode<W: #crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
+            fn strict_encode<W: #crate_name::TypedWrite>(&self, writer: W) -> Result<W, #crate_name::WriteError> {
                 use #crate_name::{TypedWrite, WriteStruct, fname};
                 writer.write_struct::<Self>(|w| {
                     Ok(w
@@ -80,7 +80,7 @@ impl DeriveInner for DeriveEncode<'_> {
         });
 
         Ok(quote! {
-            fn strict_encode<W: #crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
+            fn strict_encode<W: #crate_name::TypedWrite>(&self, writer: W) -> Result<W, #crate_name::WriteError> {
                 use #crate_name::{TypedWrite, WriteTuple};
                 writer.write_tuple::<Self>(|w| {
                     Ok(w
@@ -203,7 +203,7 @@ impl DeriveInner for DeriveEncode<'_> {
         };
 
         Ok(quote! {
-            fn strict_encode<W: #crate_name::TypedWrite>(&self, writer: W) -> ::std::io::Result<W> {
+            fn strict_encode<W: #crate_name::TypedWrite>(&self, writer: W) -> Result<W, #crate_name::WriteError> {
                 use #crate_name::TypedWrite;
                 #inner
             }

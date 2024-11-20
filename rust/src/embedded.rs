@@ -21,7 +21,6 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::hash::Hash;
-use std::io;
 use std::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8};
 
 use amplify::ascii::AsciiString;
@@ -35,8 +34,8 @@ use crate::stl::AsciiSym;
 use crate::{
     DecodeError, DefineUnion, Primitive, RString, ReadRaw, ReadTuple, ReadUnion, RestrictedCharSet,
     Sizing, StrictDecode, StrictDumb, StrictEncode, StrictProduct, StrictStruct, StrictSum,
-    StrictTuple, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteRaw, WriteTuple,
-    WriteUnion, LIB_EMBEDDED,
+    StrictTuple, StrictType, StrictUnion, TypeName, TypedRead, TypedWrite, WriteError, WriteRaw,
+    WriteTuple, WriteUnion, LIB_EMBEDDED,
 };
 
 pub trait DecodeRawLe: Sized {
@@ -53,7 +52,7 @@ pub trait DecodeRawLe: Sized {
 pub struct Byte(u8);
 
 impl StrictEncode for Byte {
-    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> Result<W, WriteError> {
         unsafe {
             writer = writer.register_primitive(Primitive::BYTE);
             writer.raw_writer().write_raw::<1>([self.0])?;
@@ -69,7 +68,7 @@ macro_rules! encode_num {
             fn strict_name() -> Option<TypeName> { Some(tn!(stringify!($id))) }
         }
         impl $crate::StrictEncode for $ty {
-            fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+            fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> Result<W, $crate::WriteError> {
                 unsafe {
                     writer = writer.register_primitive(Primitive::$id);
                     writer.raw_writer().write_raw_array(self.to_le_bytes())?;
@@ -78,13 +77,15 @@ macro_rules! encode_num {
             }
         }
         impl $crate::DecodeRawLe for $ty {
-            fn decode_raw_le(reader: &mut (impl ReadRaw + ?Sized)) -> Result<Self, DecodeError> {
+            fn decode_raw_le(
+                reader: &mut (impl ReadRaw + ?Sized),
+            ) -> Result<Self, $crate::DecodeError> {
                 let buf = reader.read_raw_array::<{ Self::BITS as usize / 8 }>()?;
                 Ok(Self::from_le_bytes(buf))
             }
         }
         impl $crate::StrictDecode for $ty {
-            fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+            fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, $crate::DecodeError> {
                 Self::decode_raw_le(unsafe { reader.raw_reader() })
             }
         }
@@ -98,7 +99,7 @@ macro_rules! encode_nonzero {
             fn strict_name() -> Option<TypeName> { Some(tn!(stringify!($id))) }
         }
         impl $crate::StrictEncode for $ty {
-            fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+            fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> Result<W, $crate::WriteError> {
                 unsafe {
                     writer = writer.register_primitive(Primitive::$id);
                     writer.raw_writer().write_raw_array(self.get().to_le_bytes())?;
@@ -107,7 +108,7 @@ macro_rules! encode_nonzero {
             }
         }
         impl $crate::StrictDecode for $ty {
-            fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+            fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, $crate::DecodeError> {
                 let buf =
                     unsafe { reader.raw_reader().read_raw_array::<{ Self::BITS as usize / 8 }>()? };
                 let v = <$p>::from_le_bytes(buf);
@@ -126,7 +127,7 @@ macro_rules! encode_float {
         }
         #[cfg(feature = "float")]
         impl $crate::StrictEncode for $ty {
-            fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+            fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> Result<W, $crate::WriteError> {
                 let mut be = [0u8; $len];
                 be.copy_from_slice(&self.to_bits().to_le_bytes()[..$len]);
                 unsafe {
@@ -138,7 +139,7 @@ macro_rules! encode_float {
         }
         #[cfg(feature = "float")]
         impl $crate::StrictDecode for $ty {
-            fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+            fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, $crate::DecodeError> {
                 const BYTES: usize = <$ty>::BITS / 8;
                 let mut inner = [0u8; 32];
                 let buf = unsafe { reader.raw_reader().read_raw_array::<BYTES>()? };
@@ -211,7 +212,7 @@ where T: Default + StrictStruct
 impl<T> StrictEncode for Box<T>
 where T: StrictEncode
 {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
         self.as_ref().strict_encode(writer)
     }
 }
@@ -242,7 +243,7 @@ where T: StrictType
 }
 impl<T> StrictUnion for Option<T> where T: StrictType {}
 impl<T: StrictEncode + StrictDumb> StrictEncode for Option<T> {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
         writer.write_union::<Self>(|u| {
             let u = u.define_unit(vname!("none")).define_newtype::<T>(vname!("some")).complete();
 
@@ -269,7 +270,7 @@ impl StrictType for () {
     fn strict_name() -> Option<TypeName> { None }
 }
 impl StrictEncode for () {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
         Ok(unsafe { writer.register_primitive(Primitive::UNIT) })
     }
 }
@@ -286,7 +287,7 @@ impl<A: StrictType + Default, B: StrictType + Default> StrictTuple for (A, B) {
     const FIELD_COUNT: u8 = 2;
 }
 impl<A: StrictEncode + Default, B: StrictEncode + Default> StrictEncode for (A, B) {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
         writer.write_tuple::<Self>(|w| Ok(w.write_field(&self.0)?.write_field(&self.1)?.complete()))
     }
 }
@@ -316,7 +317,7 @@ impl<A: StrictType + Default, B: StrictType + Default, C: StrictType + Default> 
 impl<A: StrictEncode + Default, B: StrictEncode + Default, C: StrictEncode + Default> StrictEncode
     for (A, B, C)
 {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
         writer.write_tuple::<Self>(|w| {
             Ok(w.write_field(&self.0)?.write_field(&self.1)?.write_field(&self.2)?.complete())
         })
@@ -340,7 +341,7 @@ impl<T: StrictType + Copy + StrictDumb, const LEN: usize> StrictType for [T; LEN
     fn strict_name() -> Option<TypeName> { None }
 }
 impl<T: StrictEncode + Copy + StrictDumb, const LEN: usize> StrictEncode for [T; LEN] {
-    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> Result<W, WriteError> {
         for item in self {
             writer = item.strict_encode(writer)?;
         }
@@ -372,7 +373,7 @@ impl<T: StrictType + StrictDumb + Copy, const LEN: usize, const REVERSE_STR: boo
 impl<T: StrictEncode + StrictDumb + Copy, const LEN: usize, const REVERSE_STR: bool> StrictEncode
     for Array<T, LEN, REVERSE_STR>
 {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
         self.as_inner().strict_encode(writer)
     }
 }
@@ -391,7 +392,7 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictType for Confined<String,
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<String, MIN_LEN, MAX_LEN>
 {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
         unsafe {
             writer
                 .register_unicode(Sizing::new(MIN_LEN as u64, MAX_LEN as u64))
@@ -418,7 +419,7 @@ impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictType
 impl<const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<AsciiString, MIN_LEN, MAX_LEN>
 {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
         unsafe {
             writer
                 .register_list(
@@ -460,7 +461,7 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN_LEN: usize, const MA
 impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN_LEN: usize, const MAX_LEN: usize>
     StrictEncode for RString<C1, C, MIN_LEN, MAX_LEN>
 {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
         debug_assert_ne!(
             MIN_LEN, 0,
             "Restricted string type can't have minimum length equal to zero"
@@ -491,7 +492,7 @@ impl<T: StrictType, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
 impl<T: StrictEncode + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<Vec<T>, MIN_LEN, MAX_LEN>
 {
-    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> Result<W, WriteError> {
         let sizing = Sizing::new(MIN_LEN as u64, MAX_LEN as u64);
         writer = unsafe {
             writer = writer.write_collection::<Vec<T>, MIN_LEN, MAX_LEN>(self)?;
@@ -526,7 +527,7 @@ impl<T: StrictType, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
 impl<T: StrictEncode + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<VecDeque<T>, MIN_LEN, MAX_LEN>
 {
-    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> Result<W, WriteError> {
         let sizing = Sizing::new(MIN_LEN as u64, MAX_LEN as u64);
         writer = unsafe {
             writer = writer.write_collection::<VecDeque<T>, MIN_LEN, MAX_LEN>(self)?;
@@ -561,7 +562,7 @@ impl<T: StrictType + Ord, const MIN_LEN: usize, const MAX_LEN: usize> StrictType
 impl<T: StrictEncode + Ord + StrictDumb, const MIN_LEN: usize, const MAX_LEN: usize> StrictEncode
     for Confined<BTreeSet<T>, MIN_LEN, MAX_LEN>
 {
-    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> Result<W, WriteError> {
         unsafe {
             writer = writer.write_collection::<BTreeSet<T>, MIN_LEN, MAX_LEN>(self)?;
         }
@@ -602,7 +603,7 @@ impl<
         const MAX_LEN: usize,
     > StrictEncode for Confined<BTreeMap<K, V>, MIN_LEN, MAX_LEN>
 {
-    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> Result<W, WriteError> {
         unsafe {
             writer.raw_writer().write_raw_len::<MAX_LEN>(self.len())?;
         }

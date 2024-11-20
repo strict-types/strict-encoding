@@ -35,7 +35,7 @@ use amplify::num::{u1, u2, u3, u4, u5, u6, u7};
 
 use crate::{
     type_name, DecodeError, StrictDecode, StrictDumb, StrictEncode, StrictEnum, StrictSum,
-    StrictType, TypeName, TypedRead, TypedWrite, VariantError, LIB_NAME_STD,
+    StrictType, TypeName, TypedRead, TypedWrite, VariantError, WriteError, LIB_NAME_STD,
 };
 
 // TODO: Move RString and related ASCII types to amplify library
@@ -274,7 +274,7 @@ impl StrictType for bool {
     fn strict_name() -> Option<TypeName> { Some(tn!("Bool")) }
 }
 impl StrictEncode for bool {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
         writer.write_enum::<Bool>(Bool::from(self))
     }
 }
@@ -301,7 +301,7 @@ macro_rules! impl_u {
             fn strict_name() -> Option<TypeName> { Some(tn!(stringify!($ty))) }
         }
         impl StrictEncode for $inner {
-            fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+            fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
                 writer.write_enum::<$ty>($ty::try_from(self.to_u8())
                     .expect(concat!("broken", stringify!($inner), "type guarantees")))
             }
@@ -507,7 +507,9 @@ impl StrictSum for AsciiSym {
 }
 impl StrictEnum for AsciiSym {}
 impl StrictEncode for AsciiSym {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> { writer.write_enum(*self) }
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
+        writer.write_enum(*self)
+    }
 }
 impl StrictDecode for AsciiSym {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
@@ -648,7 +650,9 @@ impl StrictSum for AsciiPrintable {
 }
 impl StrictEnum for AsciiPrintable {}
 impl StrictEncode for AsciiPrintable {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> { writer.write_enum(*self) }
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
+        writer.write_enum(*self)
+    }
 }
 impl StrictDecode for AsciiPrintable {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
