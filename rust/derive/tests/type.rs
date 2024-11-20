@@ -30,7 +30,7 @@ extern crate strict_encoding_derive;
 mod common;
 
 use strict_encoding::{
-    tn, StrictDeserialize, StrictSerialize, StrictStruct, StrictSum, StrictType,
+    tn, StrictDeserialize, StrictSerde, StrictSerialize, StrictStruct, StrictSum, StrictType,
 };
 
 const TEST_LIB: &str = "TestLib";
@@ -126,8 +126,9 @@ fn skip_field() -> common::Result {
         #[strict_type(skip)]
         wrong_name: u8,
     }
-    impl StrictSerialize for Struct {}
-    impl StrictDeserialize for Struct {}
+    impl StrictSerde<{ u16::MAX as usize }> for Struct {}
+    impl StrictSerialize<{ u16::MAX as usize }> for Struct {}
+    impl StrictDeserialize<{ u16::MAX as usize }> for Struct {}
 
     assert_eq!(Struct::ALL_FIELDS, &["mustCamelize"]);
 
@@ -135,7 +136,7 @@ fn skip_field() -> common::Result {
         must_camelize: 2,
         wrong_name: 3,
     };
-    assert_eq!(val.to_strict_serialized::<{ usize::MAX }>().unwrap().as_slice(), &[2]);
+    assert_eq!(val.to_strict_serialized().unwrap().as_slice(), &[2]);
     let val = Struct {
         must_camelize: 2,
         wrong_name: 0,
