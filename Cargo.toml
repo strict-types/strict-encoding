@@ -4,14 +4,14 @@ default-members = ["rust", "rust/derive", "rust/test_helpers"]
 resolver = "2"
 
 [workspace.package]
-version = "2.8.1"
+version = "3.0.0-alpha.1"
 authors = ["Dr Maxim Orlovsky <orlovsky@ubideco.org>"]
 homepage = "https://strict-types.org"
 repository = "https://github.com/strict-types/strict-encoding"
-rust-version = "1.77.0"
+rust-version = "1.81.0"
 edition = "2021"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-amplify = { version = "4.8.0" }
+amplify = { version = "4.8.0", default-features = false }
 serde_crate = { package = "serde", version = "1", features = ["derive"] }

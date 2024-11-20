@@ -19,7 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::str::FromStr;
+use core::str::FromStr;
 
 use amplify::Wrapper;
 

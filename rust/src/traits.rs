@@ -19,15 +19,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::io::{BufRead, Seek};
-use std::marker::PhantomData;
-use std::{fs, io};
+use core::marker::PhantomData;
 
 use amplify::confinement::{Collection, Confined};
 use amplify::num::u24;
 use amplify::Wrapper;
 
-use super::{DecodeError, DecodeRawLe, VariantName, WriteError};
+use super::{DecodeError, DecodeRawLe, ReadError, VariantName, WriteError};
 use crate::reader::StreamReader;
 use crate::writer::StreamWriter;
 use crate::{
@@ -162,9 +160,9 @@ pub trait TypedWrite: Sized {
 }
 
 pub trait ReadRaw {
-    fn read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>>;
+    fn read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> Result<Vec<u8>, ReadError>;
 
-    fn read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]>;
+    fn read_raw_array<const LEN: usize>(&mut self) -> Result<[u8; LEN], ReadError>;
 
     fn read_raw_len<const MAX_LEN: usize>(&mut self) -> Result<usize, DecodeError> {
         Ok(match MAX_LEN {
@@ -179,11 +177,11 @@ pub trait ReadRaw {
 }
 
 impl<T: ReadRaw> ReadRaw for &mut T {
-    fn read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>> {
+    fn read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> Result<Vec<u8>, ReadError> {
         (*self).read_raw::<MAX_LEN>(len)
     }
 
-    fn read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]> {
+    fn read_raw_array<const LEN: usize>(&mut self) -> Result<[u8; LEN], ReadError> {
         (*self).read_raw_array::<LEN>()
     }
 }
@@ -403,11 +401,12 @@ pub trait StrictSerialize: StrictEncode {
         Confined::<Vec<u8>, 0, MAX>::try_from(data).map_err(SerializeError::from)
     }
 
+    #[cfg(feature = "std")]
     fn strict_serialize_to_file<const MAX: usize>(
         &self,
         path: impl AsRef<std::path::Path>,
     ) -> Result<(), SerializeError> {
-        let file = fs::File::create(path).map_err(WriteError::from)?;
+        let file = std::fs::File::create(path).map_err(WriteError::from)?;
         // TODO: Do FileReader
         let file = StrictWriter::with(StreamWriter::new::<MAX>(file));
         self.strict_encode(file)?;
@@ -422,21 +421,27 @@ pub trait StrictDeserialize: StrictDecode {
         let mut reader = StrictReader::in_memory::<MAX>(ast_data);
         let me = Self::strict_decode(&mut reader)?;
         let mut cursor = reader.into_cursor();
-        if !cursor.fill_buf()?.is_empty() {
+        if !cursor.fill_buf().map_err(ReadError::from)?.is_empty() {
             return Err(DeserializeError::DataNotEntirelyConsumed);
         }
         Ok(me)
     }
 
+    #[cfg(feature = "std")]
     fn strict_deserialize_from_file<const MAX: usize>(
         path: impl AsRef<std::path::Path>,
     ) -> Result<Self, DeserializeError> {
-        let file = fs::File::open(path)?;
+        use std::io::Seek;
+        use std::{fs, io};
+
+        let file = fs::File::open(path).map_err(ReadError::from)?;
         // TODO: Do FileReader
         let mut reader = StrictReader::with(StreamReader::new::<MAX>(file));
-        let me = Self::strict_decode(&mut reader)?;
+        let me = Self::strict_decode(&mut reader).map_err(ReadError::from)?;
         let mut file = reader.unbox().unconfine();
-        if file.stream_position()? != file.seek(io::SeekFrom::End(0))? {
+        if file.stream_position().map_err(ReadError::from)?
+            != file.seek(io::SeekFrom::End(0)).map_err(ReadError::from)?
+        {
             return Err(DeserializeError::DataNotEntirelyConsumed);
         }
         Ok(me)

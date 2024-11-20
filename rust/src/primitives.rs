@@ -19,8 +19,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::{self, Display, Formatter, Write};
-use std::hash::Hash;
+use core::fmt::{self, Display, Formatter, Write};
+use core::hash::Hash;
 
 use amplify::Wrapper;
 

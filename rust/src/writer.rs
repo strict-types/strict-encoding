@@ -19,10 +19,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::{BTreeMap, BTreeSet};
-use std::io;
-use std::io::Sink;
-use std::marker::PhantomData;
+use alloc::collections::{BTreeMap, BTreeSet};
+use core::marker::PhantomData;
 
 use amplify::confinement::U64 as U64MAX;
 use amplify::{IoError, WriteCounter};
@@ -33,14 +31,6 @@ use crate::{
     TypedWrite, Variant, VariantName, WriteEnum, WriteRaw, WriteStruct, WriteTuple, WriteUnion,
     LIB_EMBEDDED,
 };
-
-#[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
-#[display(inner)]
-pub enum WriteError {
-    #[from]
-    #[from(io::Error)]
-    IoError(IoError),
-}
 
 // TODO: Move to amplify crate
 #[derive(Clone, Debug)]

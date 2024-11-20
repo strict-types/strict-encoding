@@ -19,10 +19,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::any;
-use std::collections::BTreeSet;
-use std::fmt::{Debug, Display};
-use std::marker::PhantomData;
+use alloc::collections::BTreeSet;
+use core::any;
+use core::fmt::{Debug, Display};
+use core::marker::PhantomData;
 
 use crate::{LibName, TypeName, VariantName};
 

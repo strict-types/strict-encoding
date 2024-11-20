@@ -19,9 +19,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
-use std::hash::Hash;
-use std::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8};
+use alloc::collections::{BTreeMap, BTreeSet, VecDeque};
+use core::hash::Hash;
+use core::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8};
 
 use amplify::ascii::AsciiString;
 use amplify::confinement::Confined;

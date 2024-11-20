@@ -21,12 +21,12 @@
 
 #![allow(non_camel_case_types, unused_imports)]
 
-use std::borrow::Borrow;
-use std::fmt::{Debug, Display, Formatter};
-use std::marker::PhantomData;
-use std::ops::Deref;
-use std::str::FromStr;
-use std::{any, io};
+use core::any;
+use core::borrow::Borrow;
+use core::fmt::{self, Debug, Display, Formatter};
+use core::marker::PhantomData;
+use core::ops::Deref;
+use core::str::FromStr;
 
 use amplify::ascii::{AsAsciiStrError, AsciiChar, AsciiString, FromAsciiError};
 use amplify::confinement;
@@ -204,7 +204,7 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
 impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> Debug
     for RString<C1, C, MIN, MAX>
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let c = type_name::<C>();
         let c1 = type_name::<C>();
         let c = if c == c1 { c.to_owned() } else { format!("{c1}, {c}") };
@@ -215,7 +215,7 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
 impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: usize> Display
     for RString<C1, C, MIN, MAX>
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { Display::fmt(&self.s, f) }
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result { Display::fmt(&self.s, f) }
 }
 
 #[cfg(feature = "serde")]

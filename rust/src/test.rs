@@ -19,8 +19,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::Debug;
-use std::io::BufRead;
+use core::fmt::Debug;
 
 use amplify::confinement::Confined;
 
