@@ -84,12 +84,83 @@ impl Display for Sizing {
 }
 
 #[derive(Clone, Eq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
 pub struct Variant {
     pub name: VariantName,
     pub tag: u8,
 }
 impl_strict_struct!(Variant, STRICT_TYPES_LIB; name, tag);
+
+#[cfg(feature = "serde")]
+// The manual serde implementation is needed due to `Variant` bein used as a key in maps (like enum
+// or union fields), and serde text implementations such as JSON can't serialize map keys if they
+// are not strings. This solves the issue, by putting string serialization of `Variant` for
+// human-readable serializers
+mod _serde {
+    use std::str::FromStr;
+
+    use serde_crate::ser::SerializeStruct;
+    use serde_crate::{Deserialize, Deserializer, Serialize, Serializer};
+
+    use super::*;
+
+    impl Serialize for Variant {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer {
+            if serializer.is_human_readable() {
+                serializer.serialize_str(&format!("{}:{}", self.name, self.tag))
+            } else {
+                let mut s = serializer.serialize_struct("Variant", 2)?;
+                s.serialize_field("name", &self.name)?;
+                s.serialize_field("tag", &self.tag)?;
+                s.end()
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Variant {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de> {
+            if deserializer.is_human_readable() {
+                let s = String::deserialize(deserializer)?;
+                let mut split = s.split(':');
+                let (name, tag) = (split.next(), split.next());
+                if split.next().is_some() {
+                    return Err(serde::de::Error::custom(format!(
+                        "Invalid variant format: '{}'. Expected 'name:tag'",
+                        s
+                    )));
+                }
+                match (name, tag) {
+                    (Some(name), Some(tag)) => {
+                        let name = VariantName::from_str(name).map_err(|e| {
+                            serde::de::Error::custom(format!("Invalid variant name: {}", e))
+                        })?;
+                        let tag = tag.parse::<u8>().map_err(|e| {
+                            serde::de::Error::custom(format!("Invalid variant tag: {}", e))
+                        })?;
+                        Ok(Variant { name, tag })
+                    }
+                    _ => Err(serde::de::Error::custom(format!(
+                        "Invalid variant format: '{}'. Expected 'name:tag'",
+                        s
+                    ))),
+                }
+            } else {
+                #[cfg_attr(
+                    feature = "serde",
+                    derive(Deserialize),
+                    serde(crate = "serde_crate", rename = "Variant")
+                )]
+                struct VariantFields {
+                    name: VariantName,
+                    tag: u8,
+                }
+                let VariantFields { name, tag } = VariantFields::deserialize(deserializer)?;
+                Ok(Variant { name, tag })
+            }
+        }
+    }
+}
 
 impl Variant {
     pub fn named(tag: u8, name: VariantName) -> Variant { Variant { name, tag } }
@@ -136,5 +207,36 @@ impl Display for Variant {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name)?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #![allow(unused)]
+
+    use std::io::Cursor;
+
+    use crate::*;
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn variant_serde_roundtrip() {
+        let variant_orig = Variant::strict_dumb();
+
+        // CBOR
+        let mut buf = Vec::new();
+        ciborium::into_writer(&variant_orig, &mut buf).unwrap();
+        let variant_post: Variant = ciborium::from_reader(Cursor::new(&buf)).unwrap();
+        assert_eq!(variant_orig, variant_post);
+
+        // JSON
+        let variant_str = serde_json::to_string(&variant_orig).unwrap();
+        let variant_post: Variant = serde_json::from_str(&variant_str).unwrap();
+        assert_eq!(variant_orig, variant_post);
+
+        // YAML
+        let variant_str = serde_yaml::to_string(&variant_orig).unwrap();
+        let variant_post: Variant = serde_yaml::from_str(&variant_str).unwrap();
+        assert_eq!(variant_orig, variant_post);
     }
 }
