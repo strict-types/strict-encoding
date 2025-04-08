@@ -234,7 +234,7 @@ pub struct TupleReader<'parent, R: ReadRaw> {
     parent: &'parent mut StrictReader<R>,
 }
 
-impl<'parent, R: ReadRaw> ReadTuple for TupleReader<'parent, R> {
+impl<R: ReadRaw> ReadTuple for TupleReader<'_, R> {
     fn read_field<T: StrictDecode>(&mut self) -> Result<T, DecodeError> {
         self.read_fields += 1;
         T::strict_decode(self.parent)
@@ -247,7 +247,7 @@ pub struct StructReader<'parent, R: ReadRaw> {
     parent: &'parent mut StrictReader<R>,
 }
 
-impl<'parent, R: ReadRaw> ReadStruct for StructReader<'parent, R> {
+impl<R: ReadRaw> ReadStruct for StructReader<'_, R> {
     fn read_field<T: StrictDecode>(&mut self, field: FieldName) -> Result<T, DecodeError> {
         self.named_fields.push(field);
         T::strict_decode(self.parent)
