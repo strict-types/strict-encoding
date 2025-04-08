@@ -20,6 +20,10 @@ serde_crate = { workspace = true, optional = true }
 
 [dev-dependencies]
 amplify = { workspace = true, features = ["proc_attr", "hex"] }
+ciborium = "0.2.2"
+half = "<2.5.0"
+serde_json = "1.0.140"
+serde_yaml = "0.9.34"
 strict_encoding_test = { path = "./test_helpers" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
