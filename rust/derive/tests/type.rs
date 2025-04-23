@@ -5,9 +5,10 @@
 // Designed in 2019-2025 by Dr Maxim Orlovsky <orlovsky@ubideco.org>
 // Written in 2024-2025 by Dr Maxim Orlovsky <orlovsky@ubideco.org>
 //
+// Copyright (C) 2019-2022 LNP/BP Standards Association.
 // Copyright (C) 2022-2025 Laboratories for Ubiquitous Deterministic Computing (UBIDECO),
 //                         Institute for Distributed and Cognitive Systems (InDCS), Switzerland.
-// Copyright (C) 2022-2025 Dr Maxim Orlovsky.
+// Copyright (C) 2019-2025 Dr Maxim Orlovsky.
 // All rights under the above copyrights are reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
