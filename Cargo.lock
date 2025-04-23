@@ -394,7 +394,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "strict_encoding"
-version = "2.8.1"
+version = "2.8.2"
 dependencies = [
  "amplify",
  "ciborium",
@@ -412,7 +412,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_derive"
-version = "2.8.1"
+version = "2.8.2"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -426,7 +426,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_test"
-version = "2.8.1"
+version = "2.8.2"
 dependencies = [
  "amplify",
  "strict_encoding",
