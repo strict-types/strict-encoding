@@ -10,7 +10,7 @@ provable properties and bounds for the in-memory and serialized type
 representation.
 
 The development of the libraries is performed by
-[UBIDECO Labs](https://ubideco.org).
+[UBIDECO Labs](https://ubideco.org), a part of [InDCS](https://indcs.org).
 
 ## Overview
 
