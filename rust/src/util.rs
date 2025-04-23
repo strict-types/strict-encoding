@@ -19,10 +19,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::cmp::Ordering;
-use std::fmt::{self, Display, Formatter};
-use std::hash::{Hash, Hasher};
-use std::io;
+use core::cmp::Ordering;
+use core::fmt::{self, Display, Formatter};
+use core::hash::{Hash, Hasher};
 
 use crate::{ReadStruct, VariantName, WriteStruct, STRICT_TYPES_LIB};
 

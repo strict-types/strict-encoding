@@ -16,4 +16,4 @@ readme = "../README.md"
 
 [dependencies]
 amplify = { workspace = true }
-strict_encoding = { version = "2.8.0", path = ".." }
+strict_encoding = { version = "3.0.0-alpha.1", path = ".." }

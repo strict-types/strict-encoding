@@ -9,7 +9,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "448cf0c3afc71439b5f837aac5399a1ef2b223f5f38324dbfb4343deec3b80cc"
 dependencies = [
  "amplify_apfloat",
- "amplify_derive",
  "amplify_num",
  "amplify_syn",
  "ascii",
@@ -27,18 +26,6 @@ dependencies = [
  "amplify_num",
  "bitflags",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "amplify_derive"
-version = "4.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a6309e6b8d89b36b9f959b7a8fa093583b94922a0f6438a24fb08936de4d428"
-dependencies = [
- "amplify_syn",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -394,7 +381,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "strict_encoding"
-version = "2.8.1"
+version = "3.0.0-alpha.1"
 dependencies = [
  "amplify",
  "ciborium",
@@ -412,7 +399,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_derive"
-version = "2.8.1"
+version = "3.0.0-alpha.1"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -426,7 +413,7 @@ dependencies = [
 
 [[package]]
 name = "strict_encoding_test"
-version = "2.8.1"
+version = "3.0.0-alpha.1"
 dependencies = [
  "amplify",
  "strict_encoding",

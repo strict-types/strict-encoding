@@ -19,8 +19,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::io;
-
 use crate::{
     DecodeError, FieldName, ReadRaw, ReadStruct, ReadTuple, ReadUnion, StrictDecode, StrictEnum,
     StrictStruct, StrictSum, StrictTuple, StrictUnion, TypedRead, VariantName,

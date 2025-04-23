@@ -19,17 +19,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::io;
-use std::ops::Range;
+use core::ops::Range;
 
-use amplify::{confinement, IoError};
+use amplify::confinement;
+
+#[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
+#[display(inner)]
+// TODO: Replace with no-I/O variant from amplify when ready
+pub struct ReadError(String);
+
+#[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
+#[display(inner)]
+// TODO: Replace with no-I/O variant from amplify when ready
+pub struct WriteError(String);
+
+#[cfg(feature = "std")]
+impl From<std::io::Error> for ReadError {
+    fn from(err: std::io::Error) -> Self { Self(err.to_string()) }
+}
+
+#[cfg(feature = "std")]
+impl From<std::io::Error> for WriteError {
+    fn from(err: std::io::Error) -> Self { Self(err.to_string()) }
+}
 
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum DecodeError {
+    #[from]
     #[display(inner)]
-    #[from(io::Error)]
-    Io(IoError),
+    Read(ReadError),
 
     /// confinement requirements are not satisfied. Specifically, {0}
     #[from]
@@ -40,7 +59,7 @@ pub enum DecodeError {
 
     /// string data are not in valid UTF-8 encoding.\nDetails: {0}
     #[from]
-    Utf8(std::string::FromUtf8Error),
+    Utf8(alloc::string::FromUtf8Error),
 
     /// string data are not in valid UTF-8 encoding.\nDetails: {0}
     #[from]
@@ -77,9 +96,9 @@ pub enum DecodeError {
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum SerializeError {
+    #[from]
     #[display(inner)]
-    #[from(io::Error)]
-    Io(IoError),
+    Write(WriteError),
 
     /// confinement requirements are not satisfied. Specifically, {0}
     #[from]
@@ -89,9 +108,8 @@ pub enum SerializeError {
 #[derive(Clone, Eq, PartialEq, Debug, Display, Error, From)]
 #[display(doc_comments)]
 pub enum DeserializeError {
+    #[from(ReadError)]
     #[display(inner)]
-    #[from]
-    #[from(io::Error)]
     Decode(DecodeError),
 
     /// data are not entirely consumed during strict deserialize operation

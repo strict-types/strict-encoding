@@ -19,15 +19,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::io::{BufRead, Seek};
-use std::marker::PhantomData;
-use std::{fs, io};
+use core::marker::PhantomData;
 
 use amplify::confinement::{Collection, Confined};
 use amplify::num::u24;
 use amplify::Wrapper;
 
-use super::{DecodeError, DecodeRawLe, VariantName};
+use super::{DecodeError, DecodeRawLe, ReadError, VariantName, WriteError};
 use crate::reader::StreamReader;
 use crate::writer::StreamWriter;
 use crate::{
@@ -38,11 +36,14 @@ use crate::{
 pub trait TypedParent: Sized {}
 
 pub trait WriteRaw {
-    fn write_raw<const MAX_LEN: usize>(&mut self, bytes: impl AsRef<[u8]>) -> io::Result<()>;
-    fn write_raw_array<const LEN: usize>(&mut self, raw: [u8; LEN]) -> io::Result<()> {
+    fn write_raw<const MAX_LEN: usize>(
+        &mut self,
+        bytes: impl AsRef<[u8]>,
+    ) -> Result<(), WriteError>;
+    fn write_raw_array<const LEN: usize>(&mut self, raw: [u8; LEN]) -> Result<(), WriteError> {
         self.write_raw::<LEN>(raw)
     }
-    fn write_raw_len<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<()> {
+    fn write_raw_len<const MAX_LEN: usize>(&mut self, len: usize) -> Result<(), WriteError> {
         match MAX_LEN {
             tiny if tiny <= u8::MAX as usize => self.write_raw_array((len as u8).to_le_bytes()),
             small if small <= u16::MAX as usize => self.write_raw_array((len as u16).to_le_bytes()),
@@ -57,7 +58,10 @@ pub trait WriteRaw {
 }
 
 impl<T: WriteRaw> WriteRaw for &mut T {
-    fn write_raw<const MAX_LEN: usize>(&mut self, bytes: impl AsRef<[u8]>) -> io::Result<()> {
+    fn write_raw<const MAX_LEN: usize>(
+        &mut self,
+        bytes: impl AsRef<[u8]>,
+    ) -> Result<(), WriteError> {
         (*self).write_raw::<MAX_LEN>(bytes)
     }
 }
@@ -74,19 +78,19 @@ pub trait TypedWrite: Sized {
 
     fn write_union<T: StrictUnion>(
         self,
-        inner: impl FnOnce(Self::UnionDefiner) -> io::Result<Self>,
-    ) -> io::Result<Self>;
-    fn write_enum<T: StrictEnum>(self, value: T) -> io::Result<Self>
+        inner: impl FnOnce(Self::UnionDefiner) -> Result<Self, WriteError>,
+    ) -> Result<Self, WriteError>;
+    fn write_enum<T: StrictEnum>(self, value: T) -> Result<Self, WriteError>
     where u8: From<T>;
     fn write_tuple<T: StrictTuple>(
         self,
-        inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
-    ) -> io::Result<Self>;
+        inner: impl FnOnce(Self::TupleWriter) -> Result<Self, WriteError>,
+    ) -> Result<Self, WriteError>;
     fn write_struct<T: StrictStruct>(
         self,
-        inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
-    ) -> io::Result<Self>;
-    fn write_newtype<T: StrictTuple>(self, value: &impl StrictEncode) -> io::Result<Self> {
+        inner: impl FnOnce(Self::StructWriter) -> Result<Self, WriteError>,
+    ) -> Result<Self, WriteError>;
+    fn write_newtype<T: StrictTuple>(self, value: &impl StrictEncode) -> Result<Self, WriteError> {
         self.write_tuple::<T>(|writer| Ok(writer.write_field(value)?.complete()))
     }
 
@@ -129,7 +133,7 @@ pub trait TypedWrite: Sized {
     unsafe fn write_string<const MAX_LEN: usize>(
         mut self,
         bytes: impl AsRef<[u8]>,
-    ) -> io::Result<Self> {
+    ) -> Result<Self, WriteError> {
         self.raw_writer().write_raw_len::<MAX_LEN>(bytes.as_ref().len())?;
         self.raw_writer().write_raw::<MAX_LEN>(bytes)?;
         Ok(self)
@@ -140,7 +144,7 @@ pub trait TypedWrite: Sized {
     unsafe fn write_collection<C: Collection, const MIN_LEN: usize, const MAX_LEN: usize>(
         mut self,
         col: &Confined<C, MIN_LEN, MAX_LEN>,
-    ) -> io::Result<Self>
+    ) -> Result<Self, WriteError>
     where
         for<'a> &'a C: IntoIterator,
         for<'a> <&'a C as IntoIterator>::Item: StrictEncode,
@@ -156,9 +160,9 @@ pub trait TypedWrite: Sized {
 }
 
 pub trait ReadRaw {
-    fn read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>>;
+    fn read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> Result<Vec<u8>, ReadError>;
 
-    fn read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]>;
+    fn read_raw_array<const LEN: usize>(&mut self) -> Result<[u8; LEN], ReadError>;
 
     fn read_raw_len<const MAX_LEN: usize>(&mut self) -> Result<usize, DecodeError> {
         Ok(match MAX_LEN {
@@ -173,11 +177,11 @@ pub trait ReadRaw {
 }
 
 impl<T: ReadRaw> ReadRaw for &mut T {
-    fn read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> io::Result<Vec<u8>> {
+    fn read_raw<const MAX_LEN: usize>(&mut self, len: usize) -> Result<Vec<u8>, ReadError> {
         (*self).read_raw::<MAX_LEN>(len)
     }
 
-    fn read_raw_array<const LEN: usize>(&mut self) -> io::Result<[u8; LEN]> {
+    fn read_raw_array<const LEN: usize>(&mut self) -> Result<[u8; LEN], ReadError> {
         (*self).read_raw_array::<LEN>()
     }
 }
@@ -237,7 +241,7 @@ pub trait DefineTuple: Sized {
 
 pub trait WriteTuple: Sized {
     type Parent: TypedParent;
-    fn write_field(self, value: &impl StrictEncode) -> io::Result<Self>;
+    fn write_field(self, value: &impl StrictEncode) -> Result<Self, WriteError>;
     fn complete(self) -> Self::Parent;
 }
 
@@ -253,7 +257,7 @@ pub trait DefineStruct: Sized {
 
 pub trait WriteStruct: Sized {
     type Parent: TypedParent;
-    fn write_field(self, name: FieldName, value: &impl StrictEncode) -> io::Result<Self>;
+    fn write_field(self, name: FieldName, value: &impl StrictEncode) -> Result<Self, WriteError>;
     fn complete(self) -> Self::Parent;
 }
 
@@ -270,7 +274,7 @@ pub trait DefineEnum: Sized {
 
 pub trait WriteEnum: Sized {
     type Parent: TypedWrite;
-    fn write_variant(self, name: VariantName) -> io::Result<Self>;
+    fn write_variant(self, name: VariantName) -> Result<Self, WriteError>;
     fn complete(self) -> Self::Parent;
 }
 
@@ -303,20 +307,24 @@ pub trait WriteUnion: Sized {
     type TupleWriter: WriteTuple<Parent = Self>;
     type StructWriter: WriteStruct<Parent = Self>;
 
-    fn write_unit(self, name: VariantName) -> io::Result<Self>;
-    fn write_newtype(self, name: VariantName, value: &impl StrictEncode) -> io::Result<Self> {
+    fn write_unit(self, name: VariantName) -> Result<Self, WriteError>;
+    fn write_newtype(
+        self,
+        name: VariantName,
+        value: &impl StrictEncode,
+    ) -> Result<Self, WriteError> {
         self.write_tuple(name, |writer| Ok(writer.write_field(value)?.complete()))
     }
     fn write_tuple(
         self,
         name: VariantName,
-        inner: impl FnOnce(Self::TupleWriter) -> io::Result<Self>,
-    ) -> io::Result<Self>;
+        inner: impl FnOnce(Self::TupleWriter) -> Result<Self, WriteError>,
+    ) -> Result<Self, WriteError>;
     fn write_struct(
         self,
         name: VariantName,
-        inner: impl FnOnce(Self::StructWriter) -> io::Result<Self>,
-    ) -> io::Result<Self>;
+        inner: impl FnOnce(Self::StructWriter) -> Result<Self, WriteError>,
+    ) -> Result<Self, WriteError>;
 
     fn complete(self) -> Self::Parent;
 }
@@ -349,8 +357,8 @@ pub trait ReadUnion: Sized {
 }
 
 pub trait StrictEncode: StrictType {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W>;
-    fn strict_write(&self, writer: impl WriteRaw) -> io::Result<()> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError>;
+    fn strict_write(&self, writer: impl WriteRaw) -> Result<(), WriteError> {
         let w = StrictWriter::with(writer);
         self.strict_encode(w)?;
         Ok(())
@@ -366,13 +374,13 @@ pub trait StrictDecode: StrictType {
 }
 
 impl<T: StrictEncode> StrictEncode for &T {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> {
         (*self).strict_encode(writer)
     }
 }
 
 impl<T> StrictEncode for PhantomData<T> {
-    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> { Ok(writer) }
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> Result<W, WriteError> { Ok(writer) }
 }
 
 impl<T> StrictDecode for PhantomData<T> {
@@ -380,7 +388,7 @@ impl<T> StrictDecode for PhantomData<T> {
 }
 
 pub trait StrictSerialize: StrictEncode {
-    fn strict_serialized_len<const MAX: usize>(&self) -> io::Result<usize> {
+    fn strict_serialized_len<const MAX: usize>(&self) -> Result<usize, WriteError> {
         let counter = StrictWriter::counter::<MAX>();
         Ok(self.strict_encode(counter)?.unbox().unconfine().count)
     }
@@ -393,11 +401,12 @@ pub trait StrictSerialize: StrictEncode {
         Confined::<Vec<u8>, 0, MAX>::try_from(data).map_err(SerializeError::from)
     }
 
+    #[cfg(feature = "std")]
     fn strict_serialize_to_file<const MAX: usize>(
         &self,
         path: impl AsRef<std::path::Path>,
     ) -> Result<(), SerializeError> {
-        let file = fs::File::create(path)?;
+        let file = std::fs::File::create(path).map_err(WriteError::from)?;
         // TODO: Do FileReader
         let file = StrictWriter::with(StreamWriter::new::<MAX>(file));
         self.strict_encode(file)?;
@@ -412,21 +421,27 @@ pub trait StrictDeserialize: StrictDecode {
         let mut reader = StrictReader::in_memory::<MAX>(ast_data);
         let me = Self::strict_decode(&mut reader)?;
         let mut cursor = reader.into_cursor();
-        if !cursor.fill_buf()?.is_empty() {
+        if !cursor.fill_buf().map_err(ReadError::from)?.is_empty() {
             return Err(DeserializeError::DataNotEntirelyConsumed);
         }
         Ok(me)
     }
 
+    #[cfg(feature = "std")]
     fn strict_deserialize_from_file<const MAX: usize>(
         path: impl AsRef<std::path::Path>,
     ) -> Result<Self, DeserializeError> {
-        let file = fs::File::open(path)?;
+        use std::io::Seek;
+        use std::{fs, io};
+
+        let file = fs::File::open(path).map_err(ReadError::from)?;
         // TODO: Do FileReader
         let mut reader = StrictReader::with(StreamReader::new::<MAX>(file));
-        let me = Self::strict_decode(&mut reader)?;
+        let me = Self::strict_decode(&mut reader).map_err(ReadError::from)?;
         let mut file = reader.unbox().unconfine();
-        if file.stream_position()? != file.seek(io::SeekFrom::End(0))? {
+        if file.stream_position().map_err(ReadError::from)?
+            != file.seek(io::SeekFrom::End(0)).map_err(ReadError::from)?
+        {
             return Err(DeserializeError::DataNotEntirelyConsumed);
         }
         Ok(me)

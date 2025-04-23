@@ -29,6 +29,16 @@
     //missing_docs
 )]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+extern crate core;
+
+#[macro_use]
+extern crate amplify;
+#[cfg(feature = "serde")]
+#[macro_use]
+extern crate serde_crate as serde;
 
 #[cfg(feature = "derive")]
 pub use derive::{StrictDecode, StrictDumb, StrictEncode, StrictType};
@@ -38,12 +48,6 @@ use derive::{StrictDecode, StrictDumb, StrictEncode, StrictType};
 pub use strict_encoding_derive as derive;
 #[cfg(not(feature = "derive"))]
 use strict_encoding_derive as derive;
-
-#[macro_use]
-extern crate amplify;
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde_crate as serde;
 
 #[macro_use]
 mod macros;
@@ -62,7 +66,7 @@ pub mod stl;
 pub(crate) mod test;
 
 pub use embedded::{Byte, DecodeRawLe};
-pub use error::{DecodeError, DeserializeError, SerializeError};
+pub use error::{DecodeError, DeserializeError, ReadError, SerializeError, WriteError};
 pub use ident::{FieldName, Ident, LibName, TypeName, VariantName, IDENT_MAX_LEN};
 pub use primitives::{NumCls, NumInfo, NumSize, Primitive};
 pub use reader::{ConfinedReader, StreamReader, StrictReader};
