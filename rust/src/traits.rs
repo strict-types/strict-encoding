@@ -381,21 +381,23 @@ impl<T> StrictDecode for PhantomData<T> {
     fn strict_decode(_reader: &mut impl TypedRead) -> Result<Self, DecodeError> { Ok(default!()) }
 }
 
-pub trait StrictSerialize: StrictEncode {
-    fn strict_serialized_len<const MAX: usize>(&self) -> io::Result<usize> {
+/// Ensures that both [`StrictSerialize`] and [`StrictDeserialize`], when both implemented, has the
+/// same maximum length requirements.
+pub trait StrictSerde<const MAX: usize>: StrictType {}
+
+pub trait StrictSerialize<const MAX: usize>: StrictSerde<MAX> + StrictEncode {
+    fn strict_serialized_len(&self) -> io::Result<usize> {
         let counter = StrictWriter::counter::<MAX>();
         Ok(self.strict_encode(counter)?.unbox().unconfine().count)
     }
 
-    fn to_strict_serialized<const MAX: usize>(
-        &self,
-    ) -> Result<Confined<Vec<u8>, 0, MAX>, SerializeError> {
+    fn to_strict_serialized(&self) -> Result<Confined<Vec<u8>, 0, MAX>, SerializeError> {
         let ast_data = StrictWriter::in_memory::<MAX>();
         let data = self.strict_encode(ast_data)?.unbox().unconfine();
         Confined::<Vec<u8>, 0, MAX>::try_from(data).map_err(SerializeError::from)
     }
 
-    fn strict_serialize_to_file<const MAX: usize>(
+    fn strict_serialize_to_file(
         &self,
         path: impl AsRef<std::path::Path>,
     ) -> Result<(), SerializeError> {
@@ -407,8 +409,8 @@ pub trait StrictSerialize: StrictEncode {
     }
 }
 
-pub trait StrictDeserialize: StrictDecode {
-    fn from_strict_serialized<const MAX: usize>(
+pub trait StrictDeserialize<const MAX: usize>: StrictSerde<MAX> + StrictDecode {
+    fn from_strict_serialized(
         ast_data: Confined<Vec<u8>, 0, MAX>,
     ) -> Result<Self, DeserializeError> {
         let mut reader = StrictReader::in_memory::<MAX>(ast_data);
@@ -420,7 +422,7 @@ pub trait StrictDeserialize: StrictDecode {
         Ok(me)
     }
 
-    fn strict_deserialize_from_file<const MAX: usize>(
+    fn strict_deserialize_from_file(
         path: impl AsRef<std::path::Path>,
     ) -> Result<Self, DeserializeError> {
         let file = fs::File::open(path)?;

@@ -62,6 +62,7 @@ mod embedded;
 pub mod stl;
 #[cfg(test)]
 pub(crate) mod test;
+mod file;
 
 pub use embedded::{Byte, DecodeRawLe};
 pub use error::{DecodeError, DeserializeError, SerializeError};
