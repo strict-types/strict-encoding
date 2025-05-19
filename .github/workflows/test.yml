@@ -38,4 +38,4 @@ jobs:
       - name: Test main lib in headless Chrome
         run: wasm-pack test --headless --chrome rust
       - name: Test derive lib in headless Chrome
-        run: wasm-pack test --headless --chrome rust/derive
+        run: RUSTFLAGS='--cfg getrandom_backend="wasm_js"' wasm-pack test --headless --chrome rust --all-features
