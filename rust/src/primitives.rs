@@ -29,7 +29,7 @@ use amplify::Wrapper;
 use crate::STRICT_TYPES_LIB;
 
 #[derive(Wrapper, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Debug, From)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Primitive(u8);
 
 impl Primitive {

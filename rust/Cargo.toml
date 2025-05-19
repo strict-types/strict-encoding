@@ -16,7 +16,7 @@ exclude = ["derive", "test_helpers"]
 [dependencies]
 amplify = { workspace = true, features = ["proc_attr"] }
 strict_encoding_derive = { version = "2.8.0", path = "derive" }
-serde_crate = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
 
 [dev-dependencies]
 amplify = { workspace = true, features = ["proc_attr", "hex"] }
@@ -50,7 +50,7 @@ float = [
 ]
 half = [] # TODO: Remove this with major version update
 serde = [
-    "serde_crate",
+    "dep:serde",
     "amplify/serde"
 ]
 

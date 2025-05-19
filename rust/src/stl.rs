@@ -73,7 +73,7 @@ pub trait RestrictedCharSet:
 }
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize), serde(crate = "serde_crate", transparent))]
+#[cfg_attr(feature = "serde", derive(Serialize), serde(transparent))]
 pub struct RString<
     C1: RestrictedCharSet,
     C: RestrictedCharSet = C1,
@@ -222,8 +222,8 @@ impl<C1: RestrictedCharSet, C: RestrictedCharSet, const MIN: usize, const MAX: u
 
 #[cfg(feature = "serde")]
 mod _serde {
-    use serde_crate::de::Error;
-    use serde_crate::{Deserialize, Deserializer};
+    use serde::de::Error;
+    use serde::{Deserialize, Deserializer};
 
     use super::*;
 
