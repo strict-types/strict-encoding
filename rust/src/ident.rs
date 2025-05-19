@@ -97,11 +97,7 @@ macro_rules! impl_ident_subtype {
 
 #[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, FromStr)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct Ident(RString<AlphaLodash, AlphaNumLodash, 1, IDENT_MAX_LEN>);
 
 impl_ident_type!(Ident);
@@ -109,11 +105,7 @@ impl_strict_newtype!(Ident, STRICT_TYPES_LIB);
 
 #[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, FromStr)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct TypeName(RString<AlphaCapsLodash, AlphaNumLodash, 1, IDENT_MAX_LEN>);
 
 impl_ident_type!(TypeName);
@@ -122,11 +114,7 @@ impl_strict_newtype!(TypeName, STRICT_TYPES_LIB);
 
 #[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, FromStr)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct FieldName(RString<AlphaSmallLodash, AlphaNumLodash, 1, IDENT_MAX_LEN>);
 
 impl_ident_type!(FieldName);
@@ -135,11 +123,7 @@ impl_strict_newtype!(FieldName, STRICT_TYPES_LIB);
 
 #[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, FromStr)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct VariantName(RString<AlphaSmallLodash, AlphaNumLodash, 1, IDENT_MAX_LEN>);
 
 impl_ident_type!(VariantName);
@@ -148,11 +132,7 @@ impl_strict_newtype!(VariantName, STRICT_TYPES_LIB);
 
 #[derive(Wrapper, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, From)]
 #[wrapper(Deref, Display, FromStr)]
-#[cfg_attr(
-    feature = "serde",
-    derive(Serialize, Deserialize),
-    serde(crate = "serde_crate", transparent)
-)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 pub struct LibName(RString<AlphaCapsLodash, AlphaNumLodash, 1, IDENT_MAX_LEN>);
 
 impl_ident_type!(LibName);
