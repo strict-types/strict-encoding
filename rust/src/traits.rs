@@ -381,6 +381,7 @@ impl<T> StrictDecode for PhantomData<T> {
     fn strict_decode(_reader: &mut impl TypedRead) -> Result<Self, DecodeError> { Ok(default!()) }
 }
 
+// TODO: Provide max length as a trait-level const
 pub trait StrictSerialize: StrictEncode {
     fn strict_serialized_len<const MAX: usize>(&self) -> io::Result<usize> {
         let counter = StrictWriter::counter::<MAX>();
@@ -395,12 +396,17 @@ pub trait StrictSerialize: StrictEncode {
         Confined::<Vec<u8>, 0, MAX>::try_from(data).map_err(SerializeError::from)
     }
 
+    fn strict_serialize<const MAX: usize>(&self, write: impl io::Write) -> Result<(), io::Error> {
+        let writer = StreamWriter::new::<MAX>(write);
+        self.strict_write(writer)
+    }
+
     fn strict_serialize_to_file<const MAX: usize>(
         &self,
         path: impl AsRef<std::path::Path>,
     ) -> Result<(), SerializeError> {
         let file = fs::File::create(path)?;
-        // TODO: Do FileReader
+        // TODO: Do FileWriter
         let file = StrictWriter::with(StreamWriter::new::<MAX>(file));
         self.strict_encode(file)?;
         Ok(())
@@ -418,6 +424,17 @@ pub trait StrictDeserialize: StrictDecode {
             return Err(DeserializeError::DataNotEntirelyConsumed);
         }
         Ok(me)
+    }
+
+    fn strict_deserialize<const MAX: usize>(
+        mut read: impl io::Read,
+    ) -> Result<Self, DeserializeError> {
+        let reader = StreamReader::new::<MAX>(&mut read);
+        let me = Self::strict_read(reader)?;
+        match read.read_exact(&mut [0u8; 0]) {
+            Err(_) => Ok(me),
+            Ok(_) => Err(DeserializeError::DataNotEntirelyConsumed),
+        }
     }
 
     fn strict_deserialize_from_file<const MAX: usize>(

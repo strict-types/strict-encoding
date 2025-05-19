@@ -30,7 +30,7 @@ use crate::{ReadStruct, VariantName, WriteStruct, STRICT_TYPES_LIB};
 
 // TODO: Control that min > max!
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(crate = "serde_crate"))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sizing {
     pub min: u64,
     pub max: u64,
@@ -100,8 +100,8 @@ impl_strict_struct!(Variant, STRICT_TYPES_LIB; name, tag);
 mod _serde {
     use std::str::FromStr;
 
-    use serde_crate::ser::SerializeStruct;
-    use serde_crate::{Deserialize, Deserializer, Serialize, Serializer};
+    use serde::ser::SerializeStruct;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     use super::*;
 
@@ -148,11 +148,7 @@ mod _serde {
                     ))),
                 }
             } else {
-                #[cfg_attr(
-                    feature = "serde",
-                    derive(Deserialize),
-                    serde(crate = "serde_crate", rename = "Variant")
-                )]
+                #[cfg_attr(feature = "serde", derive(Deserialize), serde(rename = "Variant"))]
                 struct VariantFields {
                     name: VariantName,
                     tag: u8,
