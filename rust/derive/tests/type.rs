@@ -137,7 +137,7 @@ fn skip_field() -> common::Result {
         must_camelize: 2,
         wrong_name: 3,
     };
-    assert_eq!(val.to_strict_serialized::<{ usize::MAX }>().unwrap().as_slice(), &[2]);
+    assert_eq!(val.to_strict_vec().unwrap().as_slice(), &[2]);
     let val = Struct {
         must_camelize: 2,
         wrong_name: 0,

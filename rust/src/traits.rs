@@ -381,34 +381,54 @@ impl<T> StrictDecode for PhantomData<T> {
     fn strict_decode(_reader: &mut impl TypedRead) -> Result<Self, DecodeError> { Ok(default!()) }
 }
 
-// TODO: Provide max length as a trait-level const
-pub trait StrictSerialize: StrictEncode {
-    fn strict_serialized_len<const MAX: usize>(&self) -> io::Result<usize> {
+pub trait StrictSerialize<const MAX_SERIALIZED_LEN: usize>: StrictEncode {
+    fn strict_serialize(&self, write: impl io::Write) -> Result<(), io::Error> {
+        let writer = StreamWriter::new::<MAX_SERIALIZED_LEN>(write);
+        self.strict_write(writer)
+    }
+
+    fn to_strict_vec(&self) -> Result<Confined<Vec<u8>, 0, MAX_SERIALIZED_LEN>, SerializeError> {
+        let ast_data = StrictWriter::in_memory::<MAX_SERIALIZED_LEN>();
+        let data = self.strict_encode(ast_data)?.unbox().unconfine();
+        Confined::<Vec<u8>, 0, MAX_SERIALIZED_LEN>::try_from(data).map_err(SerializeError::from)
+    }
+
+    //#[cfg(feature = "std")]
+    fn strict_serialize_to_path(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        overwrite: bool,
+    ) -> Result<(), SerializeError> {
+        let file = if overwrite { fs::File::create(path)? } else { fs::File::create_new(path)? };
+        self.strict_serialize(file)?;
+        Ok(())
+    }
+
+    #[deprecated(since = "3.0.0", note = "use `StrictEncode::strict_len` instead")]
+    fn strict_serialized_len<const MAX: usize>(&self) -> io::Result<usize>
+    where Self: StrictSerialize<MAX> {
         let counter = StrictWriter::counter::<MAX>();
         Ok(self.strict_encode(counter)?.unbox().unconfine().count)
     }
 
+    #[deprecated(since = "3.0.0", note = "use `to_strict_vec` instead")]
     fn to_strict_serialized<const MAX: usize>(
         &self,
-    ) -> Result<Confined<Vec<u8>, 0, MAX>, SerializeError> {
-        let ast_data = StrictWriter::in_memory::<MAX>();
-        let data = self.strict_encode(ast_data)?.unbox().unconfine();
-        Confined::<Vec<u8>, 0, MAX>::try_from(data).map_err(SerializeError::from)
+    ) -> Result<Confined<Vec<u8>, 0, MAX>, SerializeError>
+    where Self: StrictSerialize<MAX> {
+        self.to_strict_vec()
     }
 
-    fn strict_serialize<const MAX: usize>(&self, write: impl io::Write) -> Result<(), io::Error> {
-        let writer = StreamWriter::new::<MAX>(write);
-        self.strict_write(writer)
-    }
-
+    #[deprecated(since = "3.0.0", note = "use `strict_serialize_to_path` instead")]
     fn strict_serialize_to_file<const MAX: usize>(
         &self,
         path: impl AsRef<std::path::Path>,
-    ) -> Result<(), SerializeError> {
+    ) -> Result<(), SerializeError>
+    where
+        Self: StrictSerialize<MAX>,
+    {
         let file = fs::File::create(path)?;
-        // TODO: Do FileWriter
-        let file = StrictWriter::with(StreamWriter::new::<MAX>(file));
-        self.strict_encode(file)?;
+        StrictSerialize::<MAX_SERIALIZED_LEN>::strict_serialize(self, file)?;
         Ok(())
     }
 }
